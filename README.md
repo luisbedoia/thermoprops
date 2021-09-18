@@ -1,10 +1,10 @@
 # Thermoprops
 
-It allows to calculate the thermodynamic properties of various substances of interest in thermodynamics and refrigeration.
+Progressive web app that allows to calculate the thermodynamics properties of various substances of interest in thermodynamics and refrigeration. 
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 12.1.1.
+<!--This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 12.1.1.
 
-<!-- ## Development server
+ ## Development server
 
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
 
