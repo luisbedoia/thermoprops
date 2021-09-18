@@ -1,23 +1,25 @@
 <!-- <p>ok</p>
 <button (click)="PropsSI()">Imprimir</button> -->
-<mat-spinner *ngIf="!loaded">
+<div class="main-div" *ngIf="!loaded">
+    <mat-spinner >
 
-</mat-spinner>
-<div>
+    </mat-spinner>
+</div>
+
+<div class="main-div">
     <mat-card class="example-card">
         <mat-card-header>
-            <div mat-card-avatar class="example-header-image"></div>
-            <mat-card-title>Shiba Inu</mat-card-title>
-            <mat-card-subtitle>Dog Breed</mat-card-subtitle>
+            <mat-card-title>Thermoprops</mat-card-title>
+            <mat-card-subtitle>Thermodynamic properties calculator</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
             <form class="example-form">
                 <mat-form-field class="example-full-width" appearance="fill">
-                    <mat-label>Number</mat-label>
+                    <mat-label>Search a substance</mat-label>
                     <input 
                         type="text" 
                         placeholder="Pick one" 
-                        aria-label="Number" 
+                        aria-label="Search a substance" 
                         matInput 
                         [matAutocomplete]="auto" 
                         [formControl]="selectedFluid">
@@ -29,11 +31,11 @@
                 </mat-form-field>
             </form>
 
-            {{resultado}}
+            <p>Temperature: 298.15, Pressure: 101325 Pa, Density: {{resultado | number}} kg/m^3</p>
 
         </mat-card-content>
         <mat-card-actions>
-            <button mat-button (click)="calculate()">Calcular</button>
+            <button mat-button (click)="calculate()">Calculate</button>
         </mat-card-actions>
     </mat-card>
 </div>
