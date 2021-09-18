@@ -1,5 +1,8 @@
 <!-- <p>ok</p>
 <button (click)="PropsSI()">Imprimir</button> -->
+<mat-spinner *ngIf="!loaded">
+
+</mat-spinner>
 <div>
     <mat-card class="example-card">
         <mat-card-header>
@@ -26,10 +29,11 @@
                 </mat-form-field>
             </form>
 
+            {{resultado}}
+
         </mat-card-content>
         <mat-card-actions>
-            <button mat-button (click)="PropsSI()">LIKE</button>
-            <button mat-button>SHARE</button>
+            <button mat-button (click)="calculate()">Calcular</button>
         </mat-card-actions>
     </mat-card>
 </div>
