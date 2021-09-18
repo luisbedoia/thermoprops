@@ -1,6 +1,6 @@
-import { Component, OnInit, DoCheck } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms'
-import { Observable } from 'rxjs';
+import {  Observable, interval } from 'rxjs';
 import {map, startWith} from 'rxjs/operators';
 declare var Module: any;
 
@@ -9,34 +9,47 @@ declare var Module: any;
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.sass']
 })
-export class AppComponent implements OnInit, DoCheck {
+export class AppComponent implements OnInit {
+  constructor(
+  ) { }
   title = 'thermoprops';
   loaded: boolean = false;
-  fluidList: string[] = []
+  fluidList: string[]=[]
   selectedFluid = new FormControl();
   filteredOptions: Observable<string[]> = new Observable<string[]>();
+  resultado = '';
   ngOnInit() {
-      this.filteredOptions = this.selectedFluid.valueChanges.pipe(
-        startWith(''),
-        map(value => this._filter(value))
-      );
+    this.checkIfLoaded()
+    this.filteredOptions = this.selectedFluid.valueChanges.pipe(
+      startWith(''),
+      map(value => this._filter(value))
+    );
+
+    interval(500).subscribe(x => {
+      if(typeof Module.get_global_param_string !== 'undefined') {
+        this.fluidList = Module.get_global_param_string('fluids_list').split(',');
+        this.loaded = true;
+      }
+    });
+    
   }
 
-  ngDoCheck(){
-    if(Module.get_global_param_string && !this.loaded){
-      this.fluidList = Module.get_global_param_string('fluids_list').split(',');
-      this.loaded = true;
+  calculate(){
+    if(this.selectedFluid.value){
+      this.resultado = Module.PropsSI('D', 'T', 298.15, 'P', 101325, this.selectedFluid.value);
     }
-  }
-
-  PropsSI(){
-    this.fluidList = Module.get_global_param_string('fluids_list').split(',');
-    let a = Module.PropsSI('D', 'T', 298.15, 'P', 101325, 'Nitrogen');
-    console.log(a)
+    
   }
 
   private _filter(value: string): string[] {
     const filterValue = value.toLowerCase();
     return this.fluidList.filter(fluid => fluid.toLowerCase().includes(filterValue));
   }
+
+  checkIfLoaded(){
+    window.addEventListener('load', (event) => {
+      console.log(event);
+    })
+  }
+  
 }
