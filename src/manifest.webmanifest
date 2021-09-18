@@ -6,6 +6,10 @@
   "display": "standalone",
   "scope": "./",
   "start_url": "./",
+  "assets": [
+    "assets/js/coolprop.js",
+    "assets/js/coolprop.wasm"
+  ],
   "icons": [
     {
       "src": "assets/icons/icon-72x72.png",
