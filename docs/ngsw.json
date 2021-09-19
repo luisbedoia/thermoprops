@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1632005412055,
+  "timestamp": 1632030827376,
   "index": "/thermoprops/index.html",
   "assetGroups": [
     {
@@ -13,7 +13,7 @@
       "urls": [
         "/thermoprops/favicon.ico",
         "/thermoprops/index.html",
-        "/thermoprops/main.f0d69b935814722c4233.js",
+        "/thermoprops/main.49d98e1704124442a10b.js",
         "/thermoprops/manifest.webmanifest",
         "/thermoprops/polyfills.449126d1717fe9c6c8a5.js",
         "/thermoprops/runtime.30f1303ca93824b49392.js",
@@ -38,7 +38,8 @@
         "/thermoprops/assets/icons/icon-72x72.png",
         "/thermoprops/assets/icons/icon-96x96.png",
         "/thermoprops/assets/js/coolprop.js",
-        "/thermoprops/assets/js/coolprop.wasm"
+        "/thermoprops/assets/js/coolprop.wasm",
+        "/thermoprops/assets/json/all_fluids.json"
       ],
       "patterns": []
     }
@@ -55,9 +56,10 @@
     "/thermoprops/assets/icons/icon-96x96.png": "3914125a4b445bf111c5627875fc190f560daa41",
     "/thermoprops/assets/js/coolprop.js": "36ba02527abfdbcecf204b73ed386204ee894910",
     "/thermoprops/assets/js/coolprop.wasm": "4b227367d270a4322fd77d8c1e3ff2fd3f99bf06",
+    "/thermoprops/assets/json/all_fluids.json": "3d069f121867a7f041de30ad1835343f3f38cb00",
     "/thermoprops/favicon.ico": "22f6a4a3bcaafafb0254e0f2fa4ceb89e505e8b2",
-    "/thermoprops/index.html": "09f546d52e640549988105d8185c53c63bebe225",
-    "/thermoprops/main.f0d69b935814722c4233.js": "9a19ef71ee0ba4a4d2fe5391ffdc7051f6460724",
+    "/thermoprops/index.html": "11db1c424dcff259af6f01d249853f3a6c1673e0",
+    "/thermoprops/main.49d98e1704124442a10b.js": "f3375f1d98b861fb0589d208e18be1daa8382c04",
     "/thermoprops/manifest.webmanifest": "4abfd646f5d08345553bbb10fe1c491009978c4c",
     "/thermoprops/polyfills.449126d1717fe9c6c8a5.js": "9da77729ae6fe9f372d5150fd4bf53e5f6efc24a",
     "/thermoprops/runtime.30f1303ca93824b49392.js": "89087435ec0410cfaca98257de40695e79f198a5",
