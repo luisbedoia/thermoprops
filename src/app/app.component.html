@@ -23,19 +23,24 @@
                         matInput 
                         [matAutocomplete]="auto" 
                         [formControl]="selectedFluid">
-                    <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete">
+                    <mat-autocomplete [displayWith]="displayFn" autoActiveFirstOption #auto="matAutocomplete" >
                         <mat-option *ngFor="let fluid of filteredOptions | async" [value]="fluid">
-                            {{fluid}}
+                            {{fluid.name}}
                         </mat-option>
                     </mat-autocomplete>
                 </mat-form-field>
             </form>
+            <div *ngIf="selectedFluid.value && selectedFluid.value.name">
+                
+                <p>Fluid name: {{selectedFluid.value.name }} <a mat-raised-button class="view-details" target="_blank">View details</a></p>
+                <p>Aliases: <span *ngFor="let alias of selectedFluid.value.aliases"> {{alias}},</span> </p>
+            </div>
 
             <p>Temperature: 298.15 K, Pressure: 101325 Pa, Density: {{resultado | number}} kg/m^3</p>
 
         </mat-card-content>
-        <mat-card-actions>
-            <button mat-button (click)="calculate()">Calculate</button>
+        <mat-card-actions align="end">
+            <button mat-raised-button color="primary" (click)="calculate()">Calculate</button>
         </mat-card-actions>
     </mat-card>
 </div>
