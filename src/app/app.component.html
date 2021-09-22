@@ -1,7 +1,7 @@
 <!-- <p>ok</p>
 <button (click)="PropsSI()">Imprimir</button> -->
 <div class="main-div" *ngIf="!loaded">
-    <mat-spinner >
+    <mat-spinner>
 
     </mat-spinner>
 </div>
@@ -16,27 +16,85 @@
             <form class="example-form">
                 <mat-form-field class="example-full-width" appearance="fill">
                     <mat-label>Search a substance</mat-label>
-                    <input 
-                        type="text" 
-                        placeholder="Pick one" 
-                        aria-label="Search a substance" 
-                        matInput 
-                        [matAutocomplete]="auto" 
-                        [formControl]="selectedFluid">
-                    <mat-autocomplete [displayWith]="displayFn" autoActiveFirstOption #auto="matAutocomplete" >
+                    <input type="text" placeholder="Pick one" aria-label="Search a substance" matInput
+                        [matAutocomplete]="auto" [formControl]="selectedFluid">
+                    <mat-autocomplete [displayWith]="displayFn" autoActiveFirstOption #auto="matAutocomplete">
                         <mat-option *ngFor="let fluid of filteredOptions | async" [value]="fluid">
                             {{fluid.name}}
                         </mat-option>
                     </mat-autocomplete>
                 </mat-form-field>
-            </form>
-            <div *ngIf="selectedFluid.value && selectedFluid.value.name">
-                
-                <p>Fluid name: {{selectedFluid.value.name }} <a mat-raised-button class="view-details" target="_blank">View details</a></p>
-                <p>Aliases: <span *ngFor="let alias of selectedFluid.value.aliases"> {{alias}},</span> </p>
-            </div>
+                <div *ngIf="selectedFluid.value && selectedFluid.value.name">
+                    <p>
+                        Aliases: <span *ngFor="let alias of selectedFluid.value.aliases"> {{alias}},</span>
+                        <a mat-raised-button class="view-details" target="_blank">View details</a>
+                    </p>
+                </div>
 
-            <p>Temperature: 298.15 K, Pressure: 101325 Pa, Density: {{resultado | number}} kg/m^3</p>
+                <!-- <div class="example-container">
+                    <mat-form-field appearance="fill">
+                        <mat-label>Property to calculate</mat-label>
+                        <mat-select>
+                            <mat-option *ngFor="let prop of availableProps1" [value]="prop.id">
+                                {{prop.key}} [{{prop.units}}]
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="fill">
+                        <input disabled matInput type="number" [value]="resultado" placeholder="...">
+                    </mat-form-field>
+                </div> -->
+
+                <div class="example-container">
+                    <mat-form-field appearance="fill">
+                        <mat-label>Input property</mat-label>
+                        <mat-select (selectionChange)="onSelectProperty($event.value)" [(ngModel)]="prop1"
+                            [ngModelOptions]="{standalone: true}">
+                            <mat-option *ngFor="let prop of availableProps1" [value]="prop">
+                                {{prop.key}} [{{prop.units}}]
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="fill">
+                        <input matInput type="text" [(ngModel)]="prop1.value" [ngModelOptions]="{standalone: true}"
+                            placeholder="">
+                        <button *ngIf="prop1.value" matSuffix mat-icon-button aria-label="Clear"
+                            (click)="prop1.value=''">
+                            <mat-icon>close</mat-icon>
+                        </button>
+                    </mat-form-field>
+                </div>
+
+                <div class="example-container">
+                    <mat-form-field appearance="fill">
+                        <mat-label>Input property</mat-label>
+                        <mat-select (selectionChange)="onSelectProperty($event.value)" [(ngModel)]="prop2"
+                            [ngModelOptions]="{standalone: true}">
+                            <mat-option *ngFor="let prop of availableProps2" [value]="prop">
+                                {{prop.key}} [{{prop.units}}]
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="fill">
+                        <input matInput type="text" [(ngModel)]="prop2.value" [ngModelOptions]="{standalone: true}"
+                            placeholder="">
+                        <button *ngIf="prop2.value" matSuffix mat-icon-button aria-label="Clear"
+                            (click)="prop2.value=''">
+                            <mat-icon>close</mat-icon>
+                        </button>
+                    </mat-form-field>
+                </div>
+            </form>
+
+            <mat-list role="list">
+                <mat-list-item role="listitem" matTooltip="fbjdbjd" *ngFor="let x of results">{{x.key}} = {{x.value | number}} [{{x.units}}]</mat-list-item>
+            </mat-list>
+            <!-- matTooltip={{x.type}} -->
+
+
 
         </mat-card-content>
         <mat-card-actions align="end">
