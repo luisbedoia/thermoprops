@@ -7,7 +7,7 @@
 </div>
 
 <div class="main-div bg-color">
-    <mat-card class="example-card" style="width:30vw">
+    <mat-card class="example-card">
         <mat-card-header>
             <mat-card-title>Thermoprops</mat-card-title>
             <mat-card-subtitle>Thermodynamic properties calculator</mat-card-subtitle>
@@ -31,21 +31,6 @@
                     </p>
                 </div>
 
-                <!-- <div class="example-container">
-                    <mat-form-field appearance="fill">
-                        <mat-label>Property to calculate</mat-label>
-                        <mat-select>
-                            <mat-option *ngFor="let prop of availableProps1" [value]="prop.id">
-                                {{prop.key}} [{{prop.units}}]
-                            </mat-option>
-                        </mat-select>
-                    </mat-form-field>
-
-                    <mat-form-field appearance="fill">
-                        <input disabled matInput type="number" [value]="resultado" placeholder="...">
-                    </mat-form-field>
-                </div> -->
-
                 <div class="example-container">
                     <mat-form-field appearance="fill" style="width:10vw">
                         <mat-label>Input property</mat-label>
@@ -57,7 +42,7 @@
                         </mat-select>
                     </mat-form-field>
 
-                    <mat-form-field appearance="fill" style="width:19vw">
+                    <mat-form-field appearance="fill">
                         <input matInput type="text" [(ngModel)]="prop1.value" [ngModelOptions]="{standalone: true}"
                             placeholder="">
                         <button *ngIf="prop1.value" matSuffix mat-icon-button aria-label="Clear"
@@ -78,7 +63,7 @@
                         </mat-select>
                     </mat-form-field>
 
-                    <mat-form-field appearance="fill" style="width:19vw">
+                    <mat-form-field appearance="fill">
                         <input matInput type="text" [(ngModel)]="prop2.value" [ngModelOptions]="{standalone: true}"
                             placeholder="">
                         <button *ngIf="prop2.value" matSuffix mat-icon-button aria-label="Clear"
