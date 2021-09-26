@@ -7,7 +7,7 @@
 </div>
 
 <div class="main-div bg-color">
-    <mat-card class="example-card">
+    <mat-card class="example-card" style="width:30vw">
         <mat-card-header>
             <mat-card-title>Thermoprops</mat-card-title>
             <mat-card-subtitle>Thermodynamic properties calculator</mat-card-subtitle>
@@ -47,7 +47,7 @@
                 </div> -->
 
                 <div class="example-container">
-                    <mat-form-field appearance="fill">
+                    <mat-form-field appearance="fill" style="width:10vw">
                         <mat-label>Input property</mat-label>
                         <mat-select (selectionChange)="onSelectProperty($event.value)" [(ngModel)]="prop1"
                             [ngModelOptions]="{standalone: true}">
@@ -57,7 +57,7 @@
                         </mat-select>
                     </mat-form-field>
 
-                    <mat-form-field appearance="fill">
+                    <mat-form-field appearance="fill" style="width:19vw">
                         <input matInput type="text" [(ngModel)]="prop1.value" [ngModelOptions]="{standalone: true}"
                             placeholder="">
                         <button *ngIf="prop1.value" matSuffix mat-icon-button aria-label="Clear"
@@ -67,8 +67,8 @@
                     </mat-form-field>
                 </div>
 
-                <div class="example-container">
-                    <mat-form-field appearance="fill">
+		<div class="example-container">
+                    <mat-form-field appearance="fill" style="width:10vw">
                         <mat-label>Input property</mat-label>
                         <mat-select (selectionChange)="onSelectProperty($event.value)" [(ngModel)]="prop2"
                             [ngModelOptions]="{standalone: true}">
@@ -78,7 +78,7 @@
                         </mat-select>
                     </mat-form-field>
 
-                    <mat-form-field appearance="fill">
+                    <mat-form-field appearance="fill" style="width:19vw">
                         <input matInput type="text" [(ngModel)]="prop2.value" [ngModelOptions]="{standalone: true}"
                             placeholder="">
                         <button *ngIf="prop2.value" matSuffix mat-icon-button aria-label="Clear"
@@ -89,7 +89,7 @@
                 </div>
             </form>
 
-            <mat-list role="list">
+            <mat-list *ngIf="calculated" role="list">
                 <mat-list-item role="listitem" matTooltip="fbjdbjd" *ngFor="let x of results">{{x.key}} = {{x.value | number}} [{{x.units}}]</mat-list-item>
             </mat-list>
             <!-- matTooltip={{x.type}} -->
