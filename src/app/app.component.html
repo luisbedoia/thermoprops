@@ -1,5 +1,3 @@
-<!-- <p>ok</p>
-<button (click)="PropsSI()">Imprimir</button> -->
 <div class="main-div" *ngIf="!loaded">
     <mat-spinner>
 
@@ -14,6 +12,7 @@
         </mat-card-header>
         <mat-card-content>
             <form class="example-form">
+                <!-- SELECT SUBSTANCE -->
                 <mat-form-field class="example-full-width" appearance="fill">
                     <mat-label>Search a substance</mat-label>
                     <input type="text" placeholder="Pick one" aria-label="Search a substance" matInput
@@ -31,21 +30,7 @@
                     </p>
                 </div>
 
-                <!-- <div class="example-container">
-                    <mat-form-field appearance="fill">
-                        <mat-label>Property to calculate</mat-label>
-                        <mat-select>
-                            <mat-option *ngFor="let prop of availableProps1" [value]="prop.id">
-                                {{prop.key}} [{{prop.units}}]
-                            </mat-option>
-                        </mat-select>
-                    </mat-form-field>
-
-                    <mat-form-field appearance="fill">
-                        <input disabled matInput type="number" [value]="resultado" placeholder="...">
-                    </mat-form-field>
-                </div> -->
-
+                <!-- INPUT PROPERTY -->
                 <div class="example-container">
                     <mat-form-field appearance="fill">
                         <mat-label>Input property</mat-label>
@@ -67,6 +52,7 @@
                     </mat-form-field>
                 </div>
 
+                <!-- INPUT PROPERTY -->
                 <div class="example-container">
                     <mat-form-field appearance="fill">
                         <mat-label>Input property</mat-label>
@@ -92,10 +78,6 @@
             <mat-list role="list">
                 <mat-list-item role="listitem" matTooltip="fbjdbjd" *ngFor="let x of results">{{x.key}} = {{x.value | number}} [{{x.units}}]</mat-list-item>
             </mat-list>
-            <!-- matTooltip={{x.type}} -->
-
-
-
         </mat-card-content>
         <mat-card-actions align="end">
             <button mat-raised-button color="primary" (click)="calculate()">Calculate</button>
