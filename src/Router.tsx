@@ -1,6 +1,6 @@
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
-import { isBrowser, isMobile } from "react-device-detect";
+// import { isBrowser, isMobile } from "react-device-detect";
 import { Start } from "./components";
 import { Calculator } from "./components";
 import { interval } from "rxjs";
@@ -12,11 +12,12 @@ export default function MyRouter() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isClicked, setIsClicked] = useState(false);
   const [loadComponent, setLoadComponent] = useState(<></>);
+  const base=`${process.env.PUBLIC_URL}` || "/thermoprops";
   function handleClick() {
     console.log("Clicked");
     setLoadComponent(
       <Helmet>
-        <script defer src="js/coolprop.js"></script>
+        <script defer src="/thermoprops/js/coolprop.js"></script>
         {/* Module.PropsSI('D', 'T', 298.15, 'P', 101325, 'Nitrogen') */}
       </Helmet>
     );
@@ -34,11 +35,10 @@ export default function MyRouter() {
     }
   });
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={base}>
       <Routes>
-        <Route path="/" element={<Navigate to="/home" />} />
         <Route
-          path="/home"
+          path="/"
           element={
             isLoaded ? (
               <Navigate to="/calculator" />
@@ -49,8 +49,9 @@ export default function MyRouter() {
         />
         <Route
           path="/calculator/*"
-          element={isLoaded ? <Calculator /> : <Navigate to="/home" />}
+          element={isLoaded ? <Calculator /> : <Navigate to="/" />}
         />
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
       {loadComponent}
     </BrowserRouter>

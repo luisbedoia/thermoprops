@@ -1,22 +1,19 @@
-import { Navbar, MyCard, Start } from "./components";
-import {
-  BrowserView,
-  MobileView,
-  isBrowser,
-  isMobile,
-} from "react-device-detect";
+// import {
+//   BrowserView,
+//   MobileView,
+// } from "react-device-detect";
 import MyRouter from "./Router";
 
 function App() {
   return (
     <div className="App">
       <MyRouter />
-      <BrowserView>
+      {/* <BrowserView>
         <h1>This is rendered only in browser</h1>
       </BrowserView>
       <MobileView>
         <h1>This is rendered only on mobile</h1>
-      </MobileView>
+      </MobileView> */}
     </div>
   );
 }
