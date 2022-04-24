@@ -1,9 +1,6 @@
-import { Navbar, MyCard, Start } from "./components";
 import {
   BrowserView,
   MobileView,
-  isBrowser,
-  isMobile,
 } from "react-device-detect";
 import MyRouter from "./Router";
 
