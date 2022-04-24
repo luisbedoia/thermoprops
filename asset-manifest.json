@@ -1,17 +1,17 @@
 {
   "files": {
     "main.css": "/thermoprops/static/css/main.adfe213c.css",
-    "main.js": "/thermoprops/static/js/main.88b71e6f.js",
+    "main.js": "/thermoprops/static/js/main.2a9dca21.js",
     "static/js/787.4f0b5de8.chunk.js": "/thermoprops/static/js/787.4f0b5de8.chunk.js",
     "static/media/bootstrap-icons.woff?": "/thermoprops/static/media/bootstrap-icons.c1d7432ee75fa194e499.woff",
     "static/media/bootstrap-icons.woff2?": "/thermoprops/static/media/bootstrap-icons.a13b815539b49de48d23.woff2",
     "index.html": "/thermoprops/index.html",
     "main.adfe213c.css.map": "/thermoprops/static/css/main.adfe213c.css.map",
-    "main.88b71e6f.js.map": "/thermoprops/static/js/main.88b71e6f.js.map",
+    "main.2a9dca21.js.map": "/thermoprops/static/js/main.2a9dca21.js.map",
     "787.4f0b5de8.chunk.js.map": "/thermoprops/static/js/787.4f0b5de8.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.adfe213c.css",
-    "static/js/main.88b71e6f.js"
+    "static/js/main.2a9dca21.js"
   ]
 }
