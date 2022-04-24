@@ -1,19 +1,23 @@
-import { Navbar, MyCard } from "./components";
-import { Helmet } from "react-helmet";
+import { Navbar, MyCard, Start } from "./components";
+import {
+  BrowserView,
+  MobileView,
+  isBrowser,
+  isMobile,
+} from "react-device-detect";
+import MyRouter from "./Router";
+
 function App() {
   return (
-    <>
-      <div className="App">
-        {<Navbar />}
-        <div>
-          <MyCard />
-        </div>
-      </div>
-      <Helmet>
-        <script defer src="js/coolprop.js"></script>
-        {/* Module.PropsSI('D', 'T', 298.15, 'P', 101325, 'Nitrogen') */}
-      </Helmet>
-    </>
+    <div className="App">
+      <MyRouter />
+      <BrowserView>
+        <h1>This is rendered only in browser</h1>
+      </BrowserView>
+      <MobileView>
+        <h1>This is rendered only on mobile</h1>
+      </MobileView>
+    </div>
   );
 }
 
