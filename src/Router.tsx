@@ -1,6 +1,6 @@
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
-import { isBrowser, isMobile } from "react-device-detect";
+// import { isBrowser, isMobile } from "react-device-detect";
 import { Start } from "./components";
 import { Calculator } from "./components";
 import { interval } from "rxjs";
