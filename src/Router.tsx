@@ -12,12 +12,14 @@ export default function MyRouter() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isClicked, setIsClicked] = useState(false);
   const [loadComponent, setLoadComponent] = useState(<></>);
-  const base=`${process.env.PUBLIC_URL}` || "/thermoprops";
+  const base = `${process.env.PUBLIC_URL}` || "/thermoprops";
+  //   const base = null;
+  const coolpropPath = `${base || ""}/js/coolprop.js`;
   function handleClick() {
     console.log("Clicked");
     setLoadComponent(
       <Helmet>
-        <script defer src="/thermoprops/js/coolprop.js"></script>
+        <script defer src={coolpropPath}></script>
         {/* Module.PropsSI('D', 'T', 298.15, 'P', 101325, 'Nitrogen') */}
       </Helmet>
     );
@@ -35,7 +37,8 @@ export default function MyRouter() {
     }
   });
   return (
-    <BrowserRouter basename={base}>
+    <BrowserRouter basename={base || "/"}>
+      <p>{base}</p>
       <Routes>
         <Route
           path="/"
