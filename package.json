@@ -1,5 +1,6 @@
 {
   "name": "thermoprops",
+  "homepage": "https://luisbedoia.github.io/thermoprops/",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
