@@ -17,7 +17,7 @@ export default function App() {
   const [property2, setProperty2] = useState(
     properties.find((p) => p.input && p.name !== property1)?.name || ""
   );
-  const [result, setResult] = useState<any | null>(null);
+  const [result, setResult] = useState<Result[] | null>(null);
 
   const propertiesList1 = properties.filter(
     (p) => p.input && p.name !== property2
