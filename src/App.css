@@ -1,0 +1,144 @@
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+h1 {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+label {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+select,
+input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: inherit;
+  transition: 0.3s;
+  box-sizing: border-box;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+select:hover,
+input:hover {
+  border-color: #646cff;
+}
+
+button {
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background-color: #1a1a1a;
+  color: inherit;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  border-color: #646cff;
+}
+
+.result-container {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: left;
+  font-size: 0.9rem;
+  overflow-x: auto;
+}
+
+/* Contenedor de la lista de resultados */
+.result-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilo de cada resultado individual */
+.result {
+  padding: 0.75rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  transition: background 0.3s;
+  cursor: pointer;
+  position: relative;
+}
+
+/* Texto del resultado principal */
+.result p {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #fff;
+}
+
+/* Descripción oculta por defecto */
+.description {
+  display: none;
+  position: absolute;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  width: 250px;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: normal;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Mostrar descripción al hacer hover */
+.result:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.result:hover .description {
+  display: block;
+}

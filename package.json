@@ -1,65 +1,38 @@
 {
   "name": "thermoprops",
   "homepage": "https://luisbedoia.github.io/thermoprops/",
-  "version": "0.1.0",
   "private": true,
-  "dependencies": {
-    "@testing-library/jest-dom": "^5.16.4",
-    "@testing-library/react": "^13.1.1",
-    "@testing-library/user-event": "^13.5.0",
-    "@types/bootstrap": "^5.1.10",
-    "@types/jest": "^27.4.1",
-    "@types/node": "^16.11.27",
-    "@types/react": "^18.0.6",
-    "@types/react-dom": "^18.0.2",
-    "@types/react-helmet": "^6.1.5",
-    "bootstrap": "^5.1.3",
-    "bootstrap-icons": "^1.8.1",
-    "react": "^18.0.0",
-    "react-device-detect": "^2.2.2",
-    "react-dom": "^18.0.0",
-    "react-helmet": "^6.1.0",
-    "react-router-dom": "^6.3.0",
-    "react-scripts": "5.0.1",
-    "rxjs": "^7.5.5",
-    "sass": "^1.50.1",
-    "typescript": "^4.6.3",
-    "web-vitals": "^2.1.4",
-    "workbox-background-sync": "^5.1.4",
-    "workbox-broadcast-update": "^5.1.4",
-    "workbox-cacheable-response": "^5.1.4",
-    "workbox-core": "^5.1.4",
-    "workbox-expiration": "^5.1.4",
-    "workbox-google-analytics": "^5.1.4",
-    "workbox-navigation-preload": "^5.1.4",
-    "workbox-precaching": "^5.1.4",
-    "workbox-range-requests": "^5.1.4",
-    "workbox-routing": "^5.1.4",
-    "workbox-strategies": "^5.1.4",
-    "workbox-streams": "^5.1.4"
-  },
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@vite-pwa/assets-generator": "^0.2.6",
+    "@vitejs/plugin-react": "^4.2.1",
+    "eslint": "^9.18.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.18",
+    "globals": "^15.14.0",
+    "typescript": "~5.7.2",
+    "typescript-eslint": "^8.20.0",
+    "vite": "^6.0.11",
+    "vite-plugin-pwa": "^0.21.1",
+    "workbox-core": "^7.3.0",
+    "workbox-window": "^7.3.0"
+  },
+  "overrides": {
+    "sharp": "0.32.6",
+    "sharp-ico": "0.1.5"
   }
 }
