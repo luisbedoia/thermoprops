@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   calculateProperties,
   getFluidsList,
@@ -9,7 +9,8 @@ import {
 import "./App.css";
 
 export default function App() {
-  const fluidsList = getFluidsList();
+  // const fluidsList = await getFluidsList();
+  const [fluidsList, setFluidsList] = useState<string[]>([]);
   const [property1, setProperty1] = useState(
     properties.find((p) => p.input)?.name || ""
   );
@@ -25,7 +26,7 @@ export default function App() {
     (p) => p.input && p.name !== property1
   );
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const fluid = formData.get("fluid") as string;
@@ -34,8 +35,20 @@ export default function App() {
 
     if (!property1 || !property2 || isNaN(value1) || isNaN(value2)) return;
 
-    setResult(calculateProperties(property1, value1, property2, value2, fluid));
+    setResult(await calculateProperties(property1, value1, property2, value2, fluid));
   };
+
+  useEffect(() => {
+    async function fetchFluidsList() {
+      try {
+        const fluids = await getFluidsList();
+        setFluidsList(fluids);
+      } catch (error) {
+        console.error("Error fetching fluids list:", error);
+      }
+    }
+    fetchFluidsList();
+  }, []);
 
   return (
     <div className="card">

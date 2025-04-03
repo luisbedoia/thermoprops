@@ -1,7 +1,7 @@
 declare global {
   interface Window {
-    Module: {
-      PropsSI: (
+    Module?: {
+      PropsSI?: (
         property: string,
         property1: string,
         value1: number,
@@ -9,7 +9,7 @@ declare global {
         value2: number,
         fluid: string
       ) => number;
-      get_global_param_string: (parameter: string) => string;
+      get_global_param_string?: (parameter: string) => string;
     };
   }
 }

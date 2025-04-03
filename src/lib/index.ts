@@ -147,7 +147,7 @@ export function checkValidInputProperty(name: string) {
   }
 }
 
-export function calculateProperty(
+export async function calculateProperty(
   property: string,
   property1: string,
   value1: number,
@@ -155,62 +155,69 @@ export function calculateProperty(
   value2: number,
   fluid: string
 ) {
+  await loadLibrary();
   checkValidProperty(property);
   checkValidInputProperty(property1);
   checkValidInputProperty(property2);
-  if (window.Module) {
-    return window.Module.PropsSI(
-      property,
-      property1,
-      value1,
-      property2,
-      value2,
-      fluid
-    );
-  } else {
-    throw Error("Module.PropsSI not available");
-  }
+  return window.Module!.PropsSI!(
+    property,
+    property1,
+    value1,
+    property2,
+    value2,
+    fluid
+  );
 }
 
-export function calculateProperties(
+export async function calculateProperties(
   property1: string,
   value1: number,
   property2: string,
   value2: number,
   fluid: string
-): Result[] {
+): Promise<Result[]> {
   const propertiesToCalculate: Property[] = properties.filter(
     (property) => property.output && !property.trivial
   );
 
   let result: Result[] = [];
 
-  propertiesToCalculate.forEach((property) => {
-    const propertyResult = calculateProperty(
-      property.name,
-      property1,
-      value1,
-      property2,
-      value2,
-      fluid
-    );
-    result.push({
-      name: property.name,
-      unit: property.unit,
-      description: property.description,
-      value: propertyResult,
-    });
-  });
+  await Promise.all(
+    propertiesToCalculate.map(async (property) => {
+      const propertyResult = await calculateProperty(
+        property.name,
+        property1,
+        value1,
+        property2,
+        value2,
+        fluid
+      );
+      result.push({
+        name: property.name,
+        unit: property.unit,
+        description: property.description,
+        value: propertyResult,
+      });
+    })
+  );
 
   return result;
 }
 
-export function getFluidsList() {
-  if (window.Module) {
-    return window.Module.get_global_param_string("fluids_list")
-      .split(",")
-      .sort();
-  } else {
-    throw Error("Module.PropsSI not available");
-  }
+export async function getFluidsList(): Promise<string[]> {
+  await loadLibrary();
+  return window.Module!.get_global_param_string!("fluids_list")
+    .split(",")
+    .sort();
+}
+
+async function loadLibrary(): Promise<void> {
+  return new Promise((resolve) => {
+    const interval = setInterval(() => {
+      if (window.Module) {
+        clearInterval(interval);
+        resolve();
+      }
+    }, 50);
+  });
 }
