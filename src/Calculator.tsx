@@ -6,9 +6,9 @@ import {
   Property,
   Result,
 } from "./lib";
-import "./OnePointCalculator.css";
+import "./Calculator.css";
 
-export function OnePointCalculator() {
+export function Calculator() {
   const [fluidsList, setFluidsList] = useState<string[]>([]);
   const [property1, setProperty1] = useState(
     properties.find((p) => p.input)?.name || ""
@@ -54,21 +54,19 @@ export function OnePointCalculator() {
   return (
     <div className="card">
       <form onSubmit={handleSubmit}>
-        <h1>One point fluid properties</h1>
+        <h1>Fluid Properties</h1>
 
         <div>
-          <label htmlFor="fluid">Fluid:</label>
           <select name="fluid" id="fluid">
-            {fluidsList.map((fluido) => (
-              <option key={fluido} value={fluido}>
-                {fluido}
+            {fluidsList.map((fluid) => (
+              <option key={fluid} value={fluid}>
+                {fluid}
               </option>
             ))}
           </select>
         </div>
 
-        <div>
-          <label htmlFor="property1">Property 1:</label>
+        <div className="input-pair">
           <select
             name="property1"
             id="property1"
@@ -82,8 +80,7 @@ export function OnePointCalculator() {
           <input type="number" name="value1" id="value1" step="any" />
         </div>
 
-        <div>
-          <label htmlFor="property2">Property 2:</label>
+        <div className="input-pair">
           <select
             name="property2"
             id="property2"
@@ -117,9 +114,13 @@ function ResultComponent({ result }: { result: Result }) {
   return (
     <div className="result">
       <p>
-        {result.name}= {result.value} {result.unit}
+        {result.name}:{" "}
+        {result.value.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}{" "}
+        {result.unit}
       </p>
-      <p className="description">{result.description}</p>
     </div>
   );
 }
