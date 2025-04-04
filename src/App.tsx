@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import CP from "./coolprop/coolprop.js";
-import { Input } from "./Input.js";
+import { AppRouter } from "./Router";
 
 export default function App() {
   const [loading, setLoading] = useState(true);
@@ -25,5 +25,5 @@ export default function App() {
   if (loading) {
     return <div>Loading library...</div>;
   }
-  return <Input />;
+  return <AppRouter />;
 }
