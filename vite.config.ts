@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      base: "/thermoprops/",
       registerType: "autoUpdate",
       injectRegister: false,
 
