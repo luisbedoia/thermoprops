@@ -147,7 +147,7 @@ export function checkValidInputProperty(name: string) {
   }
 }
 
-export async function calculateProperty(
+export function calculateProperty(
   property: string,
   property1: string,
   value1: number,
@@ -155,7 +155,6 @@ export async function calculateProperty(
   value2: number,
   fluid: string
 ) {
-  await loadLibrary();
   checkValidProperty(property);
   checkValidInputProperty(property1);
   checkValidInputProperty(property2);
@@ -182,42 +181,26 @@ export async function calculateProperties(
 
   const result: Result[] = [];
 
-  await Promise.all(
-    propertiesToCalculate.map(async (property) => {
-      const propertyResult = await calculateProperty(
-        property.name,
-        property1,
-        value1,
-        property2,
-        value2,
-        fluid
-      );
-      result.push({
-        name: property.name,
-        unit: property.unit,
-        description: property.description,
-        value: propertyResult,
-      });
-    })
-  );
+  propertiesToCalculate.map((property) => {
+    const propertyResult = calculateProperty(
+      property.name,
+      property1,
+      value1,
+      property2,
+      value2,
+      fluid
+    );
+    result.push({
+      name: property.name,
+      unit: property.unit,
+      description: property.description,
+      value: propertyResult,
+    });
+  });
 
   return result;
 }
 
 export async function getFluidsList(): Promise<string[]> {
-  await loadLibrary();
-  return window.CP!.get_global_param_string!("fluids_list")
-    .split(",")
-    .sort();
-}
-
-async function loadLibrary(): Promise<void> {
-  return new Promise((resolve) => {
-    const interval = setInterval(() => {
-      if (window.CP) {
-        clearInterval(interval);
-        resolve();
-      }
-    }, 50);
-  });
+  return window.CP!.get_global_param_string!("fluids_list").split(",").sort();
 }

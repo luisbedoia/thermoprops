@@ -86,7 +86,6 @@ button:hover {
   overflow-x: auto;
 }
 
-/* Contenedor de la lista de resultados */
 .result-list {
   display: flex;
   flex-direction: column;
@@ -98,7 +97,6 @@ button:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Estilo de cada resultado individual */
 .result {
   padding: 0.75rem;
   border-radius: 6px;
@@ -108,7 +106,6 @@ button:hover {
   position: relative;
 }
 
-/* Texto del resultado principal */
 .result p {
   margin: 0;
   font-size: 1rem;
@@ -116,7 +113,6 @@ button:hover {
   color: #fff;
 }
 
-/* Descripción oculta por defecto */
 .description {
   display: none;
   position: absolute;
@@ -134,7 +130,7 @@ button:hover {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
-/* Mostrar descripción al hacer hover */
+
 .result:hover {
   background: rgba(255, 255, 255, 0.2);
 }

@@ -9,7 +9,6 @@ import {
 import "./OnePointCalculator.css";
 
 export function OnePointCalculator() {
-  // const fluidsList = await getFluidsList();
   const [fluidsList, setFluidsList] = useState<string[]>([]);
   const [property1, setProperty1] = useState(
     properties.find((p) => p.input)?.name || ""
@@ -35,7 +34,9 @@ export function OnePointCalculator() {
 
     if (!property1 || !property2 || isNaN(value1) || isNaN(value2)) return;
 
-    setResult(await calculateProperties(property1, value1, property2, value2, fluid));
+    setResult(
+      await calculateProperties(property1, value1, property2, value2, fluid)
+    );
   };
 
   useEffect(() => {
@@ -53,10 +54,10 @@ export function OnePointCalculator() {
   return (
     <div className="card">
       <form onSubmit={handleSubmit}>
-        <h1>Propiedades de los Fluidos</h1>
+        <h1>One point fluid properties</h1>
 
         <div>
-          <label htmlFor="fluid">Fluido:</label>
+          <label htmlFor="fluid">Fluid:</label>
           <select name="fluid" id="fluid">
             {fluidsList.map((fluido) => (
               <option key={fluido} value={fluido}>
@@ -67,7 +68,7 @@ export function OnePointCalculator() {
         </div>
 
         <div>
-          <label htmlFor="property1">Propiedad 1:</label>
+          <label htmlFor="property1">Property 1:</label>
           <select
             name="property1"
             id="property1"
@@ -82,7 +83,7 @@ export function OnePointCalculator() {
         </div>
 
         <div>
-          <label htmlFor="property2">Propiedad 2:</label>
+          <label htmlFor="property2">Property 2:</label>
           <select
             name="property2"
             id="property2"
@@ -96,7 +97,7 @@ export function OnePointCalculator() {
           <input type="number" name="value2" id="value2" step="any" />
         </div>
 
-        <button type="submit">Calcular</button>
+        <button type="submit">Submit</button>
 
         {result && <ResultList results={result} />}
       </form>
@@ -118,7 +119,6 @@ function ResultComponent({ result }: { result: Result }) {
       <p>
         {result.name}= {result.value} {result.unit}
       </p>
-      {/* description is showed on hover */}
       <p className="description">{result.description}</p>
     </div>
   );
