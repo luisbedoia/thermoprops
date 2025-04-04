@@ -159,7 +159,7 @@ export async function calculateProperty(
   checkValidProperty(property);
   checkValidInputProperty(property1);
   checkValidInputProperty(property2);
-  return window.Module!.PropsSI!(
+  return window.CP!.PropsSI!(
     property,
     property1,
     value1,
@@ -180,7 +180,7 @@ export async function calculateProperties(
     (property) => property.output && !property.trivial
   );
 
-  let result: Result[] = [];
+  const result: Result[] = [];
 
   await Promise.all(
     propertiesToCalculate.map(async (property) => {
@@ -206,7 +206,7 @@ export async function calculateProperties(
 
 export async function getFluidsList(): Promise<string[]> {
   await loadLibrary();
-  return window.Module!.get_global_param_string!("fluids_list")
+  return window.CP!.get_global_param_string!("fluids_list")
     .split(",")
     .sort();
 }
@@ -214,7 +214,7 @@ export async function getFluidsList(): Promise<string[]> {
 async function loadLibrary(): Promise<void> {
   return new Promise((resolve) => {
     const interval = setInterval(() => {
-      if (window.Module) {
+      if (window.CP) {
         clearInterval(interval);
         resolve();
       }

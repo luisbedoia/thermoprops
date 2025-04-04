@@ -1,6 +1,6 @@
 declare global {
   interface Window {
-    Module?: {
+    CP?: {
       PropsSI?: (
         property: string,
         property1: string,
