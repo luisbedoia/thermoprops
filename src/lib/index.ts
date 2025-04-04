@@ -168,13 +168,13 @@ export function calculateProperty(
   );
 }
 
-export async function calculateProperties(
+export function calculateProperties(
   property1: string,
   value1: number,
   property2: string,
   value2: number,
   fluid: string
-): Promise<Result[]> {
+): Result[] {
   const propertiesToCalculate: Property[] = properties.filter(
     (property) => property.output && !property.trivial
   );

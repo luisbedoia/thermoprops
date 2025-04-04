@@ -1,0 +1,26 @@
+.result-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  background: #fff;
+  border-radius: 6px;
+}
+
+.result {
+  padding: 0.6rem;
+  border-radius: 6px;
+  transition: background 0.3s;
+  position: relative;
+}
+
+.result p {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.result:hover {
+  background: #f1f1f1;
+}

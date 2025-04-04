@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Input } from "./Input";
-import { Result } from "./Result";
+import { ResultView } from "./Result";
 
 export function AppRouter() {
   return (
@@ -8,7 +8,7 @@ export function AppRouter() {
       <Routes>
         <Route path="/" element={<Navigate to="/input" />} />
         <Route path="/input" element={<Input />} />
-        <Route path="/result" element={<Result />} />
+        <Route path="/result" element={<ResultView />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,22 +1,23 @@
 import { useEffect, useState } from "react";
-import {
-  calculateProperties,
-  getFluidsList,
-  properties,
-  Property,
-  Result,
-} from "./lib";
+import { useNavigate } from "react-router-dom";
+import { getFluidsList, properties, Property } from "./lib";
+import "./index.css";
 import "./Input.css";
 
 export function Input() {
+  const navigate = useNavigate();
   const [fluidsList, setFluidsList] = useState<string[]>([]);
+  const [value1, setValue1] = useState("");
+  const [value2, setValue2] = useState("");
+  const [fluid, setFluid] = useState<string>(
+    fluidsList.length > 0 ? fluidsList[0] : ""
+  );
   const [property1, setProperty1] = useState(
     properties.find((p) => p.input)?.name || ""
   );
   const [property2, setProperty2] = useState(
     properties.find((p) => p.input && p.name !== property1)?.name || ""
   );
-  const [result, setResult] = useState<Result[] | null>(null);
 
   const propertiesList1 = properties.filter(
     (p) => p.input && p.name !== property2
@@ -27,16 +28,15 @@ export function Input() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const fluid = formData.get("fluid") as string;
-    const value1 = parseFloat(formData.get("value1") as string);
-    const value2 = parseFloat(formData.get("value2") as string);
+    const params = new URLSearchParams({
+      fluid,
+      property1,
+      value1: value1?.toString() || "",
+      property2,
+      value2: value2?.toString() || "",
+    });
 
-    if (!property1 || !property2 || isNaN(value1) || isNaN(value2)) return;
-
-    setResult(
-      await calculateProperties(property1, value1, property2, value2, fluid)
-    );
+    navigate(`/result?${params.toString()}`);
   };
 
   useEffect(() => {
@@ -44,6 +44,7 @@ export function Input() {
       try {
         const fluids = await getFluidsList();
         setFluidsList(fluids);
+        setFluid(fluids[0]);
       } catch (error) {
         console.error("Error fetching fluids list:", error);
       }
@@ -57,7 +58,12 @@ export function Input() {
         <h1>Fluid Properties</h1>
 
         <div>
-          <select name="fluid" id="fluid">
+          <select
+            name="fluid"
+            id="fluid"
+            value={fluid}
+            onChange={(e) => setFluid(e.target.value)}
+          >
             {fluidsList.map((fluid) => (
               <option key={fluid} value={fluid}>
                 {fluid}
@@ -77,7 +83,16 @@ export function Input() {
               <PropertySelect key={property.name} property={property} />
             ))}
           </select>
-          <input type="number" name="value1" id="value1" step="any" />
+          <input
+            type="number"
+            name="value1"
+            id="value1"
+            step="any"
+            value={value1}
+            onChange={(e) => {
+              setValue1(e.target.value);
+            }}
+          />
         </div>
 
         <div className="input-pair">
@@ -91,12 +106,19 @@ export function Input() {
               <PropertySelect key={property.name} property={property} />
             ))}
           </select>
-          <input type="number" name="value2" id="value2" step="any" />
+          <input
+            type="number"
+            name="value2"
+            id="value2"
+            step="any"
+            value={value2}
+            onChange={(e) => {
+              setValue2(e.target.value);
+            }}
+          />
         </div>
 
         <button type="submit">Submit</button>
-
-        {result && <ResultList results={result} />}
       </form>
     </div>
   );
@@ -110,27 +132,27 @@ function PropertySelect({ property }: { property: Property }) {
   );
 }
 
-function ResultComponent({ result }: { result: Result }) {
-  return (
-    <div className="result">
-      <p>
-        {result.name}:{" "}
-        {result.value.toLocaleString(undefined, {
-          minimumSignificantDigits: 3,
-          maximumSignificantDigits: 10,
-        })}{" "}
-        {result.unit}
-      </p>
-    </div>
-  );
-}
+// function ResultComponent({ result }: { result: Result }) {
+//   return (
+//     <div className="result">
+//       <p>
+//         {result.name}:{" "}
+//         {result.value.toLocaleString(undefined, {
+//           minimumSignificantDigits: 3,
+//           maximumSignificantDigits: 10,
+//         })}{" "}
+//         {result.unit}
+//       </p>
+//     </div>
+//   );
+// }
 
-function ResultList({ results }: { results: Result[] }) {
-  return (
-    <div className="result-list">
-      {results.map((result) => (
-        <ResultComponent key={result.name} result={result} />
-      ))}
-    </div>
-  );
-}
+// function ResultList({ results }: { results: Result[] }) {
+//   return (
+//     <div className="result-list">
+//       {results.map((result) => (
+//         <ResultComponent key={result.name} result={result} />
+//       ))}
+//     </div>
+//   );
+// }
