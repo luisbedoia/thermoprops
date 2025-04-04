@@ -54,9 +54,8 @@ export function Input() {
 
   return (
     <div className="card">
+      <label className="cardLabel">Fluid Properties</label>
       <form onSubmit={handleSubmit}>
-        <h1>Fluid Properties</h1>
-
         <div>
           <select
             name="fluid"

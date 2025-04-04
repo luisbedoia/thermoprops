@@ -1,10 +1,7 @@
 .result-list {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  margin-top: 1rem;
-  background: #fff;
-  border-radius: 6px;
+  gap: 1.5rem;
 }
 
 .result {

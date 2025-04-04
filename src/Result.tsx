@@ -5,7 +5,7 @@ import "./Result.css";
 
 export function ResultView() {
   const [searchParams] = useSearchParams();
-//   const _navigate = useNavigate();
+  //   const _navigate = useNavigate();
 
   const fluid = searchParams.get("fluid")!;
   const property1 = searchParams.get("property1")!;
@@ -23,6 +23,7 @@ export function ResultView() {
 
   return (
     <div className="card">
+      <label className="cardLabel">Fluid Properties Result</label>
       <ResultList results={result} />
     </div>
   );
