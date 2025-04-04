@@ -6,9 +6,9 @@ import {
   Property,
   Result,
 } from "./lib";
-import "./Calculator.css";
+import "./Input.css";
 
-export function Calculator() {
+export function Input() {
   const [fluidsList, setFluidsList] = useState<string[]>([]);
   const [property1, setProperty1] = useState(
     properties.find((p) => p.input)?.name || ""
