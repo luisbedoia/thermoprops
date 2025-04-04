@@ -15,7 +15,7 @@ export default function App() {
         window.CP = await CP();
         setLoading(false);
       } catch (error) {
-        console.error("Error loading CoolProp:", error);
+        console.error("Error loading library", error);
       }
     };
 
