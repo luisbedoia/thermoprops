@@ -116,8 +116,8 @@ function ResultComponent({ result }: { result: Result }) {
       <p>
         {result.name}:{" "}
         {result.value.toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
+          minimumSignificantDigits: 3,
+          maximumSignificantDigits: 6,
         })}{" "}
         {result.unit}
       </p>
