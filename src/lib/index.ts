@@ -182,6 +182,9 @@ export function calculateProperties(
   const result: Result[] = [];
 
   propertiesToCalculate.map((property) => {
+    if (property.name === property1 || property.name === property2) {
+      return;
+    }
     const propertyResult = calculateProperty(
       property.name,
       property1,

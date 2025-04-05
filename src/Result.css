@@ -1,23 +1,33 @@
-.result-list {
+.input-summary {
+  font-size: 0.95rem;
+  background-color: #f8f8f8;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  margin-bottom: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 0.3rem;
 }
 
-.result {
-  padding: 0.6rem;
-  border-radius: 6px;
-  transition: background 0.3s;
-  position: relative;
-}
-
-.result p {
-  margin: 0;
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
   font-size: 1rem;
-  font-weight: 500;
-  color: #333;
 }
 
-.result:hover {
-  background: #f1f1f1;
+.result-table th,
+.result-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.result-table th {
+  background-color: #f0f0f0;
+  font-weight: 600;
+}
+
+.result-table tr:hover {
+  background-color: #f9f9f9;
 }
