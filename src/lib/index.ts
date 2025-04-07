@@ -127,6 +127,14 @@ export const properties: Property[] = [
     output: true,
     trivial: false,
   },
+  {
+    name: "G",
+    unit: "J/kg",
+    description: "Mass specific Gibbs free energy",
+    input: false,
+    output: true,
+    trivial: false,
+  },
 ];
 
 export function checkValidProperty(name: string) {
