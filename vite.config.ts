@@ -3,6 +3,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
+  assetsInclude: ["**/*.wasm"],
   plugins: [
     react(),
     VitePWA({
@@ -36,4 +37,10 @@ export default defineConfig({
       },
     }),
   ],
+  optimizeDeps: {
+    exclude: ["@luisbedoia/coolprop-wasm"],
+  },
+  ssr: {
+    noExternal: ["@luisbedoia/coolprop-wasm"],
+  },
 });
