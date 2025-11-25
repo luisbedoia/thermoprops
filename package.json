@@ -13,12 +13,14 @@
   },
   "dependencies": {
     "@luisbedoia/coolprop-wasm": "^0.0.6",
+    "plotly.js-dist-min": "^3.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.5.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
+    "@types/plotly.js": "^3.0.8",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "@vite-pwa/assets-generator": "^0.2.6",
