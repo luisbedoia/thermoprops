@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import CP from "./coolprop/coolprop.js";
+import { CP } from './coolprop';
 import { AppRouter } from "./Router";
 
 export default function App() {
