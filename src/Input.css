@@ -1,52 +1,98 @@
-form {
+.settings {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1.5rem, 2vw + 1rem, 2.5rem);
+  width: 100%;
+}
+
+.settings__header h1 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.2rem, 1.5vw + 0.8rem, 1.5rem);
+}
+
+.settings__form {
+  background: var(--surface-elevated);
+  border-radius: 1rem;
+  border: 1px solid var(--border-soft);
+  padding: clamp(1.2rem, 1.5vw + 1rem, 1.8rem);
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-}
-
-.form-group {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  align-items: center;
-}
-
-label {
-  font-size: 1rem;
-  font-weight: 500;
-  color: #444;
-}
-
-select,
-input {
+  gap: 1.25rem;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05);
   width: 100%;
-  padding: 0.6rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 1rem;
-  box-sizing: border-box;
-  background: white;
-  color: #333;
-  transition: 0.2s;
-  margin-bottom: 0.5rem;
+  max-width: 28rem;
 }
 
-select:hover,
-input:hover {
-  border-color: #007acc;
-}
-
-.input-pair {
+.settings__fields {
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.field label {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.field select {
+  border-radius: 0.65rem;
+  border: 1px solid var(--border-soft);
+  padding: 0.65rem 0.75rem;
+  background: #ffffff;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.field select:focus-visible {
+  border-color: rgba(37, 99, 235, 0.4);
+  outline: 2px solid rgba(37, 99, 235, 0.25);
+  outline-offset: 1px;
+}
+
+.settings__meta dl {
+  margin: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.settings__meta dl > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.settings__meta dt {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.settings__meta dd {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.settings__actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.settings__actions button {
   width: 100%;
 }
 
-.input-pair select {
-  flex: 1.45;
-  max-width: 45%;
-}
-
-.input-pair input {
-  flex: 3;
+@media (max-width: 600px) {
+  .settings__actions button {
+    width: 100%;
+  }
 }

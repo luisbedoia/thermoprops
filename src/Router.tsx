@@ -1,16 +1,18 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { Input } from "./Input";
-import { ResultView } from "./Result";
-import { PlotView } from "./Plot";
+import { SettingsView } from "./Input";
+import { WorkspaceView } from "./Result";
+import { AppLayout } from "./layout/AppLayout";
 
 export function AppRouter() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
-        <Route path="/" element={<Navigate to="/input" />} />
-        <Route path="/input" element={<Input />} />
-        <Route path="/result" element={<ResultView />} />
-        <Route path="/plot" element={<PlotView />} />
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<Navigate to="/settings" replace />} />
+          <Route path="/settings" element={<SettingsView />} />
+          <Route path="/workspace" element={<WorkspaceView />} />
+          <Route path="*" element={<Navigate to="/settings" replace />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

@@ -1,0 +1,92 @@
+.app-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.7rem 1.1rem;
+  border-radius: 0.65rem;
+  border: 1px solid transparent;
+  background: var(--accent);
+  color: #f8fafc;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.2s ease;
+}
+
+.app-button:hover {
+  background: #1d4ed8;
+}
+
+.app-button:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.5);
+  outline-offset: 2px;
+}
+
+.app-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  background: var(--text-muted);
+}
+
+.app-button--ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-soft);
+}
+
+.app-button--ghost:hover {
+  background: var(--surface-soft);
+  color: var(--text-primary);
+}
+
+.app-button--ghost:disabled {
+  background: transparent;
+  border-color: var(--border-soft);
+  color: var(--text-muted);
+}
+
+.app-button--subtle {
+  background: var(--surface-soft);
+  color: var(--text-primary);
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+}
+
+.app-button--subtle:hover {
+  background: var(--accent-subtle);
+  border-color: var(--border-soft);
+}
+
+.app-button--subtle:disabled {
+  background: var(--surface-soft);
+  border-color: var(--border-soft);
+  color: var(--text-muted);
+}
+
+.app-button--plain {
+  background: transparent;
+  border-color: transparent;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+}
+
+.app-button--plain:hover {
+  background: transparent;
+}
+
+.app-button--plain:disabled {
+  color: var(--text-muted);
+}
+
+.app-button--sm {
+  padding: 0.5rem 0.85rem;
+  font-size: 0.88rem;
+}
+
+.app-button--full {
+  width: 100%;
+}

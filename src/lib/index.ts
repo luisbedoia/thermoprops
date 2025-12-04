@@ -14,6 +14,14 @@ export interface Result {
   value: number;
 }
 
+export interface FluidDetails {
+  aliases: string[];
+  formula?: string;
+}
+
+// Re-exportar utilidades de plots
+export * from "./plotUtils";
+
 export const properties: Property[] = [
   {
     name: "T",
@@ -147,12 +155,16 @@ export function checkValidProperty(name: string) {
 
 export function checkValidInputProperty(name: string) {
   const isValidInputProperty = properties.some(
-    (prop) => prop.name === name && prop.input
+    (prop) => prop.name === name && prop.input,
   );
 
   if (!isValidInputProperty) {
     throw new Error(`Invalid input property: ${name}.`);
   }
+}
+
+export function getPropertyDefinition(name: string) {
+  return properties.find((prop) => prop.name === name);
 }
 
 export function calculateProperty(
@@ -161,18 +173,21 @@ export function calculateProperty(
   value1: number,
   property2: string,
   value2: number,
-  fluid: string
+  fluid: string,
 ) {
   checkValidProperty(property);
   checkValidInputProperty(property1);
   checkValidInputProperty(property2);
-  return window.CP!.PropsSI!(
+  if (!window.CP?.PropsSI) {
+    throw new Error("CoolProp PropsSI API is not available.");
+  }
+  return window.CP.PropsSI(
     property,
     property1,
     value1,
     property2,
     value2,
-    fluid
+    fluid,
   );
 }
 
@@ -181,10 +196,10 @@ export function calculateProperties(
   value1: number,
   property2: string,
   value2: number,
-  fluid: string
+  fluid: string,
 ): Result[] {
   const propertiesToCalculate: Property[] = properties.filter(
-    (property) => property.output && !property.trivial
+    (property) => property.output && !property.trivial,
   );
 
   const result: Result[] = [];
@@ -199,7 +214,7 @@ export function calculateProperties(
       value1,
       property2,
       value2,
-      fluid
+      fluid,
     );
     result.push({
       name: property.name,
@@ -213,5 +228,34 @@ export function calculateProperties(
 }
 
 export async function getFluidsList(): Promise<string[]> {
-  return window.CP!.get_global_param_string!("fluids_list").split(",").sort();
+  if (!window.CP?.get_global_param_string) {
+    throw new Error("CoolProp fluids API is not available.");
+  }
+  return window.CP.get_global_param_string("fluids_list")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .sort();
+}
+
+export async function getFluidDetails(fluid: string): Promise<FluidDetails> {
+  if (!window.CP?.get_fluid_param_string) {
+    throw new Error("CoolProp fluid metadata API is not available.");
+  }
+
+  const aliasesRaw = window.CP.get_fluid_param_string(fluid, "aliases") ?? "";
+  const formulaRaw = window.CP.get_fluid_param_string(fluid, "formula") ?? "";
+
+  const aliases = aliasesRaw
+    .split(",")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0 && item.toLowerCase() !== "none");
+
+  const formula = formulaRaw.trim();
+  const hasFormula = formula.length > 0 && formula.toLowerCase() !== "none";
+
+  return {
+    aliases,
+    formula: hasFormula ? formula : undefined,
+  };
 }
