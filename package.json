@@ -4,6 +4,8 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "license": "MIT",
+  "author": "Luis Fernando Arias Bedoya",
   "scripts": {
     "dev": "vite --host",
     "build": "tsc -b && vite build --base=/thermoprops/ && cp dist/index.html dist/404.html",
