@@ -17,10 +17,15 @@ export default defineConfig({
       },
 
       manifest: {
-        name: "thermoprops",
-        short_name: "thermoprops",
-        description: "thermoprops",
+        name: "Thermoprops – Thermodynamic Properties Calculator",
+        short_name: "Thermoprops",
+        description:
+          "Free online calculator for thermodynamic properties of fluids and refrigerants using CoolProp.",
         theme_color: "#ffffff",
+        background_color: "#ffffff",
+        display: "standalone",
+        start_url: "/thermoprops/",
+        scope: "/thermoprops/",
       },
 
       workbox: {
