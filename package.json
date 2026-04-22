@@ -16,7 +16,7 @@
     "deploy": "npm run build && gh-pages -d dist"
   },
   "dependencies": {
-    "@luisbedoia/coolprop-wasm": "^0.1.3",
+    "@luisbedoia/coolprop-wasm": "^0.1.6",
     "katex": "^0.16.11",
     "plotly.js-dist-min": "^3.3.0",
     "react": "^19.0.0",

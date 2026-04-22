@@ -1,9 +1,9 @@
 export function getParameterInfo(
-  parameter: number | string,
+  parameter: number ,
   infoType: "IO" | "short" | "units" | "long",
 ): string {
   try {
-    return window.CP.get_parameter_information(parameter, infoType);
+    return window.CP.getParameterInformation(parameter, infoType);
   } catch (error) {
     console.error(`Error obteniendo info del parámetro ${parameter}:`, error);
     return "";

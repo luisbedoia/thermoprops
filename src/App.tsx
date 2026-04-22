@@ -13,7 +13,7 @@ export default function App() {
       }
 
       try {
-        window.CP = await CP();
+        window.CP = (await CP()) as typeof window.CP;
         setLoading(false);
         setError(null);
       } catch (error) {

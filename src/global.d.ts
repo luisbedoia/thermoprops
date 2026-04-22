@@ -71,7 +71,7 @@ interface PlotData {
 interface CoolPropExtendedModule extends EmbindModule {
   describeFluidPlots: (fluid: string) => FluidPlotCatalogue;
   buildPropertyPlot: (request: PlotRequest) => PlotData;
-  get_parameter_information: (
+  getGlobalParamString: (
     parameterKey: string | number,
     info: "IO" | "short" | "units" | "long",
   ) => string;

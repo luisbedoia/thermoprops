@@ -178,10 +178,10 @@ export function calculateProperty(
   checkValidProperty(property);
   checkValidInputProperty(property1);
   checkValidInputProperty(property2);
-  if (!window.CP?.PropsSI) {
+  if (!window.CP?.propsSI) {
     throw new Error("CoolProp PropsSI API is not available.");
   }
-  return window.CP.PropsSI(
+  return window.CP.propsSI(
     property,
     property1,
     value1,
@@ -228,10 +228,10 @@ export function calculateProperties(
 }
 
 export async function getFluidsList(): Promise<string[]> {
-  if (!window.CP?.get_global_param_string) {
+  if (!window.CP?.getGlobalParamString) {
     throw new Error("CoolProp fluids API is not available.");
   }
-  return window.CP.get_global_param_string("fluids_list")
+  return window.CP.getGlobalParamString("fluids_list", "long")
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean)
@@ -239,12 +239,12 @@ export async function getFluidsList(): Promise<string[]> {
 }
 
 export async function getFluidDetails(fluid: string): Promise<FluidDetails> {
-  if (!window.CP?.get_fluid_param_string) {
+  if (!window.CP?.getFluidParamString) {
     throw new Error("CoolProp fluid metadata API is not available.");
   }
 
-  const aliasesRaw = window.CP.get_fluid_param_string(fluid, "aliases") ?? "";
-  const formulaRaw = window.CP.get_fluid_param_string(fluid, "formula") ?? "";
+  const aliasesRaw = window.CP.getFluidParamString(fluid, "aliases") ?? "";
+  const formulaRaw = window.CP.getFluidParamString(fluid, "formula") ?? "";
 
   const aliases = aliasesRaw
     .split(",")
