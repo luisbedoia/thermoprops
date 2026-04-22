@@ -25,6 +25,7 @@ export function AppLayout() {
       </main>
       <footer className="app-footer">
         <span>Powered by CoolProp WASM</span>
+        <span className="app-version">{import.meta.env.VITE_APP_VERSION}</span>
       </footer>
       <Modal
         isOpen={showAbout}
