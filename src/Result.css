@@ -43,6 +43,7 @@
 }
 
 .workspace__view-toggle button {
+  flex: 1;
   background: transparent;
   border: 1px solid transparent;
   color: var(--text-muted);
@@ -74,12 +75,14 @@
 }
 
 .workspace__view-disabled-tip {
-  display: inline-flex;
+  flex: 1;
+  display: flex;
   position: relative;
   cursor: not-allowed;
 }
 
 .workspace__view-disabled-tip button {
+  flex: 1;
   pointer-events: none;
   color: var(--text-muted);
 }
@@ -93,6 +96,7 @@
   width: 220px;
   white-space: normal;
   text-align: center;
+  max-width: min(220px, 80vw);
   background: #1e293b;
   color: #f8fafc;
   font-size: 0.78rem;
@@ -581,6 +585,15 @@
     flex: 1;
   }
 
+  .workspace__view-disabled-tip {
+    flex: 1;
+  }
+
+  .workspace__view-disabled-tip::after {
+    left: 0;
+    transform: none;
+  }
+
   .workspace__actions button {
     width: 100%;
   }
@@ -596,5 +609,12 @@
 
   .state-quick__remove {
     width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .workspace__view-disabled-tip::after {
+    left: 0;
+    transform: none;
   }
 }
