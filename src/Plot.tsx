@@ -3,6 +3,7 @@ import "./Plot.css";
 import {
   buildAxisTitle,
   buildIsolineLabel,
+  getParameterInfo,
   scaleToPlotlyType,
   isSaturationCurve,
   getSaturationLabel,
@@ -221,6 +222,17 @@ export function ThermoPlot({
 
       try {
         // Construir la solicitud de plot
+        let isolineRange = currentIsolineOption.range;
+        if (getParameterInfo(currentIsolineParameter, "short") === "T") {
+          const tCrit = window.CP.propsSI("Tcrit", "", 0, "", 0, fluid);
+          if (isFinite(tCrit) && tCrit > isolineRange.min) {
+            isolineRange = {
+              min: isolineRange.min,
+              max: Math.min(isolineRange.max, tCrit * 0.99),
+            };
+          }
+        }
+
         const request: PlotRequest = {
           fluid,
           plotId: currentPlotId,
@@ -230,7 +242,7 @@ export function ThermoPlot({
               valueCount: isolineCount,
               points: isolinePoints,
               useCustomRange: true,
-              customRange: currentIsolineOption.range,
+              customRange: isolineRange,
             },
           ],
           includeSaturationCurves: includeSaturation,
