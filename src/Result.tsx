@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { calculateProperties, properties } from "./lib";
+import { calculateProperties, fluidHasPlots, properties } from "./lib";
 import { ThermoPlot, PlotPoint } from "./Plot";
 import { Button } from "./components/Button";
 import { StateList, StateQuickActions } from "./workspace/StateList";
@@ -104,6 +104,16 @@ export function WorkspaceView() {
   const fluid = searchParams.get("fluid") ?? "";
   const units = searchParams.get("units") ?? "si";
 
+  const hasPlots = useMemo(() => fluidHasPlots(fluid), [fluid]);
+
+  const [plotFailed, setPlotFailed] = useState(false);
+
+  useEffect(() => {
+    setPlotFailed(false);
+  }, [fluid]);
+
+  const canViewGraph = hasPlots && !plotFailed;
+
   const [plotId, setPlotId] = useState<string>(
     searchParams.get("plot") || PLOT_DEFAULT,
   );
@@ -115,6 +125,8 @@ export function WorkspaceView() {
     const param = searchParams.get("view");
     return param === "graph" || param === "table" ? param : VIEW_DEFAULT;
   });
+
+  const effectiveViewMode: WorkspaceViewMode = canViewGraph ? viewMode : "table";
 
   const [states, setStates] = useState<StateDefinition[]>(() =>
     decodeStates(searchParams.get("states")).map(normalizeStateDefinition),
@@ -150,7 +162,7 @@ export function WorkspaceView() {
     } else {
       next.delete("states");
     }
-    next.set("view", viewMode);
+    next.set("view", effectiveViewMode);
     next.set("plot", plotId);
     next.set("isoline", String(isolineParameter));
     next.set("units", units);
@@ -168,6 +180,8 @@ export function WorkspaceView() {
     units,
     fluid,
     viewMode,
+    canViewGraph,
+    effectiveViewMode,
     searchParams,
     setSearchParams,
   ]);
@@ -422,18 +436,39 @@ export function WorkspaceView() {
             role="group"
             aria-label="Workspace content view"
           >
+            {canViewGraph ? (
+              <Button
+                variant="plain"
+                className={effectiveViewMode === "graph" ? "is-active" : ""}
+                aria-pressed={effectiveViewMode === "graph"}
+                onClick={() => handleViewModeChange("graph")}
+              >
+                Chart
+              </Button>
+            ) : (
+              <span
+                className="workspace__view-disabled-tip"
+                data-tooltip={
+                  hasPlots
+                    ? "The chart could not be generated for this fluid. Only the table view is available."
+                    : "Charts are not available for this fluid. Use the table to view thermodynamic properties."
+                }
+              >
+                <Button
+                  variant="plain"
+                  className="is-disabled"
+                  aria-pressed={false}
+                  aria-disabled="true"
+                  tabIndex={-1}
+                >
+                  Chart
+                </Button>
+              </span>
+            )}
             <Button
               variant="plain"
-              className={viewMode === "graph" ? "is-active" : ""}
-              aria-pressed={viewMode === "graph"}
-              onClick={() => handleViewModeChange("graph")}
-            >
-              Chart
-            </Button>
-            <Button
-              variant="plain"
-              className={viewMode === "table" ? "is-active" : ""}
-              aria-pressed={viewMode === "table"}
+              className={effectiveViewMode === "table" ? "is-active" : ""}
+              aria-pressed={effectiveViewMode === "table"}
               onClick={() => handleViewModeChange("table")}
             >
               Table
@@ -443,7 +478,7 @@ export function WorkspaceView() {
       </header>
 
       <div className="workspace__content">
-        {viewMode === "graph" ? (
+        {effectiveViewMode === "graph" ? (
           <div className="workspace__panel workspace__panel--graph">
             <ThermoPlot
               fluid={fluid}
@@ -451,6 +486,7 @@ export function WorkspaceView() {
               isolineParameter={isolineParameter}
               onPlotChange={handlePlotChange}
               onIsolineParameterChange={handleIsolineParameterChange}
+              onPlotError={setPlotFailed}
               points={plotPoints}
             />
             <StateQuickActions

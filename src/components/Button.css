@@ -80,6 +80,8 @@
 
 .app-button--plain:disabled {
   color: var(--text-muted);
+  opacity: 1;
+  background: transparent;
 }
 
 .app-button--sm {

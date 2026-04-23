@@ -227,6 +227,20 @@ export function calculateProperties(
   return result;
 }
 
+export function fluidHasPlots(fluid: string): boolean {
+  if (!fluid || !window.CP?.describeFluidPlots) {
+    return false;
+  }
+  try {
+    const catalogue = window.CP.describeFluidPlots(fluid) as {
+      plots?: unknown[];
+    } | null;
+    return Array.isArray(catalogue?.plots) && catalogue.plots.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 export async function getFluidsList(): Promise<string[]> {
   if (!window.CP?.getGlobalParamString) {
     throw new Error("CoolProp fluids API is not available.");

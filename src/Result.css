@@ -73,6 +73,43 @@
   outline-offset: 2px;
 }
 
+.workspace__view-disabled-tip {
+  display: inline-flex;
+  position: relative;
+  cursor: not-allowed;
+}
+
+.workspace__view-disabled-tip button {
+  pointer-events: none;
+  color: var(--text-muted);
+}
+
+.workspace__view-disabled-tip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220px;
+  white-space: normal;
+  text-align: center;
+  background: #1e293b;
+  color: #f8fafc;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.45rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 100;
+}
+
+.workspace__view-disabled-tip:hover::after {
+  opacity: 1;
+}
+
 .workspace__content {
   display: grid;
   gap: clamp(1.5rem, 2vw + 1rem, 2.2rem);

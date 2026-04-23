@@ -59,6 +59,7 @@ type ThermoPlotProps = {
   fluid: string;
   onPlotChange?: (plotId: string) => void;
   onIsolineParameterChange?: (parameter: number) => void;
+  onPlotError?: (hasError: boolean) => void;
   points: PlotPoint[];
   // Configuración de la gráfica
   plotId?: string;
@@ -72,6 +73,7 @@ export function ThermoPlot({
   fluid,
   onPlotChange,
   onIsolineParameterChange,
+  onPlotError,
   points,
   plotId: selectedPlotId,
   isolineParameter: selectedIsolineParameter,
@@ -446,6 +448,7 @@ export function ThermoPlot({
 
         setStatus("ready");
         setError(null);
+        onPlotError?.(false);
       } catch (err) {
         console.error("Error generating plot", err);
         if (!isMounted) {
@@ -453,6 +456,7 @@ export function ThermoPlot({
         }
         setStatus("error");
         setError("The plot could not be generated for the current settings.");
+        onPlotError?.(true);
       }
     };
 
