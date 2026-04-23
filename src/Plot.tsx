@@ -180,17 +180,6 @@ export function ThermoPlot({
     };
 
     let plotlyInstance: PlotlyLike | null = null;
-    const targetElement = containerRef.current;
-    const wrapperElement = wrapperRef.current;
-
-    if (!targetElement || !wrapperElement) {
-      setStatus("error");
-      setError("Plot container element was not found.");
-      return () => {
-        /* noop */
-      };
-    }
-
     if (!fluid) {
       setStatus("error");
       setError("Select a fluid in settings to render a chart.");
@@ -202,6 +191,17 @@ export function ThermoPlot({
     if (!window.CP?.buildPropertyPlot || !window.CP?.describeFluidPlots) {
       setStatus("error");
       setError("CoolProp plot API is not available.");
+      return () => {
+        /* noop */
+      };
+    }
+
+    const targetElement = containerRef.current;
+    const wrapperElement = wrapperRef.current;
+
+    if (!targetElement || !wrapperElement) {
+      setStatus("error");
+      setError("Plot container element was not found.");
       return () => {
         /* noop */
       };
