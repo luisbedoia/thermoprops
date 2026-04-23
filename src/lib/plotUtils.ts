@@ -60,6 +60,46 @@ export function getSaturationLabel(value: number): string {
 }
 
 /**
+ * Calcula el rango [min, max] de un parámetro dentro de la campana de saturación,
+ * muestreando ambas curvas de saturación (Q=0 y Q=1) desde Ttriple hasta Tcrit.
+ * Recibe el nombre corto del parámetro (e.g. "T", "Hmass", "S") para usarlo con propsSI.
+ */
+export function computeSaturationDomeRange(
+  parameterShort: string,
+  fluid: string,
+): { min: number; max: number } | null {
+  try {
+    // Las propiedades triviales no necesitan estado — strings vacíos funcionan en CoolProp
+    const tCrit = window.CP.propsSI("Tcrit", "", 0, "", 0, fluid);
+    const tTriple = window.CP.propsSI("Ttriple", "", 0, "", 0, fluid);
+    if (!isFinite(tCrit) || !isFinite(tTriple)) return null;
+
+    // T es trivialmente acotada y no puede usarse como salida cuando T es la entrada
+    if (parameterShort === "T") {
+      return { min: tTriple, max: tCrit };
+    }
+
+    const tStart = tTriple * 1.001;
+    const tEnd = tCrit * 0.999;
+    const steps = 15;
+    const values: number[] = [];
+
+    for (let i = 0; i <= steps; i++) {
+      const t = tStart + ((tEnd - tStart) * i) / steps;
+      const liq = window.CP.propsSI(parameterShort, "Q", 0, "T", t, fluid);
+      const vap = window.CP.propsSI(parameterShort, "Q", 1, "T", t, fluid);
+      if (isFinite(liq)) values.push(liq);
+      if (isFinite(vap)) values.push(vap);
+    }
+
+    if (values.length < 2) return null;
+    return { min: Math.min(...values), max: Math.max(...values) };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Genera valores equiespaciados en un rango
  */
 export function generateEvenlySpacedValues(
