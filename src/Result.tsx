@@ -1,23 +1,24 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { calculateProperties, fluidHasPlots, properties } from "./lib";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import { calculateProperties, properties } from "./lib";
 import { normalizeNumericInput } from "./lib/normalizeNumericInput";
 import { ThermoPlot } from "./Plot";
 import type { PlotPoint } from "./Plot";
 import { Button } from "./components/Button";
 import { StateList, StateQuickActions } from "./workspace/StateList";
 import { StateModal } from "./workspace/StateModal";
-import type { ComputedState, StateDefinition } from "./workspace/types";
-import {
-  createStateLabel,
-  decodeStates,
-  encodeStates,
-  generateId,
-  getPlotPoints,
-  normalizeStateDefinition,
-  statesEqual,
-} from "./workspace/utils";
+import { createStateLabel, generateId, getPlotPoints, normalizeStateDefinition } from "./workspace/utils";
+import { useComputedStates, useWorkspaceUrlParams } from "./workspace/hooks";
+import type { WorkspaceViewMode } from "./workspace/hooks";
 import "./Result.css";
+
+const UNIT_LABELS: Record<string, string> = {
+  si: "SI",
+  imperial: "Imperial",
+};
+
+const numericProperties = properties.filter((prop) => prop.input);
 
 type FormState = {
   property1: string;
@@ -26,66 +27,117 @@ type FormState = {
   value2: string;
 };
 
-const UNIT_LABELS: Record<string, string> = {
-  si: "SI",
-  imperial: "Imperial",
+// ── WorkspaceHeader ──────────────────────────────────────────────────────────
+
+type WorkspaceHeaderProps = {
+  fluid: string;
+  canViewGraph: boolean;
+  hasPlots: boolean;
+  effectiveViewMode: WorkspaceViewMode;
+  unitLabel: string;
+  statesSummary: string;
+  onViewModeChange: (mode: WorkspaceViewMode) => void;
+  onNavigateBack: () => void;
 };
 
-const PLOT_DEFAULT = "ph";
-const ISOLINE_PARAM_DEFAULT = 19; // Temperatura (T)
-type WorkspaceViewMode = "graph" | "table";
-const VIEW_DEFAULT: WorkspaceViewMode = "graph";
+function WorkspaceHeader({
+  fluid,
+  canViewGraph,
+  hasPlots,
+  effectiveViewMode,
+  unitLabel,
+  statesSummary,
+  onViewModeChange,
+  onNavigateBack,
+}: WorkspaceHeaderProps) {
+  const headerSubtitle = unitLabel
+    ? `${unitLabel} units · ${statesSummary}`
+    : statesSummary;
 
-const numericProperties = properties.filter((prop) => prop.input);
+  return (
+    <header className="workspace__header">
+      <div className="workspace__title">
+        <h1>{fluid || "Select a fluid in settings"}</h1>
+        <p>{headerSubtitle}</p>
+      </div>
+      <div className="workspace__actions">
+        <Button variant="ghost" size="sm" onClick={onNavigateBack}>
+          Back to settings
+        </Button>
+        <div
+          className="workspace__view-toggle"
+          role="group"
+          aria-label="Workspace content view"
+        >
+          {canViewGraph ? (
+            <Button
+              variant="plain"
+              className={effectiveViewMode === "graph" ? "is-active" : ""}
+              aria-pressed={effectiveViewMode === "graph"}
+              onClick={() => onViewModeChange("graph")}
+            >
+              Chart
+            </Button>
+          ) : (
+            <span
+              className="workspace__view-disabled-tip"
+              data-tooltip={
+                hasPlots
+                  ? "The chart could not be generated for this fluid. Only the table view is available."
+                  : "Charts are not available for this fluid. Use the table to view thermodynamic properties."
+              }
+            >
+              <Button
+                variant="plain"
+                className="is-disabled"
+                aria-pressed={false}
+                aria-disabled="true"
+                tabIndex={-1}
+              >
+                Chart
+              </Button>
+            </span>
+          )}
+          <Button
+            variant="plain"
+            className={effectiveViewMode === "table" ? "is-active" : ""}
+            aria-pressed={effectiveViewMode === "table"}
+            onClick={() => onViewModeChange("table")}
+          >
+            Table
+          </Button>
+        </div>
+      </div>
+    </header>
+  );
+}
 
-
+// ── WorkspaceView ────────────────────────────────────────────────────────────
 
 export function WorkspaceView() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const fluid = searchParams.get("fluid") ?? "";
-  const units = searchParams.get("units") ?? "si";
-
-  const hasPlots = useMemo(() => fluidHasPlots(fluid), [fluid]);
 
   const [plotFailed, setPlotFailed] = useState(false);
+
+  const {
+    fluid,
+    units,
+    plotId,
+    setPlotId,
+    isolineParameter,
+    setIsolineParameter,
+    viewMode,
+    setViewMode,
+    states,
+    setStates,
+    hasPlots,
+    canViewGraph,
+    effectiveViewMode,
+  } = useWorkspaceUrlParams({ plotFailed });
 
   useEffect(() => {
     setPlotFailed(false);
   }, [fluid]);
-
-  const canViewGraph = hasPlots && !plotFailed;
-
-  const [plotId, setPlotId] = useState<string>(
-    searchParams.get("plot") || PLOT_DEFAULT,
-  );
-  const [isolineParameter, setIsolineParameter] = useState<number>(() => {
-    const param = searchParams.get("isoline");
-    return param ? Number(param) : ISOLINE_PARAM_DEFAULT;
-  });
-  const [viewMode, setViewMode] = useState<WorkspaceViewMode>(() => {
-    const param = searchParams.get("view");
-    return param === "graph" || param === "table" ? param : VIEW_DEFAULT;
-  });
-
-  const effectiveViewMode: WorkspaceViewMode = canViewGraph ? viewMode : "table";
-
-  const [states, setStates] = useState<StateDefinition[]>(() =>
-    decodeStates(searchParams.get("states")).map(normalizeStateDefinition),
-  );
-  const [formState, setFormState] = useState<FormState>(() => {
-    const primary = numericProperties[0]?.name ?? "T";
-    const secondary = numericProperties[1]?.name ?? "P";
-    return {
-      property1: primary,
-      property2: secondary,
-      value1: "",
-      value2: "",
-    };
-  });
-  const [formError, setFormError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const firstValueRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!fluid) {
@@ -93,105 +145,33 @@ export function WorkspaceView() {
     }
   }, [fluid, navigate]);
 
-  useEffect(() => {
-    if (!fluid) {
-      return;
-    }
-
-    const next = new URLSearchParams(searchParams);
-    if (states.length) {
-      next.set("states", encodeStates(states));
-    } else {
-      next.delete("states");
-    }
-    next.set("view", effectiveViewMode);
-    next.set("plot", plotId);
-    next.set("isoline", String(isolineParameter));
-    next.set("units", units);
-    next.set("fluid", fluid);
-
-    const currentParams = searchParams.toString();
-    const nextParams = next.toString();
-    if (nextParams !== currentParams) {
-      setSearchParams(next, { replace: true });
-    }
-  }, [
-    states,
-    plotId,
-    isolineParameter,
-    units,
-    fluid,
-    viewMode,
-    canViewGraph,
-    effectiveViewMode,
-    searchParams,
-    setSearchParams,
-  ]);
-
-  useEffect(() => {
-    const rawView = searchParams.get("view");
-    const nextView =
-      rawView === "graph" || rawView === "table" ? rawView : VIEW_DEFAULT;
-    setViewMode((prev) => (prev === nextView ? prev : nextView));
-
-    const currentPlot = searchParams.get("plot") || PLOT_DEFAULT;
-    setPlotId((prev) => (prev === currentPlot ? prev : currentPlot));
-
-    const currentIsolineParam = searchParams.get("isoline");
-    const parsedParam = currentIsolineParam
-      ? Number(currentIsolineParam)
-      : ISOLINE_PARAM_DEFAULT;
-    setIsolineParameter((prev) => (prev === parsedParam ? prev : parsedParam));
-
-    const decodedStates = decodeStates(searchParams.get("states")).map(
-      normalizeStateDefinition,
-    );
-    setStates((prev) =>
-      statesEqual(prev, decodedStates) ? prev : decodedStates,
-    );
-  }, [searchParams]);
-
-  const computedStates: ComputedState[] = useMemo(() => {
-    return states.map((definition) => {
-      try {
-        const value1 = Number(definition.value1);
-        const value2 = Number(definition.value2);
-        if (!Number.isFinite(value1) || !Number.isFinite(value2)) {
-          return { definition, results: [], error: "Values must be numeric." };
-        }
-        const results = calculateProperties(
-          definition.property1,
-          value1,
-          definition.property2,
-          value2,
-          fluid,
-        );
-        return { definition, results };
-      } catch (error) {
-        console.error("Unable to calculate state", definition, error);
-        return {
-          definition,
-          results: [],
-          error: "Unable to evaluate this state.",
-        };
-      }
-    });
-  }, [states, fluid]);
+  const computedStates = useComputedStates(states, fluid);
 
   const plotPoints: PlotPoint[] = useMemo(
     () => getPlotPoints(computedStates, plotId),
     [computedStates, plotId],
   );
 
-  const handleOpenModal = () => {
+  // ── Modal / form state ─────────────────────────────────────────────────────
+
+  const [formState, setFormState] = useState<FormState>(() => {
+    const primary = numericProperties[0]?.name ?? "T";
+    const secondary = numericProperties[1]?.name ?? "P";
+    return { property1: primary, property2: secondary, value1: "", value2: "" };
+  });
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const firstValueRef = useRef<HTMLInputElement | null>(null);
+
+  const handleOpenModal = useCallback(() => {
     setFormError(null);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setFormError(null);
     setIsModalOpen(false);
-  };
+  }, []);
 
   const handleStateSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -248,72 +228,63 @@ export function WorkspaceView() {
     setIsModalOpen(false);
   };
 
-  const handleRemoveState = (id: string) => {
-    setStates((prev) => prev.filter((item) => item.id !== id));
-  };
+  // ── State list handlers ────────────────────────────────────────────────────
 
-  const handleClearAll = () => {
-    setStates([]);
-  };
+  const handleRemoveState = useCallback(
+    (id: string) => setStates((prev) => prev.filter((item) => item.id !== id)),
+    [setStates],
+  );
 
-  const handleViewModeChange = (mode: WorkspaceViewMode) => {
-    if (mode !== viewMode) {
-      setViewMode(mode);
-    }
-  };
+  const handleClearAll = useCallback(() => setStates([]), [setStates]);
 
-  const handlePlotChange = (value: string) => {
-    setPlotId(value);
-  };
+  // ── View / plot handlers ───────────────────────────────────────────────────
 
-  const handleIsolineParameterChange = (value: number) => {
-    setIsolineParameter(value);
-  };
+  const handleViewModeChange = useCallback(
+    (mode: WorkspaceViewMode) => {
+      if (mode !== viewMode) setViewMode(mode);
+    },
+    [viewMode, setViewMode],
+  );
 
-  const handleFormChange = (field: keyof FormState, value: string) => {
-    setFormState((prev) => {
-      if (field === "property1") {
-        if (value === prev.property2) {
-          const fallback = numericProperties.find(
-            (prop) => prop.name !== value,
-          );
-          return {
-            ...prev,
-            property1: value,
-            property2: fallback?.name ?? prev.property2,
-          };
+  const handleNavigateBack = useCallback(() => {
+    const params = new URLSearchParams();
+    params.set("fluid", fluid);
+    params.set("units", units);
+    navigate({ pathname: "/settings", search: `?${params.toString()}` });
+  }, [navigate, fluid, units]);
+
+  // ── Form property handlers ─────────────────────────────────────────────────
+
+  const handleFormChange = useCallback(
+    (field: keyof FormState, value: string) => {
+      setFormState((prev) => {
+        if (field === "property1") {
+          if (value === prev.property2) {
+            const fallback = numericProperties.find((prop) => prop.name !== value);
+            return {
+              ...prev,
+              property1: value,
+              property2: fallback?.name ?? prev.property2,
+            };
+          }
+          return { ...prev, property1: value };
         }
-        return { ...prev, property1: value };
-      }
-
-      if (field === "property2") {
-        if (value === prev.property1) {
-          const fallback = numericProperties.find(
-            (prop) => prop.name !== value,
-          );
-          return {
-            ...prev,
-            property1: fallback?.name ?? prev.property1,
-            property2: value,
-          };
+        if (field === "property2") {
+          if (value === prev.property1) {
+            const fallback = numericProperties.find((prop) => prop.name !== value);
+            return {
+              ...prev,
+              property1: fallback?.name ?? prev.property1,
+              property2: value,
+            };
+          }
+          return { ...prev, property2: value };
         }
-        return { ...prev, property2: value };
-      }
-
-      return { ...prev, [field]: value };
-    });
-  };
-
-  const handleNavigateBack = () => {
-    const params = new URLSearchParams(searchParams);
-    params.delete("plot");
-    params.delete("isoline");
-    const search = params.toString();
-    navigate({
-      pathname: "/settings",
-      search: search ? `?${search}` : "",
-    });
-  };
+        return { ...prev, [field]: value };
+      });
+    },
+    [],
+  );
 
   const propertyOptions1 = useMemo(
     () => numericProperties.filter((prop) => prop.name !== formState.property2),
@@ -325,70 +296,27 @@ export function WorkspaceView() {
     [formState.property1],
   );
 
+  // ── Derived display values ─────────────────────────────────────────────────
+
   const unitLabel = UNIT_LABELS[units] ?? units.toUpperCase();
   const statesSummary = states.length
     ? `${states.length} state${states.length > 1 ? "s" : ""} tracked`
     : "No states tracked yet";
-  const headerSubtitle = unitLabel
-    ? `${unitLabel} units · ${statesSummary}`
-    : statesSummary;
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <section className="workspace">
-      <header className="workspace__header">
-        <div className="workspace__title">
-          <h1>{fluid || "Select a fluid in settings"}</h1>
-          <p>{headerSubtitle}</p>
-        </div>
-        <div className="workspace__actions">
-          <Button variant="ghost" size="sm" onClick={handleNavigateBack}>
-            Back to settings
-          </Button>
-          <div
-            className="workspace__view-toggle"
-            role="group"
-            aria-label="Workspace content view"
-          >
-            {canViewGraph ? (
-              <Button
-                variant="plain"
-                className={effectiveViewMode === "graph" ? "is-active" : ""}
-                aria-pressed={effectiveViewMode === "graph"}
-                onClick={() => handleViewModeChange("graph")}
-              >
-                Chart
-              </Button>
-            ) : (
-              <span
-                className="workspace__view-disabled-tip"
-                data-tooltip={
-                  hasPlots
-                    ? "The chart could not be generated for this fluid. Only the table view is available."
-                    : "Charts are not available for this fluid. Use the table to view thermodynamic properties."
-                }
-              >
-                <Button
-                  variant="plain"
-                  className="is-disabled"
-                  aria-pressed={false}
-                  aria-disabled="true"
-                  tabIndex={-1}
-                >
-                  Chart
-                </Button>
-              </span>
-            )}
-            <Button
-              variant="plain"
-              className={effectiveViewMode === "table" ? "is-active" : ""}
-              aria-pressed={effectiveViewMode === "table"}
-              onClick={() => handleViewModeChange("table")}
-            >
-              Table
-            </Button>
-          </div>
-        </div>
-      </header>
+      <WorkspaceHeader
+        fluid={fluid}
+        canViewGraph={canViewGraph}
+        hasPlots={hasPlots}
+        effectiveViewMode={effectiveViewMode}
+        unitLabel={unitLabel}
+        statesSummary={statesSummary}
+        onViewModeChange={handleViewModeChange}
+        onNavigateBack={handleNavigateBack}
+      />
 
       <div className="workspace__content">
         {effectiveViewMode === "graph" ? (
@@ -397,8 +325,8 @@ export function WorkspaceView() {
               fluid={fluid}
               plotId={plotId}
               isolineParameter={isolineParameter}
-              onPlotChange={handlePlotChange}
-              onIsolineParameterChange={handleIsolineParameterChange}
+              onPlotChange={setPlotId}
+              onIsolineParameterChange={setIsolineParameter}
               onPlotError={setPlotFailed}
               points={plotPoints}
             />
