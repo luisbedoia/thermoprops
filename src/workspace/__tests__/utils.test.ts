@@ -5,6 +5,8 @@ import {
   encodeStates,
   generateId,
   getPropertyValue,
+  getPlotPoints,
+  normalizeStateDefinition,
   statesEqual,
 } from "../utils";
 import type { StateDefinition } from "../types";
@@ -172,5 +174,115 @@ describe("statesEqual", () => {
     expect(
       statesEqual([makeState({ value2: "101325" })], [makeState({ value2: "200000" })]),
     ).toBe(false);
+  });
+});
+
+describe("normalizeStateDefinition", () => {
+  it("returns the same object reference when values are already normalized", () => {
+    const def = makeState({ value1: "300", value2: "101325" });
+    expect(normalizeStateDefinition(def)).toBe(def);
+  });
+
+  it("converts comma decimal separator in value1", () => {
+    const def = makeState({ value1: "300,5", value2: "101325" });
+    const result = normalizeStateDefinition(def);
+    expect(result.value1).toBe("300.5");
+    expect(result.value2).toBe("101325");
+  });
+
+  it("converts comma decimal separator in value2", () => {
+    const def = makeState({ value1: "300", value2: "101,325" });
+    const result = normalizeStateDefinition(def);
+    expect(result.value1).toBe("300");
+    expect(result.value2).toBe("101.325");
+  });
+
+  it("preserves id, label, and property fields when normalizing", () => {
+    const def = makeState({ value1: "1.000,5", value2: "200" });
+    const result = normalizeStateDefinition(def);
+    expect(result.id).toBe(def.id);
+    expect(result.label).toBe(def.label);
+    expect(result.property1).toBe(def.property1);
+    expect(result.property2).toBe(def.property2);
+  });
+
+  it("returns a new object when normalization changes a value", () => {
+    const def = makeState({ value1: "300,5" });
+    expect(normalizeStateDefinition(def)).not.toBe(def);
+  });
+});
+
+describe("getPlotPoints", () => {
+  const results = [
+    { name: "H", unit: "J/kg", description: "Enthalpy", value: 400000 },
+    { name: "S", unit: "J/(kg*K)", description: "Entropy", value: 1800 },
+    { name: "D", unit: "kg/m^3", description: "Density", value: 1.2 },
+  ];
+
+  const makeComputed = (
+    overrides: Partial<StateDefinition> = {},
+    error?: string,
+  ) => ({
+    definition: makeState(overrides),
+    results: error ? [] : results,
+    error,
+  });
+
+  it("returns empty array for unknown plotId", () => {
+    const states = [makeComputed()];
+    expect(getPlotPoints(states, "unknown")).toEqual([]);
+  });
+
+  it("returns empty array when computedStates is empty", () => {
+    expect(getPlotPoints([], "ph")).toEqual([]);
+  });
+
+  it("maps ph plot axes (x=H, y=P) from definition values", () => {
+    const state = makeComputed({ property1: "H", value1: "400000", property2: "P", value2: "101325" });
+    const [point] = getPlotPoints([state], "ph");
+    expect(point.x).toBe(400000);
+    expect(point.y).toBe(101325);
+  });
+
+  it("maps ph plot axes (x=H) from results when H is a computed property", () => {
+    const state = makeComputed({ property1: "T", value1: "300", property2: "P", value2: "101325" });
+    const [point] = getPlotPoints([state], "ph");
+    expect(point.x).toBe(400000); // H from results
+    expect(point.y).toBe(101325); // P from definition
+  });
+
+  it("maps ts plot axes (x=S, y=T)", () => {
+    const state = makeComputed({ property1: "T", value1: "300", property2: "P", value2: "101325" });
+    const [point] = getPlotPoints([state], "ts");
+    expect(point.x).toBe(1800);  // S from results
+    expect(point.y).toBe(300);   // T from definition
+  });
+
+  it("excludes states that have errors", () => {
+    const errored = makeComputed({}, "Unable to evaluate this state.");
+    expect(getPlotPoints([errored], "ph")).toEqual([]);
+  });
+
+  it("excludes states where an axis property cannot be resolved", () => {
+    // rh plot needs H and D — D is in results but H must come from definition or results
+    const state = makeComputed({ property1: "T", value1: "300", property2: "P", value2: "101325" });
+    // H is in results (400000), D is in results (1.2) → should be included
+    const points = getPlotPoints([state], "rh");
+    expect(points).toHaveLength(1);
+  });
+
+  it("carries id and label onto the plot point", () => {
+    const state = makeComputed({ id: "abc", label: "State A" });
+    const [point] = getPlotPoints([state], "ts");
+    expect(point.id).toBe("abc");
+    expect(point.label).toBe("State A");
+  });
+
+  it("handles multiple states, excluding errored ones", () => {
+    const good = makeComputed({ id: "g" });
+    const bad = makeComputed({ id: "b" }, "error");
+    const points = getPlotPoints([good, bad], "ph");
+    expect(points).toHaveLength(1);
+    expect(points[0].id).toBe("g");
   });
 });

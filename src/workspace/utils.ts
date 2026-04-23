@@ -1,5 +1,7 @@
 import type { Result } from "../lib";
-import type { StateDefinition } from "./types";
+import type { PlotPoint } from "../lib/plotUtils";
+import { normalizeNumericInput } from "../lib/normalizeNumericInput";
+import type { ComputedState, StateDefinition } from "./types";
 
 export function decodeStates(encoded: string | null): StateDefinition[] {
   if (!encoded) {
@@ -79,4 +81,49 @@ export function statesEqual(a: StateDefinition[], b: StateDefinition[]) {
     }
   }
   return true;
+}
+
+export function normalizeStateDefinition(
+  definition: StateDefinition,
+): StateDefinition {
+  const normalizedValue1 = normalizeNumericInput(definition.value1);
+  const normalizedValue2 = normalizeNumericInput(definition.value2);
+
+  if (
+    normalizedValue1 === definition.value1 &&
+    normalizedValue2 === definition.value2
+  ) {
+    return definition;
+  }
+
+  return {
+    ...definition,
+    value1: normalizedValue1,
+    value2: normalizedValue2,
+  };
+}
+
+const PLOT_AXES: Record<string, { x: string; y: string }> = {
+  ph: { x: "H", y: "P" },
+  ts: { x: "S", y: "T" },
+  pt: { x: "T", y: "P" },
+  rh: { x: "H", y: "D" },
+};
+
+export function getPlotPoints(
+  computedStates: ComputedState[],
+  plotId: string,
+): PlotPoint[] {
+  const axes = PLOT_AXES[plotId];
+  if (!axes) return [];
+
+  return computedStates
+    .map((state) => {
+      if (state.error) return null;
+      const x = getPropertyValue(state.definition, state.results, axes.x);
+      const y = getPropertyValue(state.definition, state.results, axes.y);
+      if (x == null || y == null) return null;
+      return { id: state.definition.id, label: state.definition.label, x, y };
+    })
+    .filter((point): point is PlotPoint => Boolean(point));
 }

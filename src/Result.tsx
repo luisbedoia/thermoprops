@@ -2,7 +2,8 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { calculateProperties, fluidHasPlots, properties } from "./lib";
 import { normalizeNumericInput } from "./lib/normalizeNumericInput";
-import { ThermoPlot, PlotPoint } from "./Plot";
+import { ThermoPlot } from "./Plot";
+import type { PlotPoint } from "./Plot";
 import { Button } from "./components/Button";
 import { StateList, StateQuickActions } from "./workspace/StateList";
 import { StateModal } from "./workspace/StateModal";
@@ -12,7 +13,8 @@ import {
   decodeStates,
   encodeStates,
   generateId,
-  getPropertyValue,
+  getPlotPoints,
+  normalizeStateDefinition,
   statesEqual,
 } from "./workspace/utils";
 import "./Result.css";
@@ -37,25 +39,6 @@ const VIEW_DEFAULT: WorkspaceViewMode = "graph";
 const numericProperties = properties.filter((prop) => prop.input);
 
 
-function normalizeStateDefinition(
-  definition: StateDefinition,
-): StateDefinition {
-  const normalizedValue1 = normalizeNumericInput(definition.value1);
-  const normalizedValue2 = normalizeNumericInput(definition.value2);
-
-  if (
-    normalizedValue1 === definition.value1 &&
-    normalizedValue2 === definition.value2
-  ) {
-    return definition;
-  }
-
-  return {
-    ...definition,
-    value1: normalizedValue1,
-    value2: normalizedValue2,
-  };
-}
 
 export function WorkspaceView() {
   const navigate = useNavigate();
@@ -195,39 +178,10 @@ export function WorkspaceView() {
     });
   }, [states, fluid]);
 
-  const plotPoints: PlotPoint[] = useMemo(() => {
-    // Obtener definición de ejes dinámicamente del catálogo
-    // Por ahora, mapeo manual de plotId a propiedades (se puede mejorar con catálogo)
-    const axesMap: Record<string, { x: string; y: string }> = {
-      ph: { x: "H", y: "P" },
-      ts: { x: "S", y: "T" },
-      pt: { x: "T", y: "P" },
-      rh: { x: "H", y: "D" },
-    };
-
-    const axes = axesMap[plotId];
-    if (!axes) {
-      return [];
-    }
-    return computedStates
-      .map((state) => {
-        if (state.error) {
-          return null;
-        }
-        const x = getPropertyValue(state.definition, state.results, axes.x);
-        const y = getPropertyValue(state.definition, state.results, axes.y);
-        if (x == null || y == null) {
-          return null;
-        }
-        return {
-          id: state.definition.id,
-          label: state.definition.label,
-          x,
-          y,
-        };
-      })
-      .filter((point): point is PlotPoint => Boolean(point));
-  }, [computedStates, plotId]);
+  const plotPoints: PlotPoint[] = useMemo(
+    () => getPlotPoints(computedStates, plotId),
+    [computedStates, plotId],
+  );
 
   const handleOpenModal = () => {
     setFormError(null);
