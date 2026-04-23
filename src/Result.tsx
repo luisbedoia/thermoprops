@@ -325,6 +325,10 @@ export function WorkspaceView() {
     setStates((prev) => prev.filter((item) => item.id !== id));
   };
 
+  const handleClearAll = () => {
+    setStates([]);
+  };
+
   const handleViewModeChange = (mode: WorkspaceViewMode) => {
     if (mode !== viewMode) {
       setViewMode(mode);
@@ -453,6 +457,7 @@ export function WorkspaceView() {
               states={computedStates}
               onAddState={handleOpenModal}
               onRemoveState={handleRemoveState}
+              onClearAll={handleClearAll}
               fluidSelected={Boolean(fluid)}
             />
           </div>
@@ -462,6 +467,7 @@ export function WorkspaceView() {
               states={computedStates}
               onAddState={handleOpenModal}
               onRemoveState={handleRemoveState}
+              onClearAll={handleClearAll}
               fluidSelected={Boolean(fluid)}
             />
           </div>

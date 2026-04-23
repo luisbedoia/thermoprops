@@ -10,6 +10,7 @@ type StateListProps = {
   states: ComputedState[];
   onAddState: () => void;
   onRemoveState: (id: string) => void;
+  onClearAll: () => void;
   fluidSelected: boolean;
 };
 
@@ -17,6 +18,7 @@ export function StateList({
   states,
   onAddState,
   onRemoveState,
+  onClearAll,
   fluidSelected,
 }: StateListProps) {
   const summary =
@@ -31,14 +33,30 @@ export function StateList({
           <h2>Tracked states</h2>
           <p className="state-list__summary">{summary}</p>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onAddState}
-          disabled={!fluidSelected}
-        >
-          Add state
-        </Button>
+        <div className="state-list__header-actions">
+          {states.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="state-list__clear-all"
+              onClick={() => {
+                if (window.confirm("Remove all tracked states? This cannot be undone.")) {
+                  onClearAll();
+                }
+              }}
+            >
+              Clear all
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onAddState}
+            disabled={!fluidSelected}
+          >
+            Add state
+          </Button>
+        </div>
       </header>
 
       {states.length === 0 ? (
@@ -194,6 +212,7 @@ type StateQuickActionsProps = {
   states: ComputedState[];
   onAddState: () => void;
   onRemoveState: (id: string) => void;
+  onClearAll: () => void;
   fluidSelected: boolean;
 };
 
@@ -201,15 +220,32 @@ export function StateQuickActions({
   states,
   onAddState,
   onRemoveState,
+  onClearAll,
   fluidSelected,
 }: StateQuickActionsProps) {
   return (
     <section className="state-quick" aria-live="polite">
       <header className="state-quick__header">
         <h2>Tracked states</h2>
-        <Button size="sm" onClick={onAddState} disabled={!fluidSelected}>
-          Add state
-        </Button>
+        <div className="state-quick__header-actions">
+          {states.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="state-quick__clear-all"
+              onClick={() => {
+                if (window.confirm("Remove all tracked states? This cannot be undone.")) {
+                  onClearAll();
+                }
+              }}
+            >
+              Clear all
+            </Button>
+          )}
+          <Button size="sm" onClick={onAddState} disabled={!fluidSelected}>
+            Add state
+          </Button>
+        </div>
       </header>
       {states.length === 0 ? (
         <p className="state-quick__empty">

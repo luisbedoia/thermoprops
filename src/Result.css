@@ -105,6 +105,17 @@
   gap: 0.75rem 1rem;
 }
 
+.state-list__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.state-list__clear-all {
+  color: var(--text-muted);
+}
+
 .state-list__header h2 {
   margin: 0;
   font-size: 1.15rem;
@@ -339,6 +350,17 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem 1rem;
+}
+
+.state-quick__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.state-quick__clear-all {
+  color: var(--text-muted);
 }
 
 .state-quick__header h2 {
