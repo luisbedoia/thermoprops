@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { calculateProperties, fluidHasPlots, properties } from "./lib";
+import { normalizeNumericInput } from "./lib/normalizeNumericInput";
 import { ThermoPlot, PlotPoint } from "./Plot";
 import { Button } from "./components/Button";
 import { StateList, StateQuickActions } from "./workspace/StateList";
@@ -35,48 +36,6 @@ const VIEW_DEFAULT: WorkspaceViewMode = "graph";
 
 const numericProperties = properties.filter((prop) => prop.input);
 
-function normalizeNumericInput(value: string): string {
-  if (typeof value !== "string") {
-    return "";
-  }
-
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return "";
-  }
-
-  const compact = trimmed.replace(/\s+/g, "");
-  if (/[.,]{2,}/.test(compact)) {
-    return "";
-  }
-  const commaCount = (compact.match(/,/g) ?? []).length;
-  const dotCount = (compact.match(/\./g) ?? []).length;
-
-  if (commaCount > 0 && dotCount > 0) {
-    const lastComma = compact.lastIndexOf(",");
-    const lastDot = compact.lastIndexOf(".");
-
-    if (lastComma > lastDot) {
-      const withoutDots = compact.replace(/\./g, "");
-      return withoutDots.replace(/,/g, ".");
-    }
-    return compact.replace(/,/g, "");
-  }
-
-  if (commaCount > 1) {
-    return compact.replace(/,/g, "");
-  }
-
-  if (commaCount === 1) {
-    return compact.replace(/,/g, ".");
-  }
-
-  if (dotCount > 1) {
-    return compact.replace(/\./g, "");
-  }
-
-  return compact;
-}
 
 function normalizeStateDefinition(
   definition: StateDefinition,
