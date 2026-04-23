@@ -4,6 +4,7 @@ import "./Plot.css";
 import {
   getParameterInfo,
   computeSaturationDomeRange,
+  computeTemperatureViewMax,
   buildIsolineLabel,
   buildIsolineTraces,
   buildPointTrace,
@@ -228,6 +229,15 @@ export function ThermoPlot({
           ? [...isolineTraces, pointTrace]
           : isolineTraces;
 
+        const xAxisShort = getParameterInfo(plotData.xAxis.parameter, "short");
+        const yAxisShort = getParameterInfo(plotData.yAxis.parameter, "short");
+        const xAxisRange = xAxisShort === "T"
+          ? { min: plotData.xAxis.range.min, max: computeTemperatureViewMax(fluid, plotData.xAxis.range.max) }
+          : undefined;
+        const yAxisRange = yAxisShort === "T"
+          ? { min: plotData.yAxis.range.min, max: computeTemperatureViewMax(fluid, plotData.yAxis.range.max) }
+          : undefined;
+
         const layout = buildPlotLayout(
           plotData.fluid,
           currentPlotDef.label,
@@ -236,6 +246,8 @@ export function ThermoPlot({
           plotData.xAxis.scale,
           plotData.yAxis.scale,
           legendPlacement,
+          xAxisRange,
+          yAxisRange,
         );
 
         const plotlyModule = (await import(

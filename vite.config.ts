@@ -4,6 +4,11 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   assetsInclude: ["**/*.wasm"],
+  server: {
+    fs: {
+      allow: ["..", "../coolprop-wasm"],
+    },
+  },
   plugins: [
     react(),
     VitePWA({

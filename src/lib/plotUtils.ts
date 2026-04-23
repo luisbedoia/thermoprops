@@ -60,12 +60,13 @@ export function computeSaturationDomeRange(
     const tTriple = window.CP.propsSI("Ttriple", "", 0, "", 0, fluid);
     if (!isFinite(tCrit) || !isFinite(tTriple)) return null;
 
-    if (parameterShort === "T") {
-      return { min: tTriple, max: tCrit };
-    }
-
     const tStart = tTriple * 1.001;
     const tEnd = tCrit * 0.999;
+
+    if (parameterShort === "T") {
+      return { min: tStart, max: tEnd };
+    }
+
     const steps = 15;
     const values: number[] = [];
 
@@ -176,6 +177,19 @@ export function buildPointTrace(
   };
 }
 
+export function computeTemperatureViewMax(
+  fluid: string,
+  originalMax: number,
+): number {
+  try {
+    const tCrit = window.CP.propsSI("Tcrit", "", 0, "", 0, fluid);
+    if (!isFinite(tCrit)) return originalMax;
+    return Math.min(originalMax, tCrit * 1.5);
+  } catch {
+    return originalMax;
+  }
+}
+
 export function buildPlotLayout(
   fluid: string,
   plotLabel: string,
@@ -184,6 +198,8 @@ export function buildPlotLayout(
   xAxisScale: 0 | 1,
   yAxisScale: 0 | 1,
   legendPlacement: "bottom" | "right",
+  xAxisRange?: { min: number; max: number },
+  yAxisRange?: { min: number; max: number },
 ): Record<string, unknown> {
   const legendRight = {
     orientation: "v",
@@ -208,6 +224,16 @@ export function buildPlotLayout(
     font: { size: 12 },
   };
 
+  const axisRangeFor = (
+    scale: 0 | 1,
+    range?: { min: number; max: number },
+  ): [number, number] | undefined => {
+    if (!range) return undefined;
+    return scale === 1
+      ? [Math.log10(range.min), Math.log10(range.max)]
+      : [range.min, range.max];
+  };
+
   return {
     title: { text: `${fluid} - ${plotLabel}`, font: { size: 12 } },
     paper_bgcolor: "#f8fafc",
@@ -220,6 +246,9 @@ export function buildPlotLayout(
       gridcolor: "#e2e8f0",
       zeroline: false,
       automargin: true,
+      ...(axisRangeFor(xAxisScale, xAxisRange) && {
+        range: axisRangeFor(xAxisScale, xAxisRange),
+      }),
     },
     yaxis: {
       title: { text: buildAxisTitle(yAxisParameter), standoff: 10 },
@@ -228,6 +257,9 @@ export function buildPlotLayout(
       gridcolor: "#e2e8f0",
       zeroline: false,
       automargin: true,
+      ...(axisRangeFor(yAxisScale, yAxisRange) && {
+        range: axisRangeFor(yAxisScale, yAxisRange),
+      }),
     },
     hovermode: "closest",
     showlegend: true,
