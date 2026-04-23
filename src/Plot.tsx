@@ -94,18 +94,22 @@ export function ThermoPlot({
       setCatalogue(null);
       return;
     }
-    try {
-      setCatalogue(window.CP.describeFluidPlots(fluid));
-    } catch (err) {
-      console.error("Error obteniendo catálogo de gráficas:", err);
-      setCatalogue(null);
-    }
+    setCatalogue(window.CP.describeFluidPlots(fluid));
   }, [fluid]);
 
   const currentPlotId = useMemo(() => {
-    if (selectedPlotId) return selectedPlotId;
-    return catalogue?.plots[0]?.id;
+    if (!catalogue || catalogue.plots.length === 0) return selectedPlotId;
+    if (selectedPlotId && catalogue.plots.some((p) => p.id === selectedPlotId)) {
+      return selectedPlotId;
+    }
+    return catalogue.plots[0]?.id;
   }, [selectedPlotId, catalogue]);
+
+  useEffect(() => {
+    if (currentPlotId && currentPlotId !== selectedPlotId) {
+      onPlotChange?.(currentPlotId);
+    }
+  }, [currentPlotId, selectedPlotId, onPlotChange]);
 
   const currentPlotDef = useMemo(() => {
     if (!catalogue || !currentPlotId) return null;
@@ -113,9 +117,21 @@ export function ThermoPlot({
   }, [catalogue, currentPlotId]);
 
   const currentIsolineParameter = useMemo(() => {
-    if (selectedIsolineParameter !== undefined) return selectedIsolineParameter;
-    return currentPlotDef?.isolineOptions[0]?.parameter;
+    if (!currentPlotDef) return selectedIsolineParameter;
+    if (
+      selectedIsolineParameter !== undefined &&
+      currentPlotDef.isolineOptions.some((opt) => opt.parameter === selectedIsolineParameter)
+    ) {
+      return selectedIsolineParameter;
+    }
+    return currentPlotDef.isolineOptions[0]?.parameter;
   }, [selectedIsolineParameter, currentPlotDef]);
+
+  useEffect(() => {
+    if (currentIsolineParameter !== undefined && currentIsolineParameter !== selectedIsolineParameter) {
+      onIsolineParameterChange?.(currentIsolineParameter);
+    }
+  }, [currentIsolineParameter, selectedIsolineParameter, onIsolineParameterChange]);
 
   const currentIsolineOption = useMemo(() => {
     if (!currentPlotDef || currentIsolineParameter === undefined) return null;

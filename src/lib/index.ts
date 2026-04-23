@@ -231,14 +231,8 @@ export function fluidHasPlots(fluid: string): boolean {
   if (!fluid || !window.CP?.describeFluidPlots) {
     return false;
   }
-  try {
-    const catalogue = window.CP.describeFluidPlots(fluid) as {
-      plots?: unknown[];
-    } | null;
-    return Array.isArray(catalogue?.plots) && catalogue.plots.length > 0;
-  } catch {
-    return false;
-  }
+  const catalogue = window.CP.describeFluidPlots(fluid);
+  return catalogue.plots.length > 0;
 }
 
 export async function getFluidsList(): Promise<string[]> {

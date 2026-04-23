@@ -251,9 +251,9 @@ describe("getPlotPoints", () => {
     expect(point.y).toBe(101325); // P from definition
   });
 
-  it("maps ts plot axes (x=S, y=T)", () => {
+  it("maps Ts plot axes (x=S, y=T)", () => {
     const state = makeComputed({ property1: "T", value1: "300", property2: "P", value2: "101325" });
-    const [point] = getPlotPoints([state], "ts");
+    const [point] = getPlotPoints([state], "Ts");
     expect(point.x).toBe(1800);  // S from results
     expect(point.y).toBe(300);   // T from definition
   });
@@ -273,7 +273,7 @@ describe("getPlotPoints", () => {
 
   it("carries id and label onto the plot point", () => {
     const state = makeComputed({ id: "abc", label: "State A" });
-    const [point] = getPlotPoints([state], "ts");
+    const [point] = getPlotPoints([state], "Ts");
     expect(point.id).toBe("abc");
     expect(point.label).toBe("State A");
   });

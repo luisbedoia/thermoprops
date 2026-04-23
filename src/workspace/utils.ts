@@ -105,7 +105,7 @@ export function normalizeStateDefinition(
 
 const PLOT_AXES: Record<string, { x: string; y: string }> = {
   ph: { x: "H", y: "P" },
-  ts: { x: "S", y: "T" },
+  Ts: { x: "S", y: "T" },
   pt: { x: "T", y: "P" },
   rh: { x: "H", y: "D" },
 };
