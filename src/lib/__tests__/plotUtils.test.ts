@@ -4,7 +4,11 @@ import {
   isSaturationCurve,
   getSaturationLabel,
   generateEvenlySpacedValues,
+  buildIsolineTraces,
+  buildPointTrace,
+  buildPlotLayout,
 } from "../plotUtils";
+import type { PlotPoint } from "../plotUtils";
 
 describe("scaleToPlotlyType", () => {
   it("returns linear for scale 0", () => {
@@ -86,5 +90,142 @@ describe("generateEvenlySpacedValues", () => {
   it("handles negative ranges", () => {
     const values = generateEvenlySpacedValues(-10, 10, 3);
     expect(values).toEqual([-10, 0, 10]);
+  });
+});
+
+// Note: buildIsolineTraces / buildPointTrace / buildPlotLayout call getParameterInfo
+// internally, which accesses window.CP. In the node test environment, window is
+// undefined → the try-catch in getParameterInfo returns "" for all labels.
+// Tests here verify structure and logic, not label strings.
+
+describe("buildIsolineTraces", () => {
+  it("returns one trace per isoline", () => {
+    const isolines = [
+      { parameter: 19, value: 300, x: [1, 2], y: [3, 4] },
+      { parameter: 19, value: 400, x: [5, 6], y: [7, 8] },
+    ];
+    expect(buildIsolineTraces(isolines, 5, 2)).toHaveLength(2);
+  });
+
+  it("returns empty array for empty input", () => {
+    expect(buildIsolineTraces([], 5, 2)).toEqual([]);
+  });
+
+  it("each trace is a scatter line with correct x/y", () => {
+    const isolines = [{ parameter: 19, value: 300, x: [1, 2], y: [10, 20] }];
+    const [trace] = buildIsolineTraces(isolines, 5, 2);
+    expect(trace.type).toBe("scatter");
+    expect(trace.mode).toBe("lines");
+    expect(trace.x).toEqual([1, 2]);
+    expect(trace.y).toEqual([10, 20]);
+  });
+
+  it("saturation curves (Q=0 or Q=1) use solid red lines", () => {
+    const liquid = [{ parameter: 21, value: 0, x: [1], y: [2] }];
+    const vapor = [{ parameter: 21, value: 1, x: [1], y: [2] }];
+    const [liquidTrace] = buildIsolineTraces(liquid, 5, 2);
+    const [vaporTrace] = buildIsolineTraces(vapor, 5, 2);
+    expect(liquidTrace.line).toMatchObject({ dash: "solid", color: "#dc2626" });
+    expect(vaporTrace.line).toMatchObject({ dash: "solid", color: "#dc2626" });
+  });
+
+  it("non-saturation isolines use dashed palette colors", () => {
+    const isolines = [{ parameter: 19, value: 300, x: [1], y: [2] }];
+    const [trace] = buildIsolineTraces(isolines, 5, 2);
+    expect(trace.line).toMatchObject({ dash: "dash" });
+    expect(typeof (trace.line as Record<string, unknown>).color).toBe("string");
+  });
+
+  it("cycles through palette when there are more isolines than palette colors", () => {
+    const isolines = Array.from({ length: 9 }, (_, i) => ({
+      parameter: 19,
+      value: 280 + i * 10,
+      x: [i],
+      y: [i],
+    }));
+    const traces = buildIsolineTraces(isolines, 5, 2);
+    const color0 = (traces[0].line as Record<string, unknown>).color;
+    const color7 = (traces[7].line as Record<string, unknown>).color;
+    expect(color0).toBe(color7); // palette has 7 colors → index 7 wraps to index 0
+  });
+
+  it("saturation curves have greater line width than isolines", () => {
+    const saturation = [{ parameter: 21, value: 0, x: [1], y: [2] }];
+    const isoline = [{ parameter: 19, value: 300, x: [1], y: [2] }];
+    const [satTrace] = buildIsolineTraces(saturation, 5, 2);
+    const [isoTrace] = buildIsolineTraces(isoline, 5, 2);
+    const satWidth = (satTrace.line as Record<string, unknown>).width as number;
+    const isoWidth = (isoTrace.line as Record<string, unknown>).width as number;
+    expect(satWidth).toBeGreaterThan(isoWidth);
+  });
+});
+
+describe("buildPointTrace", () => {
+  it("returns null for an empty points array", () => {
+    expect(buildPointTrace([], 5, 2)).toBeNull();
+  });
+
+  it("returns a markers trace for non-empty points", () => {
+    const points: PlotPoint[] = [{ id: "1", label: "State 1", x: 100, y: 200 }];
+    const trace = buildPointTrace(points, 5, 2);
+    expect(trace).not.toBeNull();
+    expect(trace?.type).toBe("scatter");
+    expect(trace?.mode).toBe("markers");
+  });
+
+  it("maps x, y, and text correctly from each point", () => {
+    const points: PlotPoint[] = [
+      { id: "a", label: "A", x: 10, y: 100 },
+      { id: "b", label: "B", x: 20, y: 200 },
+    ];
+    const trace = buildPointTrace(points, 5, 2);
+    expect(trace?.x).toEqual([10, 20]);
+    expect(trace?.y).toEqual([100, 200]);
+    expect(trace?.text).toEqual(["A", "B"]);
+  });
+
+  it("names the trace 'Tracked states'", () => {
+    const points: PlotPoint[] = [{ id: "1", label: "S1", x: 1, y: 2 }];
+    expect(buildPointTrace(points, 5, 2)?.name).toBe("Tracked states");
+  });
+});
+
+describe("buildPlotLayout", () => {
+  it("sets the fluid and plot label in the title", () => {
+    const layout = buildPlotLayout("Water", "pH Diagram", 5, 2, 0, 1, "right");
+    expect(layout.title).toMatchObject({ text: "Water - pH Diagram" });
+  });
+
+  it("uses vertical legend and wide right margin when legendPlacement is right", () => {
+    const layout = buildPlotLayout("Water", "test", 5, 2, 0, 1, "right");
+    expect(layout.legend).toMatchObject({ orientation: "v" });
+    expect(layout.margin).toMatchObject({ r: 160 });
+  });
+
+  it("uses horizontal legend and tall bottom margin when legendPlacement is bottom", () => {
+    const layout = buildPlotLayout("Water", "test", 5, 2, 0, 1, "bottom");
+    expect(layout.legend).toMatchObject({ orientation: "h" });
+    expect(layout.margin).toMatchObject({ b: 100 });
+  });
+
+  it("sets dragmode to pan", () => {
+    const layout = buildPlotLayout("Water", "test", 5, 2, 0, 1, "right");
+    expect(layout.dragmode).toBe("pan");
+  });
+
+  it("sets log scale on y-axis for scale=1", () => {
+    const layout = buildPlotLayout("Water", "test", 5, 2, 0, 1, "right");
+    expect((layout.yaxis as Record<string, unknown>).type).toBe("log");
+  });
+
+  it("sets linear scale on x-axis for scale=0", () => {
+    const layout = buildPlotLayout("Water", "test", 5, 2, 0, 1, "right");
+    expect((layout.xaxis as Record<string, unknown>).type).toBe("linear");
+  });
+
+  it("applies white background colors", () => {
+    const layout = buildPlotLayout("Water", "test", 5, 2, 0, 0, "right");
+    expect(layout.paper_bgcolor).toBe("#f8fafc");
+    expect(layout.plot_bgcolor).toBe("#ffffff");
   });
 });
