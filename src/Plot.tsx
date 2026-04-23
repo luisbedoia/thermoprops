@@ -263,6 +263,10 @@ export function ThermoPlot({
           displaylogo: false,
           displayModeBar: true,
           modeBarButtonsToRemove: ["lasso2d", "select2d"],
+          toImageButtonOptions: {
+            format: "png",
+            scale: 3,
+          },
         });
 
         const observer = new ResizeObserver(() => {
