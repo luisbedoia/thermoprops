@@ -388,6 +388,7 @@ export function WorkspaceView() {
         formError={formError}
         firstValueRef={firstValueRef}
         units={units}
+        existingStates={computedStates}
       />
     </section>
   );

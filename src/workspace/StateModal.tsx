@@ -2,6 +2,7 @@ import { FormEvent, RefObject, useEffect } from "react";
 import { Button } from "../components/Button";
 import { Modal } from "../components/Modal";
 import {
+  fromSI,
   getDisplayUnit,
   propertyLabel,
   propertyToPlain,
@@ -9,6 +10,12 @@ import {
   unitToPlain,
 } from "../lib";
 import type { Property, UnitSystem } from "../lib";
+import type { ComputedState } from "./types";
+import { getPropertyValue } from "./utils";
+
+const PICKER_NUMBER_FORMAT = new Intl.NumberFormat(undefined, {
+  maximumSignificantDigits: 6,
+});
 
 type StateModalFormState = {
   property1: string;
@@ -28,6 +35,7 @@ type StateModalProps = {
   formError: string | null;
   firstValueRef: RefObject<HTMLInputElement | null>;
   units: string;
+  existingStates: ComputedState[];
 };
 
 export function StateModal({
@@ -41,6 +49,7 @@ export function StateModal({
   formError,
   firstValueRef,
   units,
+  existingStates,
 }: StateModalProps) {
   const system: UnitSystem = resolveUnitSystem(units);
   useEffect(() => {
@@ -122,6 +131,12 @@ export function StateModal({
               placeholder="e.g. 300"
               required
             />
+            <FromStatePicker
+              propertyName={formState.property1}
+              states={existingStates}
+              units={system}
+              onPick={(value) => onFormChange("value1", value)}
+            />
           </div>
         </div>
 
@@ -155,6 +170,12 @@ export function StateModal({
               placeholder="e.g. 101325"
               required
             />
+            <FromStatePicker
+              propertyName={formState.property2}
+              states={existingStates}
+              units={system}
+              onPick={(value) => onFormChange("value2", value)}
+            />
           </div>
         </div>
 
@@ -186,5 +207,66 @@ function PropertyOption({ property, units }: PropertyOptionProps) {
       {unit ? ` · ${unit}` : ""}
       {label ? ` — ${label}` : ""}
     </option>
+  );
+}
+
+type FromStatePickerProps = {
+  propertyName: string;
+  states: ComputedState[];
+  units: UnitSystem;
+  onPick: (value: string) => void;
+};
+
+function FromStatePicker({
+  propertyName,
+  states,
+  units,
+  onPick,
+}: FromStatePickerProps) {
+  const candidates = states
+    .map((state) => {
+      const si = getPropertyValue(state.definition, state.results, propertyName);
+      if (si == null || !Number.isFinite(si)) return null;
+      return { state, si };
+    })
+    .filter((entry): entry is { state: ComputedState; si: number } => entry != null);
+
+  if (candidates.length === 0) return null;
+
+  const symbol = propertyToPlain(propertyName);
+  const unitLabel = unitToPlain(getDisplayUnit(propertyName, units));
+
+  return (
+    <select
+      className="field__from-state"
+      value=""
+      aria-label={`Use ${symbol} from existing state`}
+      onChange={(event) => {
+        const id = event.target.value;
+        if (!id) return;
+        const match = candidates.find((c) => c.state.definition.id === id);
+        if (!match) return;
+        const display = fromSI(propertyName, match.si, units);
+        onPick(String(display));
+      }}
+    >
+      <option value="" disabled>
+        Use {symbol} from existing state…
+      </option>
+      {candidates.map(({ state, si }) => {
+        const display = PICKER_NUMBER_FORMAT.format(
+          fromSI(propertyName, si, units),
+        );
+        return (
+          <option
+            key={state.definition.id}
+            value={state.definition.id}
+          >
+            {state.definition.label}: {symbol} = {display}
+            {unitLabel ? ` ${unitLabel}` : ""}
+          </option>
+        );
+      })}
+    </select>
   );
 }

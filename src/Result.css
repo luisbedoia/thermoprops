@@ -585,6 +585,20 @@
   font-size: 0.9rem;
 }
 
+.field__from-state {
+  font-size: 0.78rem;
+  padding: 0.35rem 0.5rem;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px dashed var(--border-soft);
+  border-radius: 0.5rem;
+}
+
+.field__from-state:hover {
+  border-style: solid;
+  color: var(--text-secondary, var(--text-muted));
+}
+
 .state-modal__actions {
   display: flex;
   justify-content: flex-end;
