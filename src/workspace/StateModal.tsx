@@ -17,6 +17,13 @@ const PICKER_NUMBER_FORMAT = new Intl.NumberFormat(undefined, {
   maximumSignificantDigits: 6,
 });
 
+// Mobile numeric keyboards (inputMode="decimal") don't expose a minus key, so
+// we surface a ± button. Toggles the sign of whatever the user has typed.
+function toggleSign(value: string): string {
+  if (!value || value === "-") return value === "-" ? "" : "-";
+  return value.startsWith("-") ? value.slice(1) : "-" + value;
+}
+
 type StateModalFormState = {
   property1: string;
   property2: string;
@@ -121,16 +128,28 @@ export function StateModal({
           </div>
           <div className="field">
             <label htmlFor="value1">Value</label>
-            <input
-              id="value1"
-              ref={firstValueRef}
-              type="text"
-              inputMode="decimal"
-              value={formState.value1}
-              onChange={(event) => onFormChange("value1", event.target.value)}
-              placeholder="e.g. 300"
-              required
-            />
+            <div className="field__input-wrap">
+              <button
+                type="button"
+                className="field__sign"
+                aria-label="Toggle sign"
+                onClick={() =>
+                  onFormChange("value1", toggleSign(formState.value1))
+                }
+              >
+                ±
+              </button>
+              <input
+                id="value1"
+                ref={firstValueRef}
+                type="text"
+                inputMode="decimal"
+                value={formState.value1}
+                onChange={(event) => onFormChange("value1", event.target.value)}
+                placeholder="e.g. 300"
+                required
+              />
+            </div>
             <FromStatePicker
               propertyName={formState.property1}
               states={existingStates}
@@ -161,15 +180,27 @@ export function StateModal({
           </div>
           <div className="field">
             <label htmlFor="value2">Value</label>
-            <input
-              id="value2"
-              type="text"
-              inputMode="decimal"
-              value={formState.value2}
-              onChange={(event) => onFormChange("value2", event.target.value)}
-              placeholder="e.g. 101325"
-              required
-            />
+            <div className="field__input-wrap">
+              <button
+                type="button"
+                className="field__sign"
+                aria-label="Toggle sign"
+                onClick={() =>
+                  onFormChange("value2", toggleSign(formState.value2))
+                }
+              >
+                ±
+              </button>
+              <input
+                id="value2"
+                type="text"
+                inputMode="decimal"
+                value={formState.value2}
+                onChange={(event) => onFormChange("value2", event.target.value)}
+                placeholder="e.g. 101325"
+                required
+              />
+            </div>
             <FromStatePicker
               propertyName={formState.property2}
               states={existingStates}

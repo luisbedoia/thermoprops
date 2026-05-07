@@ -599,6 +599,49 @@
   color: var(--text-secondary, var(--text-muted));
 }
 
+.field__input-wrap {
+  display: flex;
+  gap: 0.4rem;
+  align-items: stretch;
+}
+
+.field__input-wrap > input {
+  flex: 1;
+  min-width: 0;
+}
+
+.field__sign {
+  flex-shrink: 0;
+  padding: 0 0.85rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 0.65rem;
+  background: var(--surface-soft, #f8fafc);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-secondary, var(--text-muted));
+  user-select: none;
+}
+
+.field__sign:hover {
+  background: #e2e8f0;
+  color: var(--text-strong, inherit);
+}
+
+.field__sign:active {
+  transform: translateY(1px);
+}
+
+/* Hide the ± shortcut on devices with a precise pointer + hover (desktop /
+ * laptop with mouse or trackpad) — those have a physical keyboard with a
+ * minus key, so the button is just visual noise. Touch-only devices keep
+ * seeing it because their virtual keyboards omit the minus. */
+@media (hover: hover) and (pointer: fine) {
+  .field__sign {
+    display: none;
+  }
+}
+
 .state-modal__actions {
   display: flex;
   justify-content: flex-end;
