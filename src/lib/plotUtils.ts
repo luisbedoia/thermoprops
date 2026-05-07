@@ -1,5 +1,11 @@
-import { fromSI, getDisplayUnit, normalizePropertyName } from "./units";
+import {
+  DEFAULT_UNIT_SYSTEM,
+  fromSI,
+  getDisplayUnit,
+  normalizePropertyName,
+} from "./units";
 import type { UnitSystem } from "./units";
+import { unitToPlain } from "./unitsFormat";
 
 export function getParameterInfo(
   parameter: number,
@@ -18,7 +24,6 @@ function paramName(parameter: number): string {
 }
 
 function convertArray(values: number[], name: string, units: UnitSystem): number[] {
-  if (units === "si") return values;
   return values.map((v) => fromSI(name, v, units));
 }
 
@@ -29,15 +34,12 @@ export function scaleToPlotlyType(scale: 0 | 1): "linear" | "log" {
 export function buildIsolineLabel(
   parameter: number,
   value: number,
-  unitSystem: UnitSystem = "si",
+  unitSystem: UnitSystem = DEFAULT_UNIT_SYSTEM,
 ): string {
   const short = getParameterInfo(parameter, "short");
   const name = normalizePropertyName(short);
   const displayValue = fromSI(name, value, unitSystem);
-  const unitLabel =
-    unitSystem === "si"
-      ? getParameterInfo(parameter, "units")
-      : getDisplayUnit(name, unitSystem);
+  const unitLabel = unitToPlain(getDisplayUnit(name, unitSystem));
 
   const formatted = new Intl.NumberFormat(undefined, {
     maximumSignificantDigits: 4,
@@ -53,13 +55,12 @@ export function buildIsolineLabel(
 
 export function buildAxisTitle(
   parameter: number,
-  unitSystem: UnitSystem = "si",
+  unitSystem: UnitSystem = DEFAULT_UNIT_SYSTEM,
 ): string {
   const short = getParameterInfo(parameter, "short");
-  const unitLabel =
-    unitSystem === "si"
-      ? getParameterInfo(parameter, "units")
-      : getDisplayUnit(normalizePropertyName(short), unitSystem);
+  const unitLabel = unitToPlain(
+    getDisplayUnit(normalizePropertyName(short), unitSystem),
+  );
 
   if (unitLabel && unitLabel !== "-") {
     return `${short} (${unitLabel})`;
@@ -146,7 +147,7 @@ export function buildIsolineTraces(
   isolines: Array<{ parameter: number; value: number; x: number[]; y: number[] }>,
   xAxisParameter: number,
   yAxisParameter: number,
-  unitSystem: UnitSystem = "si",
+  unitSystem: UnitSystem = DEFAULT_UNIT_SYSTEM,
 ): Record<string, unknown>[] {
   const xName = paramName(xAxisParameter);
   const yName = paramName(yAxisParameter);
@@ -183,7 +184,7 @@ export function buildPointTrace(
   points: PlotPoint[],
   xAxisParameter: number,
   yAxisParameter: number,
-  unitSystem: UnitSystem = "si",
+  unitSystem: UnitSystem = DEFAULT_UNIT_SYSTEM,
 ): Record<string, unknown> | null {
   if (points.length === 0) return null;
   const xName = paramName(xAxisParameter);
@@ -233,7 +234,7 @@ export function buildPlotLayout(
   legendPlacement: "bottom" | "right",
   xAxisRange?: { min: number; max: number },
   yAxisRange?: { min: number; max: number },
-  unitSystem: UnitSystem = "si",
+  unitSystem: UnitSystem = DEFAULT_UNIT_SYSTEM,
 ): Record<string, unknown> {
   const xName = paramName(xAxisParameter);
   const yName = paramName(yAxisParameter);
@@ -241,7 +242,7 @@ export function buildPlotLayout(
     name: string,
     range?: { min: number; max: number },
   ): { min: number; max: number } | undefined => {
-    if (!range || unitSystem === "si") return range;
+    if (!range) return range;
     const a = fromSI(name, range.min, unitSystem);
     const b = fromSI(name, range.max, unitSystem);
     return { min: Math.min(a, b), max: Math.max(a, b) };

@@ -1,7 +1,24 @@
 import { Button } from "../components/Button";
-import { fromSI, getDisplayUnit, resolveUnitSystem } from "../lib";
+import { MathText } from "../components/MathText";
+import {
+  fromSI,
+  getDisplayUnit,
+  resolveUnitSystem,
+  unitToMath,
+} from "../lib";
 import type { UnitSystem } from "../lib";
 import type { ComputedState, StateDefinition } from "./types";
+
+function UnitMath({ unit, className }: { unit: string; className?: string }) {
+  if (!unit) return null;
+  return (
+    <MathText
+      className={className}
+      expression={unitToMath(unit)}
+      ariaLabel={unit}
+    />
+  );
+}
 
 const NUMBER_FORMAT = new Intl.NumberFormat(undefined, {
   minimumSignificantDigits: 3,
@@ -32,12 +49,14 @@ function StateChips({ definition, units, className }: ChipsProps) {
       <span className={className}>
         {definition.property1} ={" "}
         {formatInputValue(definition.property1, definition.value1, units)}
-        {unit1 ? ` ${unit1}` : ""}
+        {unit1 ? " " : null}
+        <UnitMath unit={unit1} />
       </span>
       <span className={className}>
         {definition.property2} ={" "}
         {formatInputValue(definition.property2, definition.value2, units)}
-        {unit2 ? ` ${unit2}` : ""}
+        {unit2 ? " " : null}
+        <UnitMath unit={unit2} />
       </span>
     </>
   );
@@ -246,7 +265,7 @@ function StateMetrics({ state, limit, variant, units }: StateMetricsProps) {
             <dt>{result.description}</dt>
             <dd>
               {NUMBER_FORMAT.format(displayValue)}
-              {displayUnit && <span>{displayUnit}</span>}
+              <UnitMath unit={displayUnit} />
             </dd>
           </div>
         );
@@ -324,9 +343,11 @@ export function StateQuickActions({
                 </span>
                 <span className="state-quick__inputs">
                   {state.definition.property1} = {value1}
-                  {unit1 ? ` ${unit1}` : ""} •{" "}
+                  {unit1 ? " " : null}
+                  <UnitMath unit={unit1} /> •{" "}
                   {state.definition.property2} = {value2}
-                  {unit2 ? ` ${unit2}` : ""}
+                  {unit2 ? " " : null}
+                  <UnitMath unit={unit2} />
                 </span>
               </div>
               <Button

@@ -22,6 +22,7 @@ export interface FluidDetails {
 // Re-exportar utilidades de plots
 export * from "./plotUtils";
 export * from "./units";
+export * from "./unitsFormat";
 
 export const properties: Property[] = [
   {
