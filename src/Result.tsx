@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { calculateProperties, properties, resolveUnitSystem, toSI } from "./lib";
+import {
+  properties,
+  resolveUnitSystem,
+  toSI,
+  validateStateInputs,
+} from "./lib";
 import { normalizeNumericInput } from "./lib/normalizeNumericInput";
 import { ThermoPlot } from "./Plot";
 import type { PlotPoint } from "./Plot";
@@ -206,7 +211,7 @@ export function WorkspaceView() {
     const value2 = toSI(formState.property2, displayValue2, system);
 
     try {
-      calculateProperties(
+      validateStateInputs(
         formState.property1,
         value1,
         formState.property2,

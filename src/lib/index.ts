@@ -145,6 +145,38 @@ export const properties: Property[] = [
     output: true,
     trivial: false,
   },
+  {
+    name: "Z",
+    unit: "",
+    description: "Compressibility factor",
+    input: false,
+    output: true,
+    trivial: false,
+  },
+  {
+    name: "L",
+    unit: "W/(m*K)",
+    description: "Thermal conductivity",
+    input: false,
+    output: true,
+    trivial: false,
+  },
+  {
+    name: "V",
+    unit: "Pa*s",
+    description: "Dynamic viscosity",
+    input: false,
+    output: true,
+    trivial: false,
+  },
+  {
+    name: "PRANDTL",
+    unit: "",
+    description: "Prandtl number",
+    input: false,
+    output: true,
+    trivial: false,
+  },
 ];
 
 export function checkValidProperty(name: string) {
@@ -193,6 +225,19 @@ export function calculateProperty(
   );
 }
 
+// Throws if CoolProp cannot evaluate the given (property1, property2) pair —
+// useful as a precondition check before storing a state. We probe density
+// because it is well-defined across single-phase and two-phase regions.
+export function validateStateInputs(
+  property1: string,
+  value1: number,
+  property2: string,
+  value2: number,
+  fluid: string,
+): void {
+  calculateProperty("D", property1, value1, property2, value2, fluid);
+}
+
 export function calculateProperties(
   property1: string,
   value1: number,
@@ -206,18 +251,29 @@ export function calculateProperties(
 
   const result: Result[] = [];
 
-  propertiesToCalculate.map((property) => {
+  propertiesToCalculate.forEach((property) => {
     if (property.name === property1 || property.name === property2) {
       return;
     }
-    const propertyResult = calculateProperty(
-      property.name,
-      property1,
-      value1,
-      property2,
-      value2,
-      fluid,
-    );
+    let propertyResult: number;
+    try {
+      propertyResult = calculateProperty(
+        property.name,
+        property1,
+        value1,
+        property2,
+        value2,
+        fluid,
+      );
+    } catch {
+      // Transport properties (Z, L, V, PRANDTL) and a few others are not
+      // defined for every state — typically two-phase mixtures. Skip silently
+      // so one undefined property doesn't blank out the whole row.
+      return;
+    }
+    if (!Number.isFinite(propertyResult)) {
+      return;
+    }
     result.push({
       name: property.name,
       unit: property.unit,

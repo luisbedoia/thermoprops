@@ -11,6 +11,10 @@ const PA_PER_PSI = 6894.757293168361;
 const KG_M3_PER_LB_FT3 = 16.018463373960142;
 const J_KG_PER_BTU_LB = 2326;
 const J_KG_K_PER_BTU_LB_R = 4186.8;
+// 1 BTU/(h·ft·°F) = 1.730734666 W/(m·K)
+const W_M_K_PER_BTU_H_FT_F = 1.730734666;
+// 1 lb/(ft·s) = 1.488163944 Pa·s
+const PA_S_PER_LB_FT_S = 1.488163944;
 
 type Kind =
   | "temperature"
@@ -18,6 +22,8 @@ type Kind =
   | "density"
   | "specEnergy"
   | "specHeat"
+  | "conductivity"
+  | "viscosity"
   | "dimensionless";
 
 const COOLPROP_SHORT_ALIASES: Record<string, string> = {
@@ -68,6 +74,10 @@ function kindOf(propertyName: string): Kind | null {
       return "specEnergy";
     case "J/(kg*K)":
       return "specHeat";
+    case "W/(m*K)":
+      return "conductivity";
+    case "Pa*s":
+      return "viscosity";
     case "":
     case "mol/mol":
       return "dimensionless";
@@ -83,6 +93,8 @@ const LABELS: Record<UnitSystem, Record<Kind, string>> = {
     density: "kg/m^3",
     specEnergy: "kJ/kg",
     specHeat: "kJ/(kg*K)",
+    conductivity: "W/(m*K)",
+    viscosity: "Pa*s",
     dimensionless: "",
   },
   kelvin: {
@@ -91,6 +103,8 @@ const LABELS: Record<UnitSystem, Record<Kind, string>> = {
     density: "kg/m^3",
     specEnergy: "kJ/kg",
     specHeat: "kJ/(kg*K)",
+    conductivity: "W/(m*K)",
+    viscosity: "Pa*s",
     dimensionless: "",
   },
   imperial: {
@@ -99,6 +113,8 @@ const LABELS: Record<UnitSystem, Record<Kind, string>> = {
     density: "lb/ft^3",
     specEnergy: "BTU/lb",
     specHeat: "BTU/(lb*°R)",
+    conductivity: "BTU/(h*ft*°F)",
+    viscosity: "lb/(ft*s)",
     dimensionless: "",
   },
 };
@@ -156,6 +172,10 @@ export function fromSI(
       return system === "imperial"
         ? value / J_KG_K_PER_BTU_LB_R
         : value / J_PER_KJ;
+    case "conductivity":
+      return system === "imperial" ? value / W_M_K_PER_BTU_H_FT_F : value;
+    case "viscosity":
+      return system === "imperial" ? value / PA_S_PER_LB_FT_S : value;
     case "dimensionless":
     case null:
     default:
@@ -182,6 +202,10 @@ export function toSI(
       return system === "imperial"
         ? value * J_KG_K_PER_BTU_LB_R
         : value * J_PER_KJ;
+    case "conductivity":
+      return system === "imperial" ? value * W_M_K_PER_BTU_H_FT_F : value;
+    case "viscosity":
+      return system === "imperial" ? value * PA_S_PER_LB_FT_S : value;
     case "dimensionless":
     case null:
     default:

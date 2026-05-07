@@ -3,6 +3,7 @@ import { MathText } from "../components/MathText";
 import {
   fromSI,
   getDisplayUnit,
+  phaseLabel,
   propertyLabel,
   propertyToMath,
   resolveUnitSystem,
@@ -199,7 +200,7 @@ function StateRow({ state, onRemove, units }: StateRowProps) {
             className="state-list__chip"
           />
         </div>
-        <StateMetrics state={state} limit={4} variant="table" units={units} />
+        <StateMetrics state={state} variant="table" units={units} />
       </td>
       <td className="state-list__actions">
         <Button
@@ -245,41 +246,64 @@ function StateCard({ state, onRemove, units }: StateCardProps) {
           Remove
         </Button>
       </header>
-      <StateMetrics state={state} limit={6} variant="card" units={units} />
+      <StateMetrics state={state} variant="card" units={units} />
     </li>
   );
 }
 
 type StateMetricsProps = {
   state: ComputedState;
-  limit: number;
   variant: "table" | "card";
   units: UnitSystem;
 };
 
-function StateMetrics({ state, limit, variant, units }: StateMetricsProps) {
+function StateMetrics({ state, variant, units }: StateMetricsProps) {
   if (state.error) {
     return (
       <p className={`state-error state-error--${variant}`}>{state.error}</p>
     );
   }
 
-  const metrics = state.results.slice(0, limit);
+  const metrics = state.results;
 
   return (
     <dl className={`state-metrics state-metrics--${variant}`}>
       {metrics.map((result) => {
+        if (result.name === "PHASE") {
+          const label = propertyLabel(result.name);
+          return (
+            <div key={result.name} className="state-metrics__row">
+              <dt title={label}>
+                <PropertyMath name={result.name} />
+                {label ? (
+                  <span className="state-metrics__name">{label}</span>
+                ) : null}
+              </dt>
+              <dd>{phaseLabel(result.value)}</dd>
+            </div>
+          );
+        }
         const displayValue = fromSI(result.name, result.value, units);
         const displayUnit = getDisplayUnit(result.name, units);
-        const tooltip = propertyLabel(result.name) ?? result.description;
+        const label = propertyLabel(result.name) ?? result.description;
+        const isQuality = result.name === "Q";
+        const qualityOutOfRange =
+          isQuality && (result.value < 0 || result.value > 1);
         return (
           <div key={result.name} className="state-metrics__row">
-            <dt title={tooltip}>
+            <dt title={label}>
               <PropertyMath name={result.name} />
+              {label ? (
+                <span className="state-metrics__name">{label}</span>
+              ) : null}
             </dt>
             <dd>
-              {NUMBER_FORMAT.format(displayValue)}
-              <UnitMath unit={displayUnit} />
+              {qualityOutOfRange ? "-" : (
+                <>
+                  {NUMBER_FORMAT.format(displayValue)}
+                  <UnitMath unit={displayUnit} />
+                </>
+              )}
             </dd>
           </div>
         );

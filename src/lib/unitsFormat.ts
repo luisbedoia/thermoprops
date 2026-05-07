@@ -34,6 +34,11 @@ const UNIT_MATH: Record<string, string> = {
   "J/(kg*K)": "\\mathrm{J}/(\\mathrm{kg}\\cdot\\mathrm{K})",
   "kJ/(kg*K)": "\\mathrm{kJ}/(\\mathrm{kg}\\cdot\\mathrm{K})",
   "BTU/(lb*°R)": "\\mathrm{BTU}/(\\mathrm{lb}\\cdot{}^{\\circ}\\mathrm{R})",
+  "W/(m*K)": "\\mathrm{W}/(\\mathrm{m}\\cdot\\mathrm{K})",
+  "Pa*s": "\\mathrm{Pa}\\cdot\\mathrm{s}",
+  "BTU/(h*ft*°F)":
+    "\\mathrm{BTU}/(\\mathrm{h}\\cdot\\mathrm{ft}\\cdot{}^{\\circ}\\mathrm{F})",
+  "lb/(ft*s)": "\\mathrm{lb}/(\\mathrm{ft}\\cdot\\mathrm{s})",
   "mol/mol": "",
 };
 
@@ -55,6 +60,10 @@ const UNIT_PLAIN: Record<string, string> = {
   "J/(kg*K)": "J/(kg·K)",
   "kJ/(kg*K)": "kJ/(kg·K)",
   "BTU/(lb*°R)": "BTU/(lb·°R)",
+  "W/(m*K)": "W/(m·K)",
+  "Pa*s": "Pa·s",
+  "BTU/(h*ft*°F)": "BTU/(h·ft·°F)",
+  "lb/(ft*s)": "lb/(ft·s)",
   "mol/mol": "",
 };
 
@@ -113,7 +122,13 @@ const PROPERTY_MATH: Record<string, string> = {
   G: "g",
   CPMASS: "c_p",
   CVMASS: "c_v",
-  PHASE: "\\phi",
+  Z: "Z",
+  L: "k",
+  V: "\\mu",
+  PRANDTL: "\\mathit{Pr}",
+  // PHASE is CoolProp's enum identifier (not a thermodynamic symbol). Rendered
+  // as italic "phase" via \mathit so it visually matches the other symbols.
+  PHASE: "\\mathit{phase}",
   TMIN: "T_{\\min}",
   TMAX: "T_{\\max}",
   PMIN: "P_{\\min}",
@@ -131,12 +146,34 @@ const PROPERTY_PLAIN: Record<string, string> = {
   G: "g",
   CPMASS: "cₚ",
   CVMASS: "cᵥ",
-  PHASE: "φ",
+  Z: "Z",
+  L: "k",
+  V: "μ",
+  PRANDTL: "Pr",
+  PHASE: "phase",
   TMIN: "Tmin",
   TMAX: "Tmax",
   PMIN: "Pmin",
   PMAX: "Pmax",
 };
+
+// CoolProp phase enum (matches iphase_* values in CoolProp.h).
+const PHASE_LABELS: Record<number, string> = {
+  0: "liquid",
+  1: "supercritical",
+  2: "supercritical gas",
+  3: "supercritical liquid",
+  4: "critical point",
+  5: "gas",
+  6: "two-phase",
+  7: "unknown",
+  8: "not imposed",
+};
+
+export function phaseLabel(code: number): string {
+  if (!Number.isFinite(code)) return "unknown";
+  return PHASE_LABELS[Math.round(code)] ?? "unknown";
+}
 
 const PROPERTY_LABEL: Record<string, string> = {
   T: "Temperature",
@@ -149,7 +186,11 @@ const PROPERTY_LABEL: Record<string, string> = {
   G: "Specific Gibbs free energy",
   CPMASS: "Specific heat at constant pressure",
   CVMASS: "Specific heat at constant volume",
-  PHASE: "Phase",
+  Z: "Compressibility factor",
+  L: "Thermal conductivity",
+  V: "Dynamic viscosity",
+  PRANDTL: "Prandtl number",
+  PHASE: "Phase at current state",
   TMIN: "Minimum temperature",
   TMAX: "Maximum temperature",
   PMIN: "Minimum pressure",

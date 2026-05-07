@@ -328,10 +328,18 @@
 
 .state-metrics__row dt {
   margin: 0;
-  font-size: 0.78rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  color: var(--text-strong, inherit);
+}
+
+.state-metrics__name {
+  font-size: 0.8rem;
+  font-weight: 400;
   color: var(--text-muted);
+  letter-spacing: 0.01em;
 }
 
 .state-metrics__row dd {
