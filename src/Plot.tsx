@@ -10,7 +10,7 @@ import {
   buildPointTrace,
   buildPlotLayout,
 } from "./lib/plotUtils";
-import { isUnitSystem } from "./lib/units";
+import { resolveUnitSystem } from "./lib/units";
 import type { UnitSystem } from "./lib/units";
 
 export type { PlotPoint } from "./lib/plotUtils";
@@ -83,9 +83,9 @@ export function ThermoPlot({
   isolineCount = 7,
   isolinePoints = 200,
   includeSaturation = true,
-  units = "si",
+  units,
 }: ThermoPlotProps) {
-  const unitSystem: UnitSystem = isUnitSystem(units) ? units : "si";
+  const unitSystem: UnitSystem = resolveUnitSystem(units);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);

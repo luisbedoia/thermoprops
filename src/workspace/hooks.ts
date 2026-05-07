@@ -28,7 +28,7 @@ export function useWorkspaceUrlParams({ plotFailed }: { plotFailed: boolean }) {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const fluid = searchParams.get("fluid") ?? "";
-  const units = searchParams.get("units") ?? "si";
+  const units = searchParams.get("units") ?? "celsius";
 
   const [plotId, setPlotId] = useState<string>(
     searchParams.get("plot") || PLOT_DEFAULT,

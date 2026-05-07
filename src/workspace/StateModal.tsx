@@ -1,7 +1,7 @@
 import { FormEvent, RefObject, useEffect } from "react";
 import { Button } from "../components/Button";
 import { Modal } from "../components/Modal";
-import { getDisplayUnit, isUnitSystem } from "../lib";
+import { getDisplayUnit, resolveUnitSystem } from "../lib";
 import type { Property, UnitSystem } from "../lib";
 
 type StateModalFormState = {
@@ -36,7 +36,7 @@ export function StateModal({
   firstValueRef,
   units,
 }: StateModalProps) {
-  const system: UnitSystem = isUnitSystem(units) ? units : "si";
+  const system: UnitSystem = resolveUnitSystem(units);
   useEffect(() => {
     if (!isOpen) {
       return;

@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { calculateProperties, isUnitSystem, properties, toSI } from "./lib";
-import type { UnitSystem } from "./lib";
+import { calculateProperties, properties, resolveUnitSystem, toSI } from "./lib";
 import { normalizeNumericInput } from "./lib/normalizeNumericInput";
 import { ThermoPlot } from "./Plot";
 import type { PlotPoint } from "./Plot";
@@ -15,8 +14,11 @@ import type { WorkspaceViewMode } from "./workspace/hooks";
 import "./Result.css";
 
 const UNIT_LABELS: Record<string, string> = {
-  si: "SI",
+  celsius: "Default",
+  kelvin: "Kelvin",
   imperial: "Imperial",
+  // Legacy alias — older URLs may still carry units=si.
+  si: "SI",
 };
 
 const numericProperties = properties.filter((prop) => prop.input);
@@ -199,7 +201,7 @@ export function WorkspaceView() {
       return;
     }
 
-    const system: UnitSystem = isUnitSystem(units) ? units : "si";
+    const system = resolveUnitSystem(units);
     const value1 = toSI(formState.property1, displayValue1, system);
     const value2 = toSI(formState.property2, displayValue2, system);
 

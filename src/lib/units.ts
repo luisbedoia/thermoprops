@@ -1,8 +1,12 @@
 import { getPropertyDefinition } from "./index";
 
-export type UnitSystem = "si" | "imperial";
+export type UnitSystem = "celsius" | "kelvin" | "imperial";
+
+export const DEFAULT_UNIT_SYSTEM: UnitSystem = "celsius";
 
 const C_TO_K = 273.15;
+const PA_PER_KPA = 1000;
+const J_PER_KJ = 1000;
 const PA_PER_PSI = 6894.757293168361;
 const KG_M3_PER_LB_FT3 = 16.018463373960142;
 const J_KG_PER_BTU_LB = 2326;
@@ -30,6 +34,26 @@ export function normalizePropertyName(name: string): string {
   return COOLPROP_SHORT_ALIASES[name] ?? name;
 }
 
+const UNIT_SYSTEM_ALIASES: Record<string, UnitSystem> = {
+  celsius: "celsius",
+  kelvin: "kelvin",
+  imperial: "imperial",
+  // Legacy aliases — keep so old URLs keep working.
+  default: "celsius",
+  si: "kelvin",
+};
+
+export function isUnitSystem(value: unknown): value is UnitSystem {
+  return value === "celsius" || value === "kelvin" || value === "imperial";
+}
+
+export function resolveUnitSystem(value: unknown): UnitSystem {
+  if (typeof value === "string" && value in UNIT_SYSTEM_ALIASES) {
+    return UNIT_SYSTEM_ALIASES[value];
+  }
+  return DEFAULT_UNIT_SYSTEM;
+}
+
 function kindOf(propertyName: string): Kind | null {
   const def = getPropertyDefinition(normalizePropertyName(propertyName));
   if (!def) return null;
@@ -52,18 +76,32 @@ function kindOf(propertyName: string): Kind | null {
   }
 }
 
-const IMPERIAL_LABELS: Record<Kind, string> = {
-  temperature: "°F",
-  pressure: "psi",
-  density: "lb/ft^3",
-  specEnergy: "BTU/lb",
-  specHeat: "BTU/(lb*°R)",
-  dimensionless: "",
+const LABELS: Record<UnitSystem, Record<Kind, string>> = {
+  celsius: {
+    temperature: "°C",
+    pressure: "kPa",
+    density: "kg/m^3",
+    specEnergy: "kJ/kg",
+    specHeat: "kJ/(kg*K)",
+    dimensionless: "",
+  },
+  kelvin: {
+    temperature: "K",
+    pressure: "kPa",
+    density: "kg/m^3",
+    specEnergy: "kJ/kg",
+    specHeat: "kJ/(kg*K)",
+    dimensionless: "",
+  },
+  imperial: {
+    temperature: "°F",
+    pressure: "psi",
+    density: "lb/ft^3",
+    specEnergy: "BTU/lb",
+    specHeat: "BTU/(lb*°R)",
+    dimensionless: "",
+  },
 };
-
-export function isUnitSystem(value: unknown): value is UnitSystem {
-  return value === "si" || value === "imperial";
-}
 
 export function getDisplayUnit(
   propertyName: string,
@@ -71,35 +109,31 @@ export function getDisplayUnit(
 ): string {
   const def = getPropertyDefinition(normalizePropertyName(propertyName));
   if (!def) return "";
-  if (system === "si") return def.unit;
   const kind = kindOf(propertyName);
   if (kind == null) return def.unit;
   if (kind === "dimensionless") return def.unit;
-  return IMPERIAL_LABELS[kind];
+  return LABELS[system][kind];
 }
 
-export function toSI(
-  propertyName: string,
-  value: number,
-  system: UnitSystem,
-): number {
-  if (system === "si") return value;
-  const kind = kindOf(propertyName);
-  switch (kind) {
-    case "temperature":
-      return ((value - 32) * 5) / 9 + C_TO_K;
-    case "pressure":
-      return value * PA_PER_PSI;
-    case "density":
-      return value * KG_M3_PER_LB_FT3;
-    case "specEnergy":
-      return value * J_KG_PER_BTU_LB;
-    case "specHeat":
-      return value * J_KG_K_PER_BTU_LB_R;
-    case "dimensionless":
-    case null:
-    default:
+function fromSITemperature(value: number, system: UnitSystem): number {
+  switch (system) {
+    case "celsius":
+      return value - C_TO_K;
+    case "kelvin":
       return value;
+    case "imperial":
+      return ((value - C_TO_K) * 9) / 5 + 32;
+  }
+}
+
+function toSITemperature(value: number, system: UnitSystem): number {
+  switch (system) {
+    case "celsius":
+      return value + C_TO_K;
+    case "kelvin":
+      return value;
+    case "imperial":
+      return ((value - 32) * 5) / 9 + C_TO_K;
   }
 }
 
@@ -108,19 +142,46 @@ export function fromSI(
   value: number,
   system: UnitSystem,
 ): number {
-  if (system === "si") return value;
   const kind = kindOf(propertyName);
   switch (kind) {
     case "temperature":
-      return ((value - C_TO_K) * 9) / 5 + 32;
+      return fromSITemperature(value, system);
     case "pressure":
-      return value / PA_PER_PSI;
+      return system === "imperial" ? value / PA_PER_PSI : value / PA_PER_KPA;
     case "density":
-      return value / KG_M3_PER_LB_FT3;
+      return system === "imperial" ? value / KG_M3_PER_LB_FT3 : value;
     case "specEnergy":
-      return value / J_KG_PER_BTU_LB;
+      return system === "imperial" ? value / J_KG_PER_BTU_LB : value / J_PER_KJ;
     case "specHeat":
-      return value / J_KG_K_PER_BTU_LB_R;
+      return system === "imperial"
+        ? value / J_KG_K_PER_BTU_LB_R
+        : value / J_PER_KJ;
+    case "dimensionless":
+    case null:
+    default:
+      return value;
+  }
+}
+
+export function toSI(
+  propertyName: string,
+  value: number,
+  system: UnitSystem,
+): number {
+  const kind = kindOf(propertyName);
+  switch (kind) {
+    case "temperature":
+      return toSITemperature(value, system);
+    case "pressure":
+      return system === "imperial" ? value * PA_PER_PSI : value * PA_PER_KPA;
+    case "density":
+      return system === "imperial" ? value * KG_M3_PER_LB_FT3 : value;
+    case "specEnergy":
+      return system === "imperial" ? value * J_KG_PER_BTU_LB : value * J_PER_KJ;
+    case "specHeat":
+      return system === "imperial"
+        ? value * J_KG_K_PER_BTU_LB_R
+        : value * J_PER_KJ;
     case "dimensionless":
     case null:
     default:

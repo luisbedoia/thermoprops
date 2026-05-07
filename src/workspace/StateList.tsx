@@ -1,5 +1,5 @@
 import { Button } from "../components/Button";
-import { fromSI, getDisplayUnit, isUnitSystem } from "../lib";
+import { fromSI, getDisplayUnit, resolveUnitSystem } from "../lib";
 import type { UnitSystem } from "../lib";
 import type { ComputedState, StateDefinition } from "./types";
 
@@ -7,10 +7,6 @@ const NUMBER_FORMAT = new Intl.NumberFormat(undefined, {
   minimumSignificantDigits: 3,
   maximumSignificantDigits: 8,
 });
-
-function asSystem(units: string): UnitSystem {
-  return isUnitSystem(units) ? units : "si";
-}
 
 function formatInputValue(
   propertyName: string,
@@ -64,7 +60,7 @@ export function StateList({
   fluidSelected,
   units,
 }: StateListProps) {
-  const system = asSystem(units);
+  const system = resolveUnitSystem(units);
   const summary =
     states.length === 0
       ? "No states tracked yet."
@@ -276,7 +272,7 @@ export function StateQuickActions({
   fluidSelected,
   units,
 }: StateQuickActionsProps) {
-  const system = asSystem(units);
+  const system = resolveUnitSystem(units);
   return (
     <section className="state-quick" aria-live="polite">
       <header className="state-quick__header">

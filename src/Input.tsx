@@ -1,13 +1,14 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { getFluidDetails, getFluidsList } from "./lib";
+import { getFluidDetails, getFluidsList, resolveUnitSystem } from "./lib";
 import "./Input.css";
 import { MathText } from "./components/MathText";
 import { Button } from "./components/Button";
 
 const UNIT_SYSTEMS = [
-  { value: "si", label: "SI (kelvin, pascal, joule/kg)" },
-  { value: "imperial", label: "Imperial (fahrenheit, psi, btu/lb)" },
+  { value: "celsius", label: "Default (°C, kPa, kJ)" },
+  { value: "kelvin", label: "Kelvin (K, kPa, kJ)" },
+  { value: "imperial", label: "Imperial (°F, psi, BTU)" },
 ];
 
 type FormState = {
@@ -25,7 +26,7 @@ export function SettingsView() {
   } | null>(null);
   const [formState, setFormState] = useState<FormState>(() => ({
     fluid: searchParams.get("fluid") ?? "",
-    units: searchParams.get("units") ?? UNIT_SYSTEMS[0].value,
+    units: resolveUnitSystem(searchParams.get("units")),
   }));
 
   const searchSnapshot = useMemo(() => searchParams.toString(), [searchParams]);
