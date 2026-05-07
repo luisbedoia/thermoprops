@@ -201,6 +201,17 @@ export function getPropertyDefinition(name: string) {
   return properties.find((prop) => prop.name === name);
 }
 
+// CoolProp accepts most pair-combinations of (T, P, D, H, S, U) for pure
+// fluids, but vapor quality (Q) is only meaningful on the saturation curve —
+// it must be paired with T or P. Other combinations would always error.
+export function areCompatibleInputs(a: string, b: string): boolean {
+  if (a === b) return false;
+  if (a === "Q" || b === "Q") {
+    return a === "T" || a === "P" || b === "T" || b === "P";
+  }
+  return true;
+}
+
 export function calculateProperty(
   property: string,
   property1: string,

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  areCompatibleInputs,
   properties,
   resolveUnitSystem,
   toSI,
@@ -271,8 +272,10 @@ export function WorkspaceView() {
     (field: keyof FormState, value: string) => {
       setFormState((prev) => {
         if (field === "property1") {
-          if (value === prev.property2) {
-            const fallback = numericProperties.find((prop) => prop.name !== value);
+          if (!areCompatibleInputs(value, prev.property2)) {
+            const fallback = numericProperties.find((prop) =>
+              areCompatibleInputs(prop.name, value),
+            );
             return {
               ...prev,
               property1: value,
@@ -282,8 +285,10 @@ export function WorkspaceView() {
           return { ...prev, property1: value };
         }
         if (field === "property2") {
-          if (value === prev.property1) {
-            const fallback = numericProperties.find((prop) => prop.name !== value);
+          if (!areCompatibleInputs(prev.property1, value)) {
+            const fallback = numericProperties.find((prop) =>
+              areCompatibleInputs(prop.name, value),
+            );
             return {
               ...prev,
               property1: fallback?.name ?? prev.property1,
@@ -299,12 +304,18 @@ export function WorkspaceView() {
   );
 
   const propertyOptions1 = useMemo(
-    () => numericProperties.filter((prop) => prop.name !== formState.property2),
+    () =>
+      numericProperties.filter((prop) =>
+        areCompatibleInputs(prop.name, formState.property2),
+      ),
     [formState.property2],
   );
 
   const propertyOptions2 = useMemo(
-    () => numericProperties.filter((prop) => prop.name !== formState.property1),
+    () =>
+      numericProperties.filter((prop) =>
+        areCompatibleInputs(prop.name, formState.property1),
+      ),
     [formState.property1],
   );
 

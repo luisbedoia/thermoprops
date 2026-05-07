@@ -359,8 +359,23 @@
 }
 
 .state-metrics--card {
+  container-type: inline-size;
   border-top: 1px solid var(--border-soft);
   padding-top: 0.75rem;
+}
+
+/* Cuando la tarjeta es estrecha (≤320 px) apilamos dt encima de dd para que
+ * los nombres largos no se solapen con el valor. Por encima de ese umbral se
+ * usa el layout de dos columnas heredado de .state-metrics__row. */
+@container (max-width: 320px) {
+  .state-metrics--card .state-metrics__row {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+
+  .state-metrics--card .state-metrics__row dd {
+    justify-self: start;
+  }
 }
 
 .state-metrics--table {
