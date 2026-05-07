@@ -1,13 +1,20 @@
-// Pretty-printing helpers for unit strings.
+// Pretty-printing helpers for unit strings and property symbols.
 //
-// Two output flavors:
-//   - unitToMath: LaTeX, suitable for KaTeX (<MathText/>).
-//   - unitToPlain: Unicode-only, suitable for <option>, Plotly axis titles,
-//     hover templates, etc.
+// Property symbols follow Çengel's "Thermodynamics: An Engineering Approach"
+// nomenclature (ρ, h, s, u, x, g, c_p, c_v, …) so the same letter shows up
+// everywhere — chips, metric labels, modal dropdown, plot axes — instead of
+// CoolProp's API names (D, H, S, U, Q, G, CPMASS, CVMASS, Hmass, …).
 //
-// A small fixed table covers every unit string the app actually emits today.
-// A regex-based fallback handles anything else (e.g. legacy SI strings or
-// future additions) without crashing.
+// Unit and property formatters each come in two flavors:
+//   - *ToMath: LaTeX, suitable for KaTeX (<MathText/>).
+//   - *ToPlain: Unicode-only, suitable for <option>, Plotly axis titles,
+//     hover templates — anywhere HTML/LaTeX cannot be embedded.
+//
+// A small fixed table covers every string the app emits today. A regex-based
+// fallback handles anything else (e.g. legacy SI strings or future additions)
+// without crashing.
+
+import { normalizePropertyName } from "./units";
 
 const UNIT_MATH: Record<string, string> = {
   "": "",
@@ -91,4 +98,75 @@ export function unitToMath(unit: string): string {
 export function unitToPlain(unit: string): string {
   if (unit in UNIT_PLAIN) return UNIT_PLAIN[unit];
   return fallbackPlain(unit);
+}
+
+// ── Property symbols (Çengel nomenclature) ───────────────────────────────────
+
+const PROPERTY_MATH: Record<string, string> = {
+  T: "T",
+  P: "P",
+  D: "\\rho",
+  H: "h",
+  S: "s",
+  U: "u",
+  Q: "x",
+  G: "g",
+  CPMASS: "c_p",
+  CVMASS: "c_v",
+  PHASE: "\\phi",
+  TMIN: "T_{\\min}",
+  TMAX: "T_{\\max}",
+  PMIN: "P_{\\min}",
+  PMAX: "P_{\\max}",
+};
+
+const PROPERTY_PLAIN: Record<string, string> = {
+  T: "T",
+  P: "P",
+  D: "ρ",
+  H: "h",
+  S: "s",
+  U: "u",
+  Q: "x",
+  G: "g",
+  CPMASS: "cₚ",
+  CVMASS: "cᵥ",
+  PHASE: "φ",
+  TMIN: "Tmin",
+  TMAX: "Tmax",
+  PMIN: "Pmin",
+  PMAX: "Pmax",
+};
+
+const PROPERTY_LABEL: Record<string, string> = {
+  T: "Temperature",
+  P: "Pressure",
+  D: "Density",
+  H: "Specific enthalpy",
+  S: "Specific entropy",
+  U: "Specific internal energy",
+  Q: "Vapor quality",
+  G: "Specific Gibbs free energy",
+  CPMASS: "Specific heat at constant pressure",
+  CVMASS: "Specific heat at constant volume",
+  PHASE: "Phase",
+  TMIN: "Minimum temperature",
+  TMAX: "Maximum temperature",
+  PMIN: "Minimum pressure",
+  PMAX: "Maximum pressure",
+};
+
+export function propertyToMath(name: string): string {
+  const canonical = normalizePropertyName(name);
+  return PROPERTY_MATH[canonical] ?? canonical;
+}
+
+export function propertyToPlain(name: string): string {
+  const canonical = normalizePropertyName(name);
+  return PROPERTY_PLAIN[canonical] ?? canonical;
+}
+
+export function propertyLabel(name: string): string | undefined {
+  const canonical = normalizePropertyName(name);
+  return PROPERTY_LABEL[canonical];
 }

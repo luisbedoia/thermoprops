@@ -3,6 +3,8 @@ import { MathText } from "../components/MathText";
 import {
   fromSI,
   getDisplayUnit,
+  propertyLabel,
+  propertyToMath,
   resolveUnitSystem,
   unitToMath,
 } from "../lib";
@@ -16,6 +18,15 @@ function UnitMath({ unit, className }: { unit: string; className?: string }) {
       className={className}
       expression={unitToMath(unit)}
       ariaLabel={unit}
+    />
+  );
+}
+
+function PropertyMath({ name }: { name: string }) {
+  return (
+    <MathText
+      expression={propertyToMath(name)}
+      ariaLabel={propertyLabel(name) ?? name}
     />
   );
 }
@@ -46,14 +57,14 @@ function StateChips({ definition, units, className }: ChipsProps) {
   const unit2 = getDisplayUnit(definition.property2, units);
   return (
     <>
-      <span className={className}>
-        {definition.property1} ={" "}
+      <span className={className} title={propertyLabel(definition.property1)}>
+        <PropertyMath name={definition.property1} /> ={" "}
         {formatInputValue(definition.property1, definition.value1, units)}
         {unit1 ? " " : null}
         <UnitMath unit={unit1} />
       </span>
-      <span className={className}>
-        {definition.property2} ={" "}
+      <span className={className} title={propertyLabel(definition.property2)}>
+        <PropertyMath name={definition.property2} /> ={" "}
         {formatInputValue(definition.property2, definition.value2, units)}
         {unit2 ? " " : null}
         <UnitMath unit={unit2} />
@@ -260,9 +271,12 @@ function StateMetrics({ state, limit, variant, units }: StateMetricsProps) {
       {metrics.map((result) => {
         const displayValue = fromSI(result.name, result.value, units);
         const displayUnit = getDisplayUnit(result.name, units);
+        const tooltip = propertyLabel(result.name) ?? result.description;
         return (
           <div key={result.name} className="state-metrics__row">
-            <dt>{result.description}</dt>
+            <dt title={tooltip}>
+              <PropertyMath name={result.name} />
+            </dt>
             <dd>
               {NUMBER_FORMAT.format(displayValue)}
               <UnitMath unit={displayUnit} />
@@ -342,10 +356,10 @@ export function StateQuickActions({
                   {state.definition.label}
                 </span>
                 <span className="state-quick__inputs">
-                  {state.definition.property1} = {value1}
+                  <PropertyMath name={state.definition.property1} /> = {value1}
                   {unit1 ? " " : null}
                   <UnitMath unit={unit1} /> •{" "}
-                  {state.definition.property2} = {value2}
+                  <PropertyMath name={state.definition.property2} /> = {value2}
                   {unit2 ? " " : null}
                   <UnitMath unit={unit2} />
                 </span>

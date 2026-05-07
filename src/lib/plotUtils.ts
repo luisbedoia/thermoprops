@@ -5,7 +5,7 @@ import {
   normalizePropertyName,
 } from "./units";
 import type { UnitSystem } from "./units";
-import { unitToPlain } from "./unitsFormat";
+import { propertyToPlain, unitToPlain } from "./unitsFormat";
 
 export function getParameterInfo(
   parameter: number,
@@ -40,12 +40,13 @@ export function buildIsolineLabel(
   const name = normalizePropertyName(short);
   const displayValue = fromSI(name, value, unitSystem);
   const unitLabel = unitToPlain(getDisplayUnit(name, unitSystem));
+  const symbol = propertyToPlain(name);
 
   const formatted = new Intl.NumberFormat(undefined, {
     maximumSignificantDigits: 4,
   }).format(displayValue);
 
-  const parts = [short, formatted];
+  const parts = [symbol, formatted];
   if (unitLabel && unitLabel !== "-") {
     parts.push(unitLabel);
   }
@@ -58,15 +59,15 @@ export function buildAxisTitle(
   unitSystem: UnitSystem = DEFAULT_UNIT_SYSTEM,
 ): string {
   const short = getParameterInfo(parameter, "short");
-  const unitLabel = unitToPlain(
-    getDisplayUnit(normalizePropertyName(short), unitSystem),
-  );
+  const name = normalizePropertyName(short);
+  const symbol = propertyToPlain(name);
+  const unitLabel = unitToPlain(getDisplayUnit(name, unitSystem));
 
   if (unitLabel && unitLabel !== "-") {
-    return `${short} (${unitLabel})`;
+    return `${symbol} (${unitLabel})`;
   }
 
-  return short;
+  return symbol;
 }
 
 export function isSaturationCurve(parameter: number, value: number): boolean {

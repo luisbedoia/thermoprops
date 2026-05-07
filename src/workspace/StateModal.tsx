@@ -1,7 +1,13 @@
 import { FormEvent, RefObject, useEffect } from "react";
 import { Button } from "../components/Button";
 import { Modal } from "../components/Modal";
-import { getDisplayUnit, resolveUnitSystem, unitToPlain } from "../lib";
+import {
+  getDisplayUnit,
+  propertyLabel,
+  propertyToPlain,
+  resolveUnitSystem,
+  unitToPlain,
+} from "../lib";
 import type { Property, UnitSystem } from "../lib";
 
 type StateModalFormState = {
@@ -171,11 +177,14 @@ type PropertyOptionProps = {
 };
 
 function PropertyOption({ property, units }: PropertyOptionProps) {
+  const symbol = propertyToPlain(property.name);
   const unit = unitToPlain(getDisplayUnit(property.name, units));
+  const label = propertyLabel(property.name);
   return (
-    <option value={property.name}>
-      {property.name}
+    <option value={property.name} title={label}>
+      {symbol}
       {unit ? ` · ${unit}` : ""}
+      {label ? ` — ${label}` : ""}
     </option>
   );
 }
