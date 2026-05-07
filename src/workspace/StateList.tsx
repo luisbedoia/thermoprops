@@ -37,6 +37,20 @@ const NUMBER_FORMAT = new Intl.NumberFormat(undefined, {
   maximumSignificantDigits: 8,
 });
 
+// Çengel-style basic state subset surfaced in the chart-view accordion.
+// state.results already excludes whichever pair the user picked as inputs,
+// so this set just whitelists "introductory" properties — anything else
+// (Z, k, μ, Pr, c_p, c_v, G, phase) lives in the full Table view.
+const QUICK_BASIC_PROPERTIES: ReadonlySet<string> = new Set([
+  "T",
+  "P",
+  "D",
+  "H",
+  "U",
+  "S",
+  "Q",
+]);
+
 function formatInputValue(
   propertyName: string,
   storedValue: string,
@@ -255,16 +269,19 @@ type StateMetricsProps = {
   state: ComputedState;
   variant: "table" | "card";
   units: UnitSystem;
+  filter?: ReadonlySet<string>;
 };
 
-function StateMetrics({ state, variant, units }: StateMetricsProps) {
+function StateMetrics({ state, variant, units, filter }: StateMetricsProps) {
   if (state.error) {
     return (
       <p className={`state-error state-error--${variant}`}>{state.error}</p>
     );
   }
 
-  const metrics = state.results;
+  const metrics = filter
+    ? state.results.filter((result) => filter.has(result.name))
+    : state.results;
 
   return (
     <dl className={`state-metrics state-metrics--${variant}`}>
@@ -375,19 +392,29 @@ export function StateQuickActions({
             );
             return (
             <li key={state.definition.id} className="state-quick__item">
-              <div className="state-quick__info">
-                <span className="state-quick__label">
-                  {state.definition.label}
-                </span>
-                <span className="state-quick__inputs">
-                  <PropertyMath name={state.definition.property1} /> = {value1}
-                  {unit1 ? " " : null}
-                  <UnitMath unit={unit1} /> •{" "}
-                  <PropertyMath name={state.definition.property2} /> = {value2}
-                  {unit2 ? " " : null}
-                  <UnitMath unit={unit2} />
-                </span>
-              </div>
+              <details className="state-quick__details">
+                <summary className="state-quick__summary">
+                  <div className="state-quick__info">
+                    <span className="state-quick__label">
+                      {state.definition.label}
+                    </span>
+                    <span className="state-quick__inputs">
+                      <PropertyMath name={state.definition.property1} /> = {value1}
+                      {unit1 ? " " : null}
+                      <UnitMath unit={unit1} />,{" "}
+                      <PropertyMath name={state.definition.property2} /> = {value2}
+                      {unit2 ? " " : null}
+                      <UnitMath unit={unit2} />
+                    </span>
+                  </div>
+                </summary>
+                <StateMetrics
+                  state={state}
+                  variant="card"
+                  units={system}
+                  filter={QUICK_BASIC_PROPERTIES}
+                />
+              </details>
               <Button
                 variant="ghost"
                 size="sm"
