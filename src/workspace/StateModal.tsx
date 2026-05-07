@@ -1,7 +1,8 @@
 import { FormEvent, RefObject, useEffect } from "react";
 import { Button } from "../components/Button";
 import { Modal } from "../components/Modal";
-import type { Property } from "../lib";
+import { getDisplayUnit, isUnitSystem } from "../lib";
+import type { Property, UnitSystem } from "../lib";
 
 type StateModalFormState = {
   property1: string;
@@ -20,6 +21,7 @@ type StateModalProps = {
   propertyOptions2: Property[];
   formError: string | null;
   firstValueRef: RefObject<HTMLInputElement | null>;
+  units: string;
 };
 
 export function StateModal({
@@ -32,7 +34,9 @@ export function StateModal({
   propertyOptions2,
   formError,
   firstValueRef,
+  units,
 }: StateModalProps) {
+  const system: UnitSystem = isUnitSystem(units) ? units : "si";
   useEffect(() => {
     if (!isOpen) {
       return;
@@ -92,7 +96,11 @@ export function StateModal({
               }
             >
               {propertyOptions1.map((property) => (
-                <PropertyOption key={property.name} property={property} />
+                <PropertyOption
+                  key={property.name}
+                  property={property}
+                  units={system}
+                />
               ))}
             </select>
           </div>
@@ -122,7 +130,11 @@ export function StateModal({
               }
             >
               {propertyOptions2.map((property) => (
-                <PropertyOption key={property.name} property={property} />
+                <PropertyOption
+                  key={property.name}
+                  property={property}
+                  units={system}
+                />
               ))}
             </select>
           </div>
@@ -155,12 +167,15 @@ export function StateModal({
 
 type PropertyOptionProps = {
   property: Property;
+  units: UnitSystem;
 };
 
-function PropertyOption({ property }: PropertyOptionProps) {
+function PropertyOption({ property, units }: PropertyOptionProps) {
+  const unit = getDisplayUnit(property.name, units);
   return (
     <option value={property.name}>
-      {property.name} · {property.unit}
+      {property.name}
+      {unit ? ` · ${unit}` : ""}
     </option>
   );
 }

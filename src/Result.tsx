@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { calculateProperties, properties } from "./lib";
+import { calculateProperties, isUnitSystem, properties, toSI } from "./lib";
+import type { UnitSystem } from "./lib";
 import { normalizeNumericInput } from "./lib/normalizeNumericInput";
 import { ThermoPlot } from "./Plot";
 import type { PlotPoint } from "./Plot";
@@ -190,13 +191,17 @@ export function WorkspaceView() {
       return;
     }
 
-    const value1 = Number(normalizedValue1);
-    const value2 = Number(normalizedValue2);
+    const displayValue1 = Number(normalizedValue1);
+    const displayValue2 = Number(normalizedValue2);
 
-    if (!Number.isFinite(value1) || !Number.isFinite(value2)) {
+    if (!Number.isFinite(displayValue1) || !Number.isFinite(displayValue2)) {
       setFormError("Both values must be numeric.");
       return;
     }
+
+    const system: UnitSystem = isUnitSystem(units) ? units : "si";
+    const value1 = toSI(formState.property1, displayValue1, system);
+    const value2 = toSI(formState.property2, displayValue2, system);
 
     try {
       calculateProperties(
@@ -219,8 +224,8 @@ export function WorkspaceView() {
       label: createStateLabel(states.length + 1),
       property1: formState.property1,
       property2: formState.property2,
-      value1: normalizedValue1,
-      value2: normalizedValue2,
+      value1: String(value1),
+      value2: String(value2),
     });
 
     setStates((prev) => [...prev, nextState]);
@@ -329,6 +334,7 @@ export function WorkspaceView() {
               onIsolineParameterChange={setIsolineParameter}
               onPlotError={setPlotFailed}
               points={plotPoints}
+              units={units}
             />
             <StateQuickActions
               states={computedStates}
@@ -336,6 +342,7 @@ export function WorkspaceView() {
               onRemoveState={handleRemoveState}
               onClearAll={handleClearAll}
               fluidSelected={Boolean(fluid)}
+              units={units}
             />
           </div>
         ) : (
@@ -346,6 +353,7 @@ export function WorkspaceView() {
               onRemoveState={handleRemoveState}
               onClearAll={handleClearAll}
               fluidSelected={Boolean(fluid)}
+              units={units}
             />
           </div>
         )}
@@ -361,6 +369,7 @@ export function WorkspaceView() {
         propertyOptions2={propertyOptions2}
         formError={formError}
         firstValueRef={firstValueRef}
+        units={units}
       />
     </section>
   );

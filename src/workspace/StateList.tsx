@@ -1,10 +1,51 @@
 import { Button } from "../components/Button";
-import type { ComputedState } from "./types";
+import { fromSI, getDisplayUnit, isUnitSystem } from "../lib";
+import type { UnitSystem } from "../lib";
+import type { ComputedState, StateDefinition } from "./types";
 
 const NUMBER_FORMAT = new Intl.NumberFormat(undefined, {
   minimumSignificantDigits: 3,
   maximumSignificantDigits: 8,
 });
+
+function asSystem(units: string): UnitSystem {
+  return isUnitSystem(units) ? units : "si";
+}
+
+function formatInputValue(
+  propertyName: string,
+  storedValue: string,
+  units: UnitSystem,
+): string {
+  const numeric = Number(storedValue);
+  if (!Number.isFinite(numeric)) return storedValue;
+  return NUMBER_FORMAT.format(fromSI(propertyName, numeric, units));
+}
+
+type ChipsProps = {
+  definition: StateDefinition;
+  units: UnitSystem;
+  className: string;
+};
+
+function StateChips({ definition, units, className }: ChipsProps) {
+  const unit1 = getDisplayUnit(definition.property1, units);
+  const unit2 = getDisplayUnit(definition.property2, units);
+  return (
+    <>
+      <span className={className}>
+        {definition.property1} ={" "}
+        {formatInputValue(definition.property1, definition.value1, units)}
+        {unit1 ? ` ${unit1}` : ""}
+      </span>
+      <span className={className}>
+        {definition.property2} ={" "}
+        {formatInputValue(definition.property2, definition.value2, units)}
+        {unit2 ? ` ${unit2}` : ""}
+      </span>
+    </>
+  );
+}
 
 type StateListProps = {
   states: ComputedState[];
@@ -12,6 +53,7 @@ type StateListProps = {
   onRemoveState: (id: string) => void;
   onClearAll: () => void;
   fluidSelected: boolean;
+  units: string;
 };
 
 export function StateList({
@@ -20,7 +62,9 @@ export function StateList({
   onRemoveState,
   onClearAll,
   fluidSelected,
+  units,
 }: StateListProps) {
+  const system = asSystem(units);
   const summary =
     states.length === 0
       ? "No states tracked yet."
@@ -86,6 +130,7 @@ export function StateList({
                     key={state.definition.id}
                     state={state}
                     onRemove={onRemoveState}
+                    units={system}
                   />
                 ))}
               </tbody>
@@ -98,6 +143,7 @@ export function StateList({
                 key={state.definition.id}
                 state={state}
                 onRemove={onRemoveState}
+                units={system}
               />
             ))}
           </ul>
@@ -110,9 +156,10 @@ export function StateList({
 type StateRowProps = {
   state: ComputedState;
   onRemove: (id: string) => void;
+  units: UnitSystem;
 };
 
-function StateRow({ state, onRemove }: StateRowProps) {
+function StateRow({ state, onRemove, units }: StateRowProps) {
   return (
     <tr>
       <th scope="row">
@@ -120,14 +167,13 @@ function StateRow({ state, onRemove }: StateRowProps) {
       </th>
       <td>
         <div className="state-list__chips">
-          <span className="state-list__chip">
-            {state.definition.property1} = {state.definition.value1}
-          </span>
-          <span className="state-list__chip">
-            {state.definition.property2} = {state.definition.value2}
-          </span>
+          <StateChips
+            definition={state.definition}
+            units={units}
+            className="state-list__chip"
+          />
         </div>
-        <StateMetrics state={state} limit={4} variant="table" />
+        <StateMetrics state={state} limit={4} variant="table" units={units} />
       </td>
       <td className="state-list__actions">
         <Button
@@ -146,21 +192,21 @@ function StateRow({ state, onRemove }: StateRowProps) {
 type StateCardProps = {
   state: ComputedState;
   onRemove: (id: string) => void;
+  units: UnitSystem;
 };
 
-function StateCard({ state, onRemove }: StateCardProps) {
+function StateCard({ state, onRemove, units }: StateCardProps) {
   return (
     <li className="state-card">
       <header className="state-card__header">
         <div>
           <span className="state-card__title">{state.definition.label}</span>
           <div className="state-card__chips">
-            <span className="state-card__chip">
-              {state.definition.property1} = {state.definition.value1}
-            </span>
-            <span className="state-card__chip">
-              {state.definition.property2} = {state.definition.value2}
-            </span>
+            <StateChips
+              definition={state.definition}
+              units={units}
+              className="state-card__chip"
+            />
           </div>
         </div>
         <Button
@@ -173,7 +219,7 @@ function StateCard({ state, onRemove }: StateCardProps) {
           Remove
         </Button>
       </header>
-      <StateMetrics state={state} limit={6} variant="card" />
+      <StateMetrics state={state} limit={6} variant="card" units={units} />
     </li>
   );
 }
@@ -182,9 +228,10 @@ type StateMetricsProps = {
   state: ComputedState;
   limit: number;
   variant: "table" | "card";
+  units: UnitSystem;
 };
 
-function StateMetrics({ state, limit, variant }: StateMetricsProps) {
+function StateMetrics({ state, limit, variant, units }: StateMetricsProps) {
   if (state.error) {
     return (
       <p className={`state-error state-error--${variant}`}>{state.error}</p>
@@ -195,15 +242,19 @@ function StateMetrics({ state, limit, variant }: StateMetricsProps) {
 
   return (
     <dl className={`state-metrics state-metrics--${variant}`}>
-      {metrics.map((result) => (
-        <div key={result.name} className="state-metrics__row">
-          <dt>{result.description}</dt>
-          <dd>
-            {NUMBER_FORMAT.format(result.value)}
-            {result.unit && <span>{result.unit}</span>}
-          </dd>
-        </div>
-      ))}
+      {metrics.map((result) => {
+        const displayValue = fromSI(result.name, result.value, units);
+        const displayUnit = getDisplayUnit(result.name, units);
+        return (
+          <div key={result.name} className="state-metrics__row">
+            <dt>{result.description}</dt>
+            <dd>
+              {NUMBER_FORMAT.format(displayValue)}
+              {displayUnit && <span>{displayUnit}</span>}
+            </dd>
+          </div>
+        );
+      })}
     </dl>
   );
 }
@@ -214,6 +265,7 @@ type StateQuickActionsProps = {
   onRemoveState: (id: string) => void;
   onClearAll: () => void;
   fluidSelected: boolean;
+  units: string;
 };
 
 export function StateQuickActions({
@@ -222,7 +274,9 @@ export function StateQuickActions({
   onRemoveState,
   onClearAll,
   fluidSelected,
+  units,
 }: StateQuickActionsProps) {
+  const system = asSystem(units);
   return (
     <section className="state-quick" aria-live="polite">
       <header className="state-quick__header">
@@ -253,15 +307,30 @@ export function StateQuickActions({
         </p>
       ) : (
         <ul className="state-quick__list">
-          {states.map((state) => (
+          {states.map((state) => {
+            const unit1 = getDisplayUnit(state.definition.property1, system);
+            const unit2 = getDisplayUnit(state.definition.property2, system);
+            const value1 = formatInputValue(
+              state.definition.property1,
+              state.definition.value1,
+              system,
+            );
+            const value2 = formatInputValue(
+              state.definition.property2,
+              state.definition.value2,
+              system,
+            );
+            return (
             <li key={state.definition.id} className="state-quick__item">
               <div className="state-quick__info">
                 <span className="state-quick__label">
                   {state.definition.label}
                 </span>
                 <span className="state-quick__inputs">
-                  {state.definition.property1} = {state.definition.value1} •{" "}
-                  {state.definition.property2} = {state.definition.value2}
+                  {state.definition.property1} = {value1}
+                  {unit1 ? ` ${unit1}` : ""} •{" "}
+                  {state.definition.property2} = {value2}
+                  {unit2 ? ` ${unit2}` : ""}
                 </span>
               </div>
               <Button
@@ -274,7 +343,8 @@ export function StateQuickActions({
                 Remove
               </Button>
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
     </section>

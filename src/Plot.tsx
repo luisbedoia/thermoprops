@@ -10,6 +10,8 @@ import {
   buildPointTrace,
   buildPlotLayout,
 } from "./lib/plotUtils";
+import { isUnitSystem } from "./lib/units";
+import type { UnitSystem } from "./lib/units";
 
 export type { PlotPoint } from "./lib/plotUtils";
 import type { PlotPoint } from "./lib/plotUtils";
@@ -36,6 +38,7 @@ type ThermoPlotProps = {
   isolineCount?: number;
   isolinePoints?: number;
   includeSaturation?: boolean;
+  units?: string;
 };
 
 function useLegendPlacement(wrapperRef: RefObject<HTMLDivElement | null>): "bottom" | "right" {
@@ -80,7 +83,9 @@ export function ThermoPlot({
   isolineCount = 7,
   isolinePoints = 200,
   includeSaturation = true,
+  units = "si",
 }: ThermoPlotProps) {
+  const unitSystem: UnitSystem = isUnitSystem(units) ? units : "si";
   const containerRef = useRef<HTMLDivElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
@@ -219,11 +224,13 @@ export function ThermoPlot({
           plotData.isolines,
           plotData.xAxis.parameter,
           plotData.yAxis.parameter,
+          unitSystem,
         );
         const pointTrace = buildPointTrace(
           points,
           plotData.xAxis.parameter,
           plotData.yAxis.parameter,
+          unitSystem,
         );
         const traces = pointTrace
           ? [...isolineTraces, pointTrace]
@@ -248,6 +255,7 @@ export function ThermoPlot({
           legendPlacement,
           xAxisRange,
           yAxisRange,
+          unitSystem,
         );
 
         const plotlyModule = (await import(
@@ -319,6 +327,7 @@ export function ThermoPlot({
     points,
     legendPlacement,
     onPlotError,
+    unitSystem,
   ]);
 
   return (
@@ -355,7 +364,7 @@ export function ThermoPlot({
           >
             {currentPlotDef?.isolineOptions.map((option) => (
               <option key={option.parameter} value={option.parameter}>
-                {buildIsolineLabel(option.parameter, option.range.min)}
+                {buildIsolineLabel(option.parameter, option.range.min, unitSystem)}
               </option>
             ))}
           </select>
