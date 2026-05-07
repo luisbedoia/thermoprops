@@ -111,7 +111,7 @@ export function getDisplayUnit(
   if (!def) return "";
   const kind = kindOf(propertyName);
   if (kind == null) return def.unit;
-  if (kind === "dimensionless") return def.unit;
+  if (kind === "dimensionless") return "";
   return LABELS[system][kind];
 }
 

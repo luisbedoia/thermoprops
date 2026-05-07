@@ -27,7 +27,7 @@ const UNIT_MATH: Record<string, string> = {
   "J/(kg*K)": "\\mathrm{J}/(\\mathrm{kg}\\cdot\\mathrm{K})",
   "kJ/(kg*K)": "\\mathrm{kJ}/(\\mathrm{kg}\\cdot\\mathrm{K})",
   "BTU/(lb*°R)": "\\mathrm{BTU}/(\\mathrm{lb}\\cdot{}^{\\circ}\\mathrm{R})",
-  "mol/mol": "\\mathrm{mol}/\\mathrm{mol}",
+  "mol/mol": "",
 };
 
 const UNIT_PLAIN: Record<string, string> = {
@@ -48,7 +48,7 @@ const UNIT_PLAIN: Record<string, string> = {
   "J/(kg*K)": "J/(kg·K)",
   "kJ/(kg*K)": "kJ/(kg·K)",
   "BTU/(lb*°R)": "BTU/(lb·°R)",
-  "mol/mol": "mol/mol",
+  "mol/mol": "",
 };
 
 const SUPERSCRIPT_DIGITS: Record<string, string> = {
