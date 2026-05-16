@@ -82,6 +82,14 @@ export const properties: Property[] = [
     trivial: false,
   },
   {
+    name: "SPECVOL",
+    unit: "m^3/kg",
+    description: "Mass specific volume",
+    input: false,
+    output: true,
+    trivial: false,
+  },
+  {
     name: "CPMASS",
     unit: "J/(kg*K)",
     description: "Mass specific constant pressure specific heat",
@@ -225,6 +233,18 @@ export function calculateProperty(
   checkValidInputProperty(property2);
   if (!window.CP?.propsSI) {
     throw new Error("CoolProp PropsSI API is not available.");
+  }
+  // CoolProp does not expose specific volume directly; derive it from density.
+  if (property === "SPECVOL") {
+    const density = window.CP.propsSI(
+      "D",
+      property1,
+      value1,
+      property2,
+      value2,
+      fluid,
+    );
+    return 1 / density;
   }
   return window.CP.propsSI(
     property,

@@ -20,6 +20,7 @@ type Kind =
   | "temperature"
   | "pressure"
   | "density"
+  | "specVolume"
   | "specEnergy"
   | "specHeat"
   | "conductivity"
@@ -70,6 +71,8 @@ function kindOf(propertyName: string): Kind | null {
       return "pressure";
     case "kg/m^3":
       return "density";
+    case "m^3/kg":
+      return "specVolume";
     case "J/kg":
       return "specEnergy";
     case "J/(kg*K)":
@@ -91,6 +94,7 @@ const LABELS: Record<UnitSystem, Record<Kind, string>> = {
     temperature: "°C",
     pressure: "kPa",
     density: "kg/m^3",
+    specVolume: "m^3/kg",
     specEnergy: "kJ/kg",
     specHeat: "kJ/(kg*K)",
     conductivity: "W/(m*K)",
@@ -101,6 +105,7 @@ const LABELS: Record<UnitSystem, Record<Kind, string>> = {
     temperature: "K",
     pressure: "kPa",
     density: "kg/m^3",
+    specVolume: "m^3/kg",
     specEnergy: "kJ/kg",
     specHeat: "kJ/(kg*K)",
     conductivity: "W/(m*K)",
@@ -111,6 +116,7 @@ const LABELS: Record<UnitSystem, Record<Kind, string>> = {
     temperature: "°F",
     pressure: "psi",
     density: "lb/ft^3",
+    specVolume: "ft^3/lb",
     specEnergy: "BTU/lb",
     specHeat: "BTU/(lb*°R)",
     conductivity: "BTU/(h*ft*°F)",
@@ -166,6 +172,9 @@ export function fromSI(
       return system === "imperial" ? value / PA_PER_PSI : value / PA_PER_KPA;
     case "density":
       return system === "imperial" ? value / KG_M3_PER_LB_FT3 : value;
+    case "specVolume":
+      // v = 1/ρ; conversion factor inverts the density factor.
+      return system === "imperial" ? value * KG_M3_PER_LB_FT3 : value;
     case "specEnergy":
       return system === "imperial" ? value / J_KG_PER_BTU_LB : value / J_PER_KJ;
     case "specHeat":
@@ -196,6 +205,8 @@ export function toSI(
       return system === "imperial" ? value * PA_PER_PSI : value * PA_PER_KPA;
     case "density":
       return system === "imperial" ? value * KG_M3_PER_LB_FT3 : value;
+    case "specVolume":
+      return system === "imperial" ? value / KG_M3_PER_LB_FT3 : value;
     case "specEnergy":
       return system === "imperial" ? value * J_KG_PER_BTU_LB : value * J_PER_KJ;
     case "specHeat":
