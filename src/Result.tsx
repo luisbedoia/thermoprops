@@ -150,7 +150,7 @@ export function WorkspaceView() {
 
   useEffect(() => {
     if (!fluid) {
-      navigate("/settings", { replace: true });
+      navigate("/", { replace: true });
     }
   }, [fluid, navigate]);
 
@@ -263,7 +263,7 @@ export function WorkspaceView() {
     const params = new URLSearchParams();
     params.set("fluid", fluid);
     params.set("units", units);
-    navigate({ pathname: "/settings", search: `?${params.toString()}` });
+    navigate({ pathname: "/", search: `?${params.toString()}` });
   }, [navigate, fluid, units]);
 
   // ── Form property handlers ─────────────────────────────────────────────────

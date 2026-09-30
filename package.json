@@ -8,12 +8,13 @@
   "author": "Luis Fernando Arias Bedoya",
   "scripts": {
     "dev": "vite --host",
-    "build": "tsc -b && vite build --base=/thermoprops/ && cp dist/index.html dist/404.html",
+    "build": "tsc -b && vite build --base=/thermoprops/ && node scripts/postbuild.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "preview": "vite preview",
     "deploy": "npm run build && gh-pages -d dist",
+    "og-image": "node scripts/og-image.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },

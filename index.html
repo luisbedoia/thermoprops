@@ -16,14 +16,17 @@
     <meta property="og:url" content="https://luisbedoia.github.io/thermoprops/" />
     <meta property="og:title" content="Thermoprops – Thermodynamic Properties Calculator" />
     <meta property="og:description" content="Free online calculator for thermodynamic properties of fluids and refrigerants powered by CoolProp WebAssembly." />
-    <meta property="og:image" content="https://luisbedoia.github.io/thermoprops/favicon.png" />
+    <meta property="og:image" content="https://luisbedoia.github.io/thermoprops/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Thermoprops – thermodynamic properties of fluids and refrigerants" />
     <meta property="og:locale" content="en_US" />
 
     <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Thermoprops – Thermodynamic Properties Calculator" />
     <meta name="twitter:description" content="Free online calculator for thermodynamic properties of fluids and refrigerants powered by CoolProp WebAssembly." />
-    <meta name="twitter:image" content="https://luisbedoia.github.io/thermoprops/favicon.png" />
+    <meta name="twitter:image" content="https://luisbedoia.github.io/thermoprops/og-image.png" />
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
@@ -59,7 +62,36 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Static shell: shown while CoolProp WASM loads and readable without JS. React replaces it. -->
+      <div class="app-shell">
+        <header class="app-header">
+          <span class="brand-title">Thermoprops</span>
+        </header>
+        <main class="app-main">
+          <section class="static-intro">
+            <h1>Thermodynamic properties calculator for fluids and refrigerants</h1>
+            <p>
+              Thermoprops is a free online calculator powered by CoolProp. Pick a
+              fluid, fix two independent properties and get the full thermodynamic
+              state: temperature, pressure, density, enthalpy, entropy, internal
+              energy, quality and more.
+            </p>
+            <ul>
+              <li>30 common fluids and refrigerants: water, air, ammonia, CO₂, nitrogen, R134a, R410A, R32, R1234yf, propane…</li>
+              <li>SI and imperial units, with temperature in °C, K or °F.</li>
+              <li>P–h, T–s, P–T and ρ–h diagrams with saturation curves, isolines and all your states plotted together.</li>
+              <li>Shareable links that keep your fluid, units and states.</li>
+            </ul>
+            <p class="static-loader" role="status">Loading calculator…</p>
+            <noscript><p>Thermoprops needs JavaScript and WebAssembly to run.</p></noscript>
+          </section>
+        </main>
+        <footer class="app-footer">
+          <span>Powered by CoolProp WASM</span>
+        </footer>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

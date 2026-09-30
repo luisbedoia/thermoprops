@@ -29,7 +29,7 @@ function renderWorkspace(params = "fluid=Water&units=si&view=table") {
     <MemoryRouter initialEntries={[`/workspace?${params}`]}>
       <Routes>
         <Route path="/workspace" element={<WorkspaceView />} />
-        <Route path="/settings" element={<div data-testid="settings-page" />} />
+        <Route path="/" element={<div data-testid="settings-page" />} />
       </Routes>
     </MemoryRouter>,
   );
@@ -81,7 +81,7 @@ describe("WorkspaceView", () => {
   // ── Routing ────────────────────────────────────────────────────────────────
 
   describe("routing", () => {
-    it("redirects to /settings when fluid is absent from URL", async () => {
+    it("redirects to the settings page when fluid is absent from URL", async () => {
       renderWorkspace("units=si&view=table");
       await waitFor(() => {
         expect(screen.getByTestId("settings-page")).toBeInTheDocument();

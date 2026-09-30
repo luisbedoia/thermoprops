@@ -120,3 +120,30 @@
   font-size: 0.95rem;
   color: var(--text-muted);
 }
+
+.static-intro {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 720px;
+}
+
+.static-intro h1 {
+  margin: 0;
+  font-size: clamp(1.4rem, 1.2vw + 1.1rem, 1.9rem);
+  line-height: 1.25;
+}
+
+.static-intro p,
+.static-intro ul {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.static-intro ul {
+  padding-left: 1.2rem;
+}
+
+.static-loader {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
