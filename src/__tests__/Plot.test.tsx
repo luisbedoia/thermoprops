@@ -85,7 +85,7 @@ describe("ThermoPlot", () => {
     it("offers every diagram of the catalog", () => {
       renderPlot();
       const options = screen.getByLabelText("Chart type").querySelectorAll("option");
-      expect(options).toHaveLength(20);
+      expect(options).toHaveLength(6);
       expect(screen.getByLabelText("Chart type")).toHaveValue("pressure_enthalpy");
     });
 
@@ -118,7 +118,7 @@ describe("ThermoPlot", () => {
       await waitForSuccess(onPlotError);
       expect(fake.cp.fluid("Water").diagram).toHaveBeenCalledWith({
         diagram: "pressure_enthalpy",
-        isolines: [{ kind: "temperature", count: 4 }],
+        isolines: [{ kind: "temperature", count: 4, unit: { scale: 1, offset: -273.15 } }],
         points: 80,
       });
       expect(plotlyMocks.newPlot).toHaveBeenCalledTimes(1);

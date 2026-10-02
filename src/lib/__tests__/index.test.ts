@@ -3,6 +3,7 @@ import { setCoolProp } from "../../coolprop";
 import { fakeCoolProp, LIQUID_WATER, TWO_PHASE_WATER } from "../../test-fixtures/fakeCoolProp";
 import {
   areCompatibleInputs,
+  displayUnit,
   fromSI,
   getDisplayUnit,
   getFluidDetails,
@@ -127,6 +128,15 @@ describe("units by coolprop-rs name", () => {
     expect(fromSI("speed_of_sound", 304.8, "imperial")).toBeCloseTo(1000, 10);
     expect(getDisplayUnit("internal_energy", "celsius")).toBe("kJ/kg");
     expect(getDisplayUnit("specific_volume", "imperial")).toBe("ft^3/lb");
+  });
+
+  it("describe each conversion as an affine map for coolprop-rs", () => {
+    expect(displayUnit("temperature", "celsius")).toEqual({ scale: 1, offset: -273.15 });
+    expect(displayUnit("pressure", "celsius")).toEqual({ scale: 1e-3, offset: 0 });
+    const f = displayUnit("temperature", "imperial");
+    expect(f.scale).toBeCloseTo(1.8, 12);
+    expect(f.offset).toBeCloseTo(-459.67, 9);
+    expect(displayUnit("quality", "imperial")).toEqual({ scale: 1, offset: 0 });
   });
 
   it("leave dimensionless quantities unitless", () => {

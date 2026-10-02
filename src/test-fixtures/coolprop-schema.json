@@ -372,7 +372,7 @@
       "molar_mass": 0.07214878,
       "name": "Isopentane",
       "p_max": 1000000000.0,
-      "p_triple": 0.00008949025483876957,
+      "p_triple": 8.949025483876957e-05,
       "t_max": 500.0,
       "t_triple": 112.65
     },
@@ -486,59 +486,6 @@
   "schema": {
     "diagrams": [
       {
-        "id": "pressure_temperature",
-        "isolines": [
-          "density",
-          "enthalpy",
-          "entropy",
-          "internal_energy"
-        ],
-        "x": {
-          "property": "temperature",
-          "scale": "linear"
-        },
-        "y": {
-          "property": "pressure",
-          "scale": "log"
-        }
-      },
-      {
-        "id": "pressure_density",
-        "isolines": [
-          "temperature",
-          "enthalpy",
-          "entropy",
-          "internal_energy",
-          "quality"
-        ],
-        "x": {
-          "property": "density",
-          "scale": "log"
-        },
-        "y": {
-          "property": "pressure",
-          "scale": "log"
-        }
-      },
-      {
-        "id": "pressure_specific_volume",
-        "isolines": [
-          "temperature",
-          "enthalpy",
-          "entropy",
-          "internal_energy",
-          "quality"
-        ],
-        "x": {
-          "property": "specific_volume",
-          "scale": "log"
-        },
-        "y": {
-          "property": "pressure",
-          "scale": "log"
-        }
-      },
-      {
         "id": "pressure_enthalpy",
         "isolines": [
           "temperature",
@@ -557,96 +504,6 @@
         }
       },
       {
-        "id": "pressure_entropy",
-        "isolines": [
-          "temperature",
-          "density",
-          "enthalpy",
-          "internal_energy",
-          "quality"
-        ],
-        "x": {
-          "property": "entropy",
-          "scale": "linear"
-        },
-        "y": {
-          "property": "pressure",
-          "scale": "log"
-        }
-      },
-      {
-        "id": "pressure_internal_energy",
-        "isolines": [
-          "temperature",
-          "density",
-          "enthalpy",
-          "entropy",
-          "quality"
-        ],
-        "x": {
-          "property": "internal_energy",
-          "scale": "linear"
-        },
-        "y": {
-          "property": "pressure",
-          "scale": "log"
-        }
-      },
-      {
-        "id": "temperature_density",
-        "isolines": [
-          "pressure",
-          "enthalpy",
-          "entropy",
-          "internal_energy",
-          "quality"
-        ],
-        "x": {
-          "property": "density",
-          "scale": "log"
-        },
-        "y": {
-          "property": "temperature",
-          "scale": "linear"
-        }
-      },
-      {
-        "id": "temperature_specific_volume",
-        "isolines": [
-          "pressure",
-          "enthalpy",
-          "entropy",
-          "internal_energy",
-          "quality"
-        ],
-        "x": {
-          "property": "specific_volume",
-          "scale": "log"
-        },
-        "y": {
-          "property": "temperature",
-          "scale": "linear"
-        }
-      },
-      {
-        "id": "temperature_enthalpy",
-        "isolines": [
-          "pressure",
-          "density",
-          "entropy",
-          "internal_energy",
-          "quality"
-        ],
-        "x": {
-          "property": "enthalpy",
-          "scale": "linear"
-        },
-        "y": {
-          "property": "temperature",
-          "scale": "linear"
-        }
-      },
-      {
         "id": "temperature_entropy",
         "isolines": [
           "pressure",
@@ -661,132 +518,6 @@
         },
         "y": {
           "property": "temperature",
-          "scale": "linear"
-        }
-      },
-      {
-        "id": "temperature_internal_energy",
-        "isolines": [
-          "pressure",
-          "density",
-          "enthalpy",
-          "entropy",
-          "quality"
-        ],
-        "x": {
-          "property": "internal_energy",
-          "scale": "linear"
-        },
-        "y": {
-          "property": "temperature",
-          "scale": "linear"
-        }
-      },
-      {
-        "id": "enthalpy_density",
-        "isolines": [
-          "pressure",
-          "temperature",
-          "entropy",
-          "internal_energy",
-          "quality"
-        ],
-        "x": {
-          "property": "density",
-          "scale": "log"
-        },
-        "y": {
-          "property": "enthalpy",
-          "scale": "linear"
-        }
-      },
-      {
-        "id": "density_entropy",
-        "isolines": [
-          "pressure",
-          "temperature",
-          "enthalpy",
-          "internal_energy",
-          "quality"
-        ],
-        "x": {
-          "property": "entropy",
-          "scale": "linear"
-        },
-        "y": {
-          "property": "density",
-          "scale": "log"
-        }
-      },
-      {
-        "id": "internal_energy_density",
-        "isolines": [
-          "pressure",
-          "temperature",
-          "enthalpy",
-          "entropy",
-          "quality"
-        ],
-        "x": {
-          "property": "density",
-          "scale": "log"
-        },
-        "y": {
-          "property": "internal_energy",
-          "scale": "linear"
-        }
-      },
-      {
-        "id": "enthalpy_specific_volume",
-        "isolines": [
-          "pressure",
-          "temperature",
-          "entropy",
-          "internal_energy",
-          "quality"
-        ],
-        "x": {
-          "property": "specific_volume",
-          "scale": "log"
-        },
-        "y": {
-          "property": "enthalpy",
-          "scale": "linear"
-        }
-      },
-      {
-        "id": "specific_volume_entropy",
-        "isolines": [
-          "pressure",
-          "temperature",
-          "enthalpy",
-          "internal_energy",
-          "quality"
-        ],
-        "x": {
-          "property": "entropy",
-          "scale": "linear"
-        },
-        "y": {
-          "property": "specific_volume",
-          "scale": "log"
-        }
-      },
-      {
-        "id": "internal_energy_specific_volume",
-        "isolines": [
-          "pressure",
-          "temperature",
-          "enthalpy",
-          "entropy",
-          "quality"
-        ],
-        "x": {
-          "property": "specific_volume",
-          "scale": "log"
-        },
-        "y": {
-          "property": "internal_energy",
           "scale": "linear"
         }
       },
@@ -809,38 +540,55 @@
         }
       },
       {
-        "id": "enthalpy_internal_energy",
+        "id": "pressure_specific_volume",
         "isolines": [
-          "pressure",
           "temperature",
-          "density",
+          "enthalpy",
           "entropy",
+          "internal_energy",
           "quality"
         ],
         "x": {
-          "property": "internal_energy",
-          "scale": "linear"
+          "property": "specific_volume",
+          "scale": "log"
         },
         "y": {
-          "property": "enthalpy",
+          "property": "pressure",
+          "scale": "log"
+        }
+      },
+      {
+        "id": "temperature_specific_volume",
+        "isolines": [
+          "pressure",
+          "enthalpy",
+          "entropy",
+          "internal_energy",
+          "quality"
+        ],
+        "x": {
+          "property": "specific_volume",
+          "scale": "log"
+        },
+        "y": {
+          "property": "temperature",
           "scale": "linear"
         }
       },
       {
-        "id": "internal_energy_entropy",
+        "id": "pressure_temperature",
         "isolines": [
-          "pressure",
-          "temperature",
           "density",
           "enthalpy",
-          "quality"
+          "entropy",
+          "internal_energy"
         ],
         "x": {
-          "property": "entropy",
+          "property": "temperature",
           "scale": "linear"
         },
         "y": {
-          "property": "internal_energy",
+          "property": "pressure",
           "scale": "linear"
         }
       }

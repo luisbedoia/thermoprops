@@ -85,30 +85,42 @@ function hoverTemplate(
   ].join("<br>");
 }
 
-/** The saturated-liquid and saturated-vapor branches of the dome. */
+function sameCurve(a: Curve, b: Curve): boolean {
+  const close = (u: number | null, v: number | null) =>
+    u === v || (u !== null && v !== null && Math.abs(u - v) <= 1e-9 * Math.abs(v));
+  return (
+    a.x.length === b.x.length &&
+    a.x.every((v, i) => close(v, b.x[i]) && close(a.y[i], b.y[i]))
+  );
+}
+
+/**
+ * The saturated-liquid and saturated-vapor branches of the dome, or a single
+ * saturation curve where they coincide (P–T of a pure fluid).
+ */
 export function buildDomeTraces(
   dome: { liquid: Curve; vapor: Curve },
   xProperty: PlotProperty,
   yProperty: PlotProperty,
   unitSystem: UnitSystem = DEFAULT_UNIT_SYSTEM,
 ): Record<string, unknown>[] {
-  return [
-    ["Saturated liquid", dome.liquid],
-    ["Saturated vapor", dome.vapor],
-  ].map(([name, curve]) => {
-    const c = curve as Curve;
-    return {
-      type: "scatter",
-      mode: "lines",
-      x: convertArray(c.x, xProperty, unitSystem),
-      y: convertArray(c.y, yProperty, unitSystem),
-      name,
-      line: { width: 2, color: DOME_COLOR },
-      showlegend: true,
-      hoverlabel: { bgcolor: "#0f172a", font: { color: "#f8fafc" } },
-      hovertemplate: hoverTemplate(xProperty, yProperty, unitSystem, name as string),
-    };
-  });
+  const branches: [string, Curve][] = sameCurve(dome.liquid, dome.vapor)
+    ? [["Saturation curve", dome.liquid]]
+    : [
+        ["Saturated liquid", dome.liquid],
+        ["Saturated vapor", dome.vapor],
+      ];
+  return branches.map(([name, curve]) => ({
+    type: "scatter",
+    mode: "lines",
+    x: convertArray(curve.x, xProperty, unitSystem),
+    y: convertArray(curve.y, yProperty, unitSystem),
+    name,
+    line: { width: 2, color: DOME_COLOR },
+    showlegend: true,
+    hoverlabel: { bgcolor: "#0f172a", font: { color: "#f8fafc" } },
+    hovertemplate: hoverTemplate(xProperty, yProperty, unitSystem, name),
+  }));
 }
 
 export function buildIsolineTraces(
@@ -166,19 +178,32 @@ export function buildPointTrace(
   };
 }
 
+/** Share of each axis the dome spans in the initial view. */
+const DOME_FILL = 0.7;
+
 /**
- * The span shown on an axis: the diagram's range, with temperature capped at
- * 1.5·Tc (beyond it the plot is mostly empty superheated gas).
+ * The span shown on an axis (SI): centered on the dome, which fills
+ * `DOME_FILL` of it. It may reach past the computed range (below the triple
+ * point, say), which keeps the dome off the edges. Falls back to the full
+ * range when the dome has no extent on this axis.
  */
 export function viewRange(
   axis: AxisData,
-  criticalTemperature: number,
+  domeValues: (number | null)[],
 ): [number, number] | null {
-  if (!axis.range) return null;
-  const [min, max] = axis.range;
-  return axis.property === "temperature"
-    ? [min, Math.min(max, 1.5 * criticalTemperature)]
-    : [min, max];
+  const log = axis.scale === "log";
+  const to = (v: number) => (log ? Math.log10(v) : v);
+  const from = (v: number) => (log ? 10 ** v : v);
+  const dome = domeValues.filter(
+    (v): v is number => v !== null && Number.isFinite(v) && (!log || v > 0),
+  );
+  if (dome.length === 0) return axis.range;
+  const lo = to(Math.min(...dome));
+  const hi = to(Math.max(...dome));
+  if (!(hi > lo)) return axis.range;
+  const half = (hi - lo) / DOME_FILL / 2;
+  const mid = (lo + hi) / 2;
+  return [from(mid - half), from(mid + half)];
 }
 
 export function buildPlotLayout(
@@ -203,7 +228,12 @@ export function buildPlotLayout(
     return {
       title: { text: buildAxisTitle(axis.property, unitSystem), standoff: 10 },
       type: axis.scale,
-      tickformat: ".2s",
+      // Label 2 and 5 between decades in full ("200", not "2"); over a few
+      // decades Plotly would label every digit, so keep to 2 and 5.
+      ...(axis.scale === "log" && {
+        minorloglabels: "complete",
+        ...(r && r[1] - r[0] <= 3 && { dtick: "D2" }),
+      }),
       gridcolor: "#e2e8f0",
       zeroline: false,
       automargin: true,

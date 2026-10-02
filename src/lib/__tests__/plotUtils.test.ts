@@ -69,6 +69,17 @@ describe("buildDomeTraces", () => {
     }
   });
 
+  it("draws one saturation curve where the branches coincide (P–T)", () => {
+    const curve = { x: [300, 400, 647], y: [3e3, 2e5, 2.2e7] };
+    const traces = buildDomeTraces(
+      { liquid: curve, vapor: { x: [...curve.x], y: [...curve.y] } },
+      "temperature",
+      "pressure",
+      "kelvin",
+    );
+    expect(traces.map((t) => t.name)).toEqual(["Saturation curve"]);
+  });
+
   it("converts to display units", () => {
     const [liquid] = buildDomeTraces(dome, "enthalpy", "pressure", "celsius");
     expect(liquid.x).toEqual([100, 200]); // kJ/kg
@@ -136,29 +147,34 @@ describe("buildPointTrace", () => {
 });
 
 describe("viewRange", () => {
-  const axis = (
-    property: AxisData["property"],
-    range: [number, number],
-  ): AxisData => ({
-    property,
+  const linear = (range: [number, number] | null): AxisData => ({
+    property: "entropy",
     scale: "linear",
     range,
   });
 
-  it("caps temperature at 1.5 Tc", () => {
-    expect(viewRange(axis("temperature", [276, 1456]), 647.096)).toEqual([
-      276, 970.644,
-    ]);
+  it("centers the dome, filling 70% of the axis", () => {
+    const [a, b] = viewRange(linear([-20_000, 20_000]), [1000, 8000, null, 4000])!;
+    expect((a + b) / 2).toBeCloseTo(4500, 9);
+    expect(7000 / (b - a)).toBeCloseTo(0.7, 9);
   });
 
-  it("leaves other axes as they are", () => {
-    expect(viewRange(axis("entropy", [0, 9000]), 647.096)).toEqual([0, 9000]);
+  it("centers in log space on log axes", () => {
+    const axis: AxisData = { property: "pressure", scale: "log", range: [1, 1e9] };
+    const [a, b] = viewRange(axis, [1e3, 1e7])!;
+    expect(Math.sqrt(a * b)).toBeCloseTo(1e5, 3);
+    expect(4 / Math.log10(b / a)).toBeCloseTo(0.7, 9);
   });
 
-  it("is null without a range", () => {
-    expect(
-      viewRange({ property: "enthalpy", scale: "linear", range: null }, 647),
-    ).toBeNull();
+  it("may reach past the computed range to keep the dome off the edges", () => {
+    const [a] = viewRange(linear([100, 20_000]), [100, 7100])!;
+    expect(a).toBeLessThan(100);
+  });
+
+  it("falls back to the full range", () => {
+    expect(viewRange(linear([0, 9000]), [3000, 3000])).toEqual([0, 9000]);
+    expect(viewRange(linear([0, 9000]), [])).toEqual([0, 9000]);
+    expect(viewRange(linear(null), [])).toBeNull();
   });
 });
 
@@ -184,6 +200,16 @@ describe("buildPlotLayout", () => {
     expect(layout.xaxis).toMatchObject({ type: "linear", range: [0, 3000] });
     // Log axes take log10 of the display-unit range (kPa here).
     expect(layout.yaxis).toMatchObject({ type: "log", range: [0, 4] });
+  });
+
+  it("labels ticks by Plotly's defaults, minor log ticks in full", () => {
+    const layout = buildPlotLayout("t", x, y, "right", null, null);
+    expect(layout.xaxis).not.toHaveProperty("tickformat");
+    expect(layout.xaxis).not.toHaveProperty("minorloglabels");
+    expect(layout.yaxis).toMatchObject({ minorloglabels: "complete" });
+    expect(layout.yaxis).not.toHaveProperty("dtick");
+    const narrow = buildPlotLayout("t", x, y, "right", null, [5e5, 8e6]);
+    expect(narrow.yaxis).toMatchObject({ dtick: "D2" });
   });
 
   it("places the legend", () => {

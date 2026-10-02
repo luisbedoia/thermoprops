@@ -177,6 +177,18 @@ export function fromSI(
   }
 }
 
+/**
+ * `fromSI` for `name` as an affine map, `shown = si * scale + offset`: how
+ * coolprop-rs is told which unit to make isoline values round in.
+ */
+export function displayUnit(
+  name: string,
+  system: UnitSystem,
+): { scale: number; offset: number } {
+  const offset = fromSI(name, 0, system);
+  return { scale: fromSI(name, 1, system) - offset, offset };
+}
+
 export function toSI(name: string, value: number, system: UnitSystem): number {
   const kind = kindOf(name);
   switch (kind) {

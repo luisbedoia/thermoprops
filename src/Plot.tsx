@@ -13,7 +13,7 @@ import {
 } from "./lib/plotUtils";
 import { propertyLabel, propertyToPlain } from "./lib/unitsFormat";
 import { loadPlotly, type PlotlyLike } from "./lib/plotly";
-import { resolveUnitSystem } from "./lib/units";
+import { displayUnit, resolveUnitSystem } from "./lib/units";
 import type { UnitSystem } from "./lib/units";
 
 export type { PlotPoint } from "./lib/plotUtils";
@@ -110,7 +110,13 @@ export function ThermoPlot({
         const fluidApi = coolprop().fluid(fluid);
         const data = fluidApi.diagram({
           diagram: diagram.id,
-          isolines: [{ kind: isolineKind, count: isolineCount }],
+          isolines: [
+            {
+              kind: isolineKind,
+              count: isolineCount,
+              unit: displayUnit(isolineKind, unitSystem),
+            },
+          ],
           points: isolinePoints,
         });
         const { x, y } = data;
@@ -122,14 +128,14 @@ export function ThermoPlot({
         const pointTrace = buildPointTrace(points, x.property, y.property, unitSystem);
         if (pointTrace) traces.push(pointTrace);
 
-        const tc = fluidApi.critical.temperature;
+        const { liquid, vapor } = data.dome;
         const layout = buildPlotLayout(
           `${fluidApi.name} - ${diagramLabel(diagram)}`,
           x,
           y,
           legendPlacement,
-          viewRange(x, tc),
-          viewRange(y, tc),
+          viewRange(x, [...liquid.x, ...vapor.x]),
+          viewRange(y, [...liquid.y, ...vapor.y]),
           unitSystem,
         );
 
