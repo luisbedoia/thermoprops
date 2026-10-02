@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import type { DiagramInfo, InputName } from "@luisbedoia/coolprop-rs-wasm";
+import type { DiagramInfo, InputName, StateInputs } from "@luisbedoia/coolprop-rs-wasm";
 import { coolprop } from "../coolprop";
-import { solveState } from "../lib";
+import { resolveUnitSystem } from "../lib/units";
 import type { ComputedState, StateDefinition } from "./types";
 import {
   decodeStates,
@@ -49,7 +49,7 @@ export function useWorkspaceUrlParams({ plotFailed }: { plotFailed: boolean }) {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const fluid = searchParams.get("fluid") ?? "";
-  const units = searchParams.get("units") ?? "celsius";
+  const units = resolveUnitSystem(searchParams.get("units"));
 
   const [diagramId, setDiagramId] = useState<string>(
     () => resolveDiagram(searchParams.get("plot")).id,
@@ -151,13 +151,14 @@ export function useComputedStates(
         return { definition, error: "Values must be numeric." };
       }
       try {
-        const state = solveState(
-          fluid,
-          definition.property1,
-          value1,
-          definition.property2,
-          value2,
-        );
+        // The pair comes from the URL, so TypeScript cannot check it;
+        // CoolProp rejects unsupported pairs.
+        const state = coolprop()
+          .fluid(fluid)
+          .state({
+            [definition.property1]: value1,
+            [definition.property2]: value2,
+          } as unknown as StateInputs);
         return { definition, state };
       } catch (error) {
         console.error("Unable to calculate state", definition, error);

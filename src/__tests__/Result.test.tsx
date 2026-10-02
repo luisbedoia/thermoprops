@@ -16,7 +16,7 @@ vi.mock("../Plot", () => ({
 
 let fake: ReturnType<typeof fakeCoolProp>;
 
-function renderWorkspace(params = "fluid=Water&units=si&view=table") {
+function renderWorkspace(params = "fluid=Water&units=kelvin&view=table") {
   return render(
     <MemoryRouter initialEntries={[`/workspace?${params}`]}>
       <Routes>
@@ -75,7 +75,7 @@ describe("WorkspaceView", () => {
 
   describe("routing", () => {
     it("redirects to the settings page when fluid is absent from URL", async () => {
-      renderWorkspace("units=si&view=table");
+      renderWorkspace("units=kelvin&view=table");
       await waitFor(() => {
         expect(screen.getByTestId("settings-page")).toBeInTheDocument();
       });
@@ -91,25 +91,30 @@ describe("WorkspaceView", () => {
 
   describe("header", () => {
     it("shows the fluid name in the page heading", () => {
-      renderWorkspace("fluid=Ammonia&units=si&view=table");
+      renderWorkspace("fluid=Ammonia&units=kelvin&view=table");
       expect(screen.getByRole("heading", { name: "Ammonia", level: 1 })).toBeInTheDocument();
     });
 
-    it("shows SI unit label in the subtitle", () => {
+    it("shows the unit system in the subtitle", () => {
       renderWorkspace();
-      expect(screen.getByText(/SI units/)).toBeInTheDocument();
+      expect(screen.getByText(/Kelvin units/)).toBeInTheDocument();
+    });
+
+    it("falls back to the default unit system for unknown ones", () => {
+      renderWorkspace("fluid=Water&units=si&view=table");
+      expect(screen.getByText(/Default units/)).toBeInTheDocument();
     });
 
     it("shows 'No states tracked yet' in the subtitle when empty", () => {
       renderWorkspace();
       // Header subtitle contains "SI units · No states tracked yet"
-      expect(screen.getByText(/SI units · No states tracked yet/)).toBeInTheDocument();
+      expect(screen.getByText(/Kelvin units · No states tracked yet/)).toBeInTheDocument();
     });
 
     it("shows state count in subtitle when states are present", () => {
       const states = [makeState(), makeState({ id: "s2", label: "State 2" })];
-      renderWorkspace(`fluid=Water&units=si&view=table&states=${encodeStates(states)}`);
-      expect(screen.getByText(/SI units · 2 states tracked/)).toBeInTheDocument();
+      renderWorkspace(`fluid=Water&units=kelvin&view=table&states=${encodeStates(states)}`);
+      expect(screen.getByText(/Kelvin units · 2 states tracked/)).toBeInTheDocument();
     });
   });
 
@@ -118,14 +123,14 @@ describe("WorkspaceView", () => {
   describe("URL state loading", () => {
     it("loads states encoded in URL and shows their labels", () => {
       const states = [makeState({ label: "State 1" })];
-      renderWorkspace(`fluid=Water&units=si&view=table&states=${encodeStates(states)}`);
+      renderWorkspace(`fluid=Water&units=kelvin&view=table&states=${encodeStates(states)}`);
       // State label appears in both StateRow (table) and StateCard (mobile) —
       // verify at least one is present.
       expect(screen.getAllByText("State 1").length).toBeGreaterThan(0);
     });
 
     it("shows the state table when view=table is in the URL", () => {
-      renderWorkspace("fluid=Water&units=si&view=table");
+      renderWorkspace("fluid=Water&units=kelvin&view=table");
       expect(screen.getByRole("heading", { name: "Tracked states" })).toBeInTheDocument();
       expect(screen.queryByTestId("thermo-plot")).not.toBeInTheDocument();
     });
@@ -185,6 +190,16 @@ describe("WorkspaceView", () => {
       });
     });
 
+    it("offers only inputs that form a solvable pair with the other one", async () => {
+      renderWorkspace();
+      await openModal();
+      const options = (id: string) =>
+        [...screen.getByLabelText(id).querySelectorAll("option")].map((o) => o.value);
+      expect(options("Property A")).not.toContain("temperature");
+      fireEvent.change(screen.getByLabelText("Property B"), { target: { value: "quality" } });
+      expect(options("Property A")).toEqual(["pressure", "temperature", "density"]);
+    });
+
     it("shows 'Both values must be numeric' when values are empty", async () => {
       renderWorkspace();
       await openModal();
@@ -222,20 +237,20 @@ describe("WorkspaceView", () => {
   describe("legacy links", () => {
     it("explains that states from an earlier version cannot be opened", () => {
       const old = [{ ...makeState(), property1: "T", property2: "P" }];
-      renderWorkspace(`fluid=Water&units=si&view=table&states=${btoa(JSON.stringify(old))}`);
+      renderWorkspace(`fluid=Water&units=kelvin&view=table&states=${btoa(JSON.stringify(old))}`);
       expect(screen.getByRole("status")).toHaveTextContent(/earlier version/);
       expect(screen.getAllByText(/No states tracked yet/).length).toBeGreaterThan(0);
     });
 
     it("can be dismissed", () => {
       const old = [{ ...makeState(), property1: "T", property2: "P" }];
-      renderWorkspace(`fluid=Water&units=si&view=table&states=${btoa(JSON.stringify(old))}`);
+      renderWorkspace(`fluid=Water&units=kelvin&view=table&states=${btoa(JSON.stringify(old))}`);
       fireEvent.click(screen.getByRole("button", { name: /dismiss/i }));
       expect(screen.queryByRole("status")).not.toBeInTheDocument();
     });
 
     it("does not show for current links", () => {
-      renderWorkspace(`fluid=Water&units=si&view=table&states=${encodeStates([makeState()])}`);
+      renderWorkspace(`fluid=Water&units=kelvin&view=table&states=${encodeStates([makeState()])}`);
       expect(screen.queryByRole("status")).not.toBeInTheDocument();
     });
   });
@@ -246,7 +261,7 @@ describe("WorkspaceView", () => {
     it("removes a state when its Remove button is clicked", async () => {
       const states = [makeState({ label: "State 1" })];
       renderWorkspace(
-        `fluid=Water&units=si&view=table&states=${encodeStates(states)}`,
+        `fluid=Water&units=kelvin&view=table&states=${encodeStates(states)}`,
       );
 
       expect(screen.getAllByText("State 1").length).toBeGreaterThan(0);
@@ -268,7 +283,7 @@ describe("WorkspaceView", () => {
       vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
       const states = [makeState(), makeState({ id: "s2", label: "State 2" })];
       renderWorkspace(
-        `fluid=Water&units=si&view=table&states=${encodeStates(states)}`,
+        `fluid=Water&units=kelvin&view=table&states=${encodeStates(states)}`,
       );
 
       expect(screen.getAllByText("State 1").length).toBeGreaterThan(0);
@@ -284,7 +299,7 @@ describe("WorkspaceView", () => {
       vi.stubGlobal("confirm", vi.fn().mockReturnValue(false));
       const states = [makeState()];
       renderWorkspace(
-        `fluid=Water&units=si&view=table&states=${encodeStates(states)}`,
+        `fluid=Water&units=kelvin&view=table&states=${encodeStates(states)}`,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /clear all/i }));
@@ -298,17 +313,17 @@ describe("WorkspaceView", () => {
 
   describe("view mode", () => {
     it("renders ThermoPlot when view=graph", () => {
-      renderWorkspace("fluid=Water&units=si&view=graph");
+      renderWorkspace("fluid=Water&units=kelvin&view=graph");
       expect(screen.getByTestId("thermo-plot")).toBeInTheDocument();
     });
 
     it("does not render ThermoPlot when view=table", () => {
-      renderWorkspace("fluid=Water&units=si&view=table");
+      renderWorkspace("fluid=Water&units=kelvin&view=table");
       expect(screen.queryByTestId("thermo-plot")).not.toBeInTheDocument();
     });
 
     it("switches from graph to table when the Table button is clicked", async () => {
-      renderWorkspace("fluid=Water&units=si&view=graph");
+      renderWorkspace("fluid=Water&units=kelvin&view=graph");
       expect(screen.getByTestId("thermo-plot")).toBeInTheDocument();
 
       fireEvent.click(screen.getByRole("button", { name: /^table$/i }));
@@ -319,7 +334,7 @@ describe("WorkspaceView", () => {
     });
 
     it("switches from table to graph when the Chart button is clicked", async () => {
-      renderWorkspace("fluid=Water&units=si&view=table");
+      renderWorkspace("fluid=Water&units=kelvin&view=table");
       expect(screen.queryByTestId("thermo-plot")).not.toBeInTheDocument();
 
       fireEvent.click(screen.getByRole("button", { name: /^chart$/i }));

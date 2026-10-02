@@ -2,16 +2,10 @@ import { FormEvent, RefObject, useEffect } from "react";
 import type { InputInfo, InputName } from "@luisbedoia/coolprop-rs-wasm";
 import { Button } from "../components/Button";
 import { Modal } from "../components/Modal";
-import {
-  fromSI,
-  getDisplayUnit,
-  propertyLabel,
-  propertyToPlain,
-  quantityValue,
-  resolveUnitSystem,
-  unitToPlain,
-} from "../lib";
-import type { UnitSystem } from "../lib";
+import { quantityInfo, quantityValue } from "../lib/quantities";
+import { fromSI, getDisplayUnit, resolveUnitSystem } from "../lib/units";
+import type { UnitSystem } from "../lib/units";
+import { unitToPlain } from "../lib/unitsFormat";
 import type { ComputedState } from "./types";
 
 const PICKER_NUMBER_FORMAT = new Intl.NumberFormat(undefined, {
@@ -230,14 +224,12 @@ type PropertyOptionProps = {
 };
 
 function PropertyOption({ property, units }: PropertyOptionProps) {
-  const symbol = propertyToPlain(property.name);
   const unit = unitToPlain(getDisplayUnit(property.name, units));
-  const label = propertyLabel(property.name);
   return (
-    <option value={property.name} title={label}>
-      {symbol}
+    <option value={property.name} title={property.description}>
+      {property.symbol}
       {unit ? ` · ${unit}` : ""}
-      {label ? ` — ${label}` : ""}
+      {` — ${property.description}`}
     </option>
   );
 }
@@ -262,7 +254,7 @@ function FromStatePicker({
 
   if (candidates.length === 0) return null;
 
-  const symbol = propertyToPlain(propertyName);
+  const { symbol } = quantityInfo(propertyName);
   const unitLabel = unitToPlain(getDisplayUnit(propertyName, units));
 
   return (

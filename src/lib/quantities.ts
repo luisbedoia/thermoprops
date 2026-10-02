@@ -1,8 +1,4 @@
-import type {
-  PlotProperty,
-  PropertyName,
-  State,
-} from "@luisbedoia/coolprop-rs-wasm";
+import type { Phase, PhaseInfo, PropertyName, State } from "@luisbedoia/coolprop-rs-wasm";
 import { coolprop } from "../coolprop";
 
 /**
@@ -26,7 +22,28 @@ export function tableQuantities(): Quantity[] {
     );
 }
 
-/** The value of a diagram axis property in `state`. */
-export function plotValue(state: State, property: PlotProperty): number {
-  return property === "specific_volume" ? 1 / state.density : state[property];
+/** Symbol and description of a quantity, as coolprop-rs catalogs them. */
+export interface QuantityInfo {
+  symbol: string;
+  description: string;
+}
+
+/**
+ * The catalog entry of `quantity`: coolprop-rs's property catalog, or its
+ * diagram-axis catalog for specific volume (not a `State` property).
+ */
+export function quantityInfo(quantity: Quantity): QuantityInfo {
+  const cp = coolprop();
+  const info =
+    cp.properties().find((p) => p.name === quantity) ??
+    cp.plotProperties().find((p) => p.name === quantity);
+  if (!info) throw new Error(`"${quantity}" is not in the coolprop-rs catalogs`);
+  return info;
+}
+
+/** The catalog entry of a phase; undefined when CoolProp gave none. */
+export function phaseInfo(phase: Phase | null): PhaseInfo | undefined {
+  return coolprop()
+    .phases()
+    .find((p) => p.name === phase);
 }

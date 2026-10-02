@@ -7,7 +7,9 @@ import type {
 } from "@luisbedoia/coolprop-rs-wasm";
 import { DEFAULT_UNIT_SYSTEM, fromSI, getDisplayUnit } from "./units";
 import type { UnitSystem } from "./units";
-import { propertyLabel, propertyToPlain, unitToPlain } from "./unitsFormat";
+import { quantityInfo } from "./quantities";
+import type { Quantity } from "./quantities";
+import { unitToPlain } from "./unitsFormat";
 
 export type PlotPoint = {
   id: string;
@@ -29,17 +31,17 @@ function convertArray(
 
 /** "T (°C)", or just the symbol for dimensionless quantities. */
 export function buildAxisTitle(
-  property: string,
+  property: Quantity,
   unitSystem: UnitSystem = DEFAULT_UNIT_SYSTEM,
 ): string {
-  const symbol = propertyToPlain(property);
+  const { symbol } = quantityInfo(property);
   const unit = unitToPlain(getDisplayUnit(property, unitSystem));
   return unit ? `${symbol} (${unit})` : symbol;
 }
 
 /** "T 100 °C": the symbol, the value in display units and the unit. */
 export function buildIsolineLabel(
-  kind: string,
+  kind: Quantity,
   value: number,
   unitSystem: UnitSystem = DEFAULT_UNIT_SYSTEM,
 ): string {
@@ -47,16 +49,14 @@ export function buildIsolineLabel(
     maximumSignificantDigits: 4,
   }).format(fromSI(kind, value, unitSystem));
   const unit = unitToPlain(getDisplayUnit(kind, unitSystem));
-  return [propertyToPlain(kind), formatted, unit].filter(Boolean).join(" ");
+  return [quantityInfo(kind).symbol, formatted, unit].filter(Boolean).join(" ");
 }
 
-/** "Pressure – Enthalpy (P–h)". */
+/** "Pressure – Specific enthalpy (p–h)". */
 export function diagramLabel(diagram: DiagramInfo): string {
-  const { x, y } = diagram;
-  const names = `${propertyLabel(y.property) ?? y.property} – ${
-    propertyLabel(x.property) ?? x.property
-  }`;
-  return `${names} (${propertyToPlain(y.property)}–${propertyToPlain(x.property)})`;
+  const y = quantityInfo(diagram.y.property);
+  const x = quantityInfo(diagram.x.property);
+  return `${y.description} – ${x.description} (${y.symbol}–${x.symbol})`;
 }
 
 const ISOLINE_PALETTE = [

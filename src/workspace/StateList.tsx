@@ -1,17 +1,15 @@
 import { Button } from "../components/Button";
 import { MathText } from "../components/MathText";
 import {
-  fromSI,
-  getDisplayUnit,
-  phaseLabel,
-  propertyLabel,
-  propertyToMath,
+  phaseInfo,
+  quantityInfo,
   quantityValue,
-  resolveUnitSystem,
   tableQuantities,
-  unitToMath,
-} from "../lib";
-import type { Quantity, UnitSystem } from "../lib";
+} from "../lib/quantities";
+import type { Quantity } from "../lib/quantities";
+import { fromSI, getDisplayUnit, resolveUnitSystem } from "../lib/units";
+import type { UnitSystem } from "../lib/units";
+import { symbolToMath, unitToMath } from "../lib/unitsFormat";
 import type { ComputedState, StateDefinition } from "./types";
 
 function UnitMath({ unit, className }: { unit: string; className?: string }) {
@@ -25,13 +23,9 @@ function UnitMath({ unit, className }: { unit: string; className?: string }) {
   );
 }
 
-function PropertyMath({ name }: { name: string }) {
-  return (
-    <MathText
-      expression={propertyToMath(name)}
-      ariaLabel={propertyLabel(name) ?? name}
-    />
-  );
+function PropertyMath({ name }: { name: Quantity }) {
+  const { symbol, description } = quantityInfo(name);
+  return <MathText expression={symbolToMath(symbol)} ariaLabel={description} />;
 }
 
 const NUMBER_FORMAT = new Intl.NumberFormat(undefined, {
@@ -39,10 +33,10 @@ const NUMBER_FORMAT = new Intl.NumberFormat(undefined, {
   maximumSignificantDigits: 8,
 });
 
-// Çengel-style basic state subset surfaced in the chart-view accordion.
-// The inputs themselves are left out of the metrics, so this set just
-// whitelists "introductory" properties — anything else (Z, k, μ, Pr, c_p,
-// c_v, g, c, phase) lives in the full Table view.
+// Basic state subset surfaced in the chart-view accordion. The inputs
+// themselves are left out of the metrics, so this set just whitelists
+// "introductory" properties — anything else (Z, λ, μ, Pr, cp, cv, g, a,
+// phase) lives in the full Table view.
 const QUICK_BASIC_PROPERTIES: ReadonlySet<string> = new Set<Quantity>([
   "temperature",
   "pressure",
@@ -74,13 +68,13 @@ function StateChips({ definition, units, className }: ChipsProps) {
   const unit2 = getDisplayUnit(definition.property2, units);
   return (
     <>
-      <span className={className} title={propertyLabel(definition.property1)}>
+      <span className={className} title={quantityInfo(definition.property1).description}>
         <PropertyMath name={definition.property1} /> ={" "}
         {formatInputValue(definition.property1, definition.value1, units)}
         {unit1 ? " " : null}
         <UnitMath unit={unit1} />
       </span>
-      <span className={className} title={propertyLabel(definition.property2)}>
+      <span className={className} title={quantityInfo(definition.property2).description}>
         <PropertyMath name={definition.property2} /> ={" "}
         {formatInputValue(definition.property2, definition.value2, units)}
         {unit2 ? " " : null}
@@ -300,14 +294,12 @@ function StateMetrics({ state, variant, units, filter }: StateMetricsProps) {
     <dl className={`state-metrics state-metrics--${variant}`}>
       {metrics.map(({ name, value }) => {
         const displayUnit = getDisplayUnit(name, units);
-        const label = propertyLabel(name);
+        const { description } = quantityInfo(name);
         return (
           <div key={name} className="state-metrics__row">
-            <dt title={label}>
+            <dt title={description}>
               <PropertyMath name={name} />
-              {label ? (
-                <span className="state-metrics__name">{label}</span>
-              ) : null}
+              <span className="state-metrics__name">{description}</span>
             </dt>
             <dd>
               {NUMBER_FORMAT.format(fromSI(name, value, units))}
@@ -318,11 +310,12 @@ function StateMetrics({ state, variant, units, filter }: StateMetricsProps) {
       })}
       {showPhase ? (
         <div className="state-metrics__row">
-          <dt title={propertyLabel("phase")}>
-            <PropertyMath name="phase" />
-            <span className="state-metrics__name">{propertyLabel("phase")}</span>
+          <dt>
+            <span className="state-metrics__name">Phase</span>
           </dt>
-          <dd>{phaseLabel(solved.phase)}</dd>
+          <dd title={phaseInfo(solved.phase)?.description}>
+            {phaseInfo(solved.phase)?.label ?? "unknown"}
+          </dd>
         </div>
       ) : null}
     </dl>

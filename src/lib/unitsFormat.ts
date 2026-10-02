@@ -1,20 +1,14 @@
-// Pretty-printing helpers for unit strings and property symbols.
+// Pretty-printing of the app's display units (see units.ts) and of
+// coolprop-rs catalog symbols. Symbols and descriptions themselves come from
+// the coolprop-rs catalogs; only their rendering lives here.
 //
-// Property symbols follow Çengel's "Thermodynamics: An Engineering Approach"
-// nomenclature (ρ, h, s, u, x, g, c_p, c_v, …) so the same letter shows up
-// everywhere — chips, metric labels, modal dropdown, plot axes — instead of
-// CoolProp's API names (D, H, S, U, Q, G, CPMASS, CVMASS, Hmass, …).
-//
-// Unit and property formatters each come in two flavors:
-//   - *ToMath: LaTeX, suitable for KaTeX (<MathText/>).
-//   - *ToPlain: Unicode-only, suitable for <option>, Plotly axis titles,
+// Unit formatters come in two flavors:
+//   - unitToMath: LaTeX, suitable for KaTeX (<MathText/>).
+//   - unitToPlain: Unicode-only, suitable for <option>, Plotly axis titles,
 //     hover templates — anywhere HTML/LaTeX cannot be embedded.
 //
-// A small fixed table covers every string the app emits today. A regex-based
-// fallback handles anything else (e.g. legacy SI strings or future additions)
-// without crashing.
-
-import type { Phase } from "@luisbedoia/coolprop-rs-wasm";
+// A small fixed table covers every unit the app emits. A regex-based fallback
+// handles anything else without crashing.
 
 const UNIT_MATH: Record<string, string> = {
   "": "",
@@ -115,93 +109,12 @@ export function unitToPlain(unit: string): string {
   return fallbackPlain(unit);
 }
 
-// ── Property symbols (Çengel nomenclature) ───────────────────────────────────
-//
-// Keyed by coolprop-rs names: state properties, inputs and diagram axes share
-// them (e.g. "temperature", "specific_volume").
+// ── Property symbols ─────────────────────────────────────────────────────────
 
-const PROPERTY_MATH: Record<string, string> = {
-  temperature: "T",
-  pressure: "P",
-  density: "\\rho",
-  specific_volume: "v",
-  enthalpy: "h",
-  entropy: "s",
-  internal_energy: "u",
-  quality: "x",
-  gibbs: "g",
-  cp: "c_p",
-  cv: "c_v",
-  compressibility: "Z",
-  conductivity: "k",
-  viscosity: "\\mu",
-  prandtl: "\\mathit{Pr}",
-  speed_of_sound: "c",
-  phase: "\\mathit{phase}",
-};
-
-const PROPERTY_PLAIN: Record<string, string> = {
-  temperature: "T",
-  pressure: "P",
-  density: "ρ",
-  specific_volume: "v",
-  enthalpy: "h",
-  entropy: "s",
-  internal_energy: "u",
-  quality: "x",
-  gibbs: "g",
-  cp: "cₚ",
-  cv: "cᵥ",
-  compressibility: "Z",
-  conductivity: "k",
-  viscosity: "μ",
-  prandtl: "Pr",
-  speed_of_sound: "c",
-  phase: "phase",
-};
-
-const PROPERTY_LABEL: Record<string, string> = {
-  temperature: "Temperature",
-  pressure: "Pressure",
-  density: "Density",
-  specific_volume: "Specific volume",
-  enthalpy: "Specific enthalpy",
-  entropy: "Specific entropy",
-  internal_energy: "Specific internal energy",
-  quality: "Vapor quality",
-  gibbs: "Specific Gibbs free energy",
-  cp: "Specific heat at constant pressure",
-  cv: "Specific heat at constant volume",
-  compressibility: "Compressibility factor",
-  conductivity: "Thermal conductivity",
-  viscosity: "Dynamic viscosity",
-  prandtl: "Prandtl number",
-  speed_of_sound: "Speed of sound",
-  phase: "Phase at current state",
-};
-
-const PHASE_LABELS: Record<Phase, string> = {
-  liquid: "liquid",
-  supercritical: "supercritical",
-  supercritical_gas: "supercritical gas",
-  supercritical_liquid: "supercritical liquid",
-  critical_point: "critical point",
-  gas: "gas",
-  two_phase: "two-phase",
-};
-
-export function phaseLabel(phase: Phase | null): string {
-  return phase ? PHASE_LABELS[phase] : "unknown";
-}
-
-export function propertyToMath(name: string): string {
-  return PROPERTY_MATH[name] ?? name;
-}
-
-export function propertyToPlain(name: string): string {
-  return PROPERTY_PLAIN[name] ?? name;
-}
-
-export function propertyLabel(name: string): string | undefined {
-  return PROPERTY_LABEL[name];
+/**
+ * A coolprop-rs catalog symbol as KaTeX: multi-letter symbols ("cp", "Pr")
+ * are one italic name, not a product of variables.
+ */
+export function symbolToMath(symbol: string): string {
+  return /^[A-Za-z]{2,}$/.test(symbol) ? `\\mathit{${symbol}}` : symbol;
 }

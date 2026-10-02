@@ -1,6 +1,7 @@
 import type { DiagramInfo } from "@luisbedoia/coolprop-rs-wasm";
-import { isInputName, plotValue } from "../lib";
+import { coolprop } from "../coolprop";
 import type { PlotPoint } from "../lib/plotUtils";
+import { quantityValue } from "../lib/quantities";
 import { normalizeNumericInput } from "../lib/normalizeNumericInput";
 import type { ComputedState, StateDefinition } from "./types";
 
@@ -34,10 +35,10 @@ export function decodeStates(encoded: string | null): DecodedStates {
           typeof item.value2 === "string" &&
           typeof item.label === "string",
       );
+    const names = new Set<unknown>(coolprop().inputs().map((i) => i.name));
     const states = wellFormed.filter(
       (item): item is StateDefinition =>
-        isInputName(item.property1 as string) &&
-        isInputName(item.property2 as string),
+        names.has(item.property1) && names.has(item.property2),
     );
     return { states, legacy: states.length < wellFormed.length };
   } catch (error) {
@@ -114,8 +115,8 @@ export function getPlotPoints(
           {
             id: definition.id,
             label: definition.label,
-            x: plotValue(state, diagram.x.property),
-            y: plotValue(state, diagram.y.property),
+            x: quantityValue(state, diagram.x.property) ?? NaN,
+            y: quantityValue(state, diagram.y.property) ?? NaN,
           },
         ]
       : [],

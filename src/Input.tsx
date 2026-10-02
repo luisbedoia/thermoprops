@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { getFluidDetails, getFluidsList, resolveUnitSystem } from "./lib";
+import { coolprop } from "./coolprop";
+import { resolveUnitSystem } from "./lib/units";
 import "./Input.css";
 import { MathText } from "./components/MathText";
 import { Button } from "./components/Button";
@@ -19,7 +20,14 @@ type FormState = {
 export function SettingsView() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const fluids = useMemo(() => getFluidsList(), []);
+  const fluids = useMemo(
+    () =>
+      coolprop()
+        .catalog()
+        .map((f) => f.name)
+        .sort(),
+    [],
+  );
   const [formState, setFormState] = useState<FormState>(() => {
     const requested = searchParams.get("fluid") ?? "";
     return {
@@ -65,7 +73,7 @@ export function SettingsView() {
   ]);
 
   const details = useMemo(
-    () => (formState.fluid ? getFluidDetails(formState.fluid) : null),
+    () => (formState.fluid ? coolprop().fluid(formState.fluid).data : null),
     [formState.fluid],
   );
 

@@ -114,12 +114,13 @@ describe("ThermoPlot", () => {
   describe("rendering", () => {
     it("requests the diagram with the selected isoline family", async () => {
       const onPlotError = vi.fn();
-      renderPlot({ onPlotError, isolineCount: 4, isolinePoints: 80 });
+      renderPlot({ onPlotError, isolineCount: 4, isolinePoints: 80, domePoints: 90 });
       await waitForSuccess(onPlotError);
       expect(fake.cp.fluid("Water").diagram).toHaveBeenCalledWith({
         diagram: "pressure_enthalpy",
         isolines: [{ kind: "temperature", count: 4, unit: { scale: 1, offset: -273.15 } }],
         points: 80,
+        dome_points: 90,
       });
       expect(plotlyMocks.newPlot).toHaveBeenCalledTimes(1);
     });

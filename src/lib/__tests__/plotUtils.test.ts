@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import type {
   AxisData,
   DiagramInfo,
@@ -14,6 +14,12 @@ import {
   diagramLabel,
   viewRange,
 } from "../plotUtils";
+import { setCoolProp } from "../../coolprop";
+import { fakeCoolProp } from "../../test-fixtures/fakeCoolProp";
+
+beforeEach(() => {
+  setCoolProp(fakeCoolProp().cp);
+});
 
 const PH: DiagramInfo = {
   id: "pressure_enthalpy",
@@ -34,7 +40,7 @@ const isoline = (
 
 describe("labels", () => {
   it("name axes with symbol and display unit", () => {
-    expect(buildAxisTitle("pressure", "celsius")).toBe("P (kPa)");
+    expect(buildAxisTitle("pressure", "celsius")).toBe("p (kPa)");
     expect(buildAxisTitle("temperature", "imperial")).toBe("T (°F)");
     expect(buildAxisTitle("quality", "celsius")).toBe("x");
   });
@@ -47,7 +53,7 @@ describe("labels", () => {
   });
 
   it("name diagrams by their axes", () => {
-    expect(diagramLabel(PH)).toBe("Pressure – Specific enthalpy (P–h)");
+    expect(diagramLabel(PH)).toBe("Pressure – Specific enthalpy (p–h)");
   });
 });
 

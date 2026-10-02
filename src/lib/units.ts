@@ -27,24 +27,12 @@ type Kind =
   | "speed"
   | "dimensionless";
 
-const UNIT_SYSTEM_ALIASES: Record<string, UnitSystem> = {
-  celsius: "celsius",
-  kelvin: "kelvin",
-  imperial: "imperial",
-  // Legacy aliases — keep so old URLs keep working.
-  default: "celsius",
-  si: "kelvin",
-};
-
 export function isUnitSystem(value: unknown): value is UnitSystem {
   return value === "celsius" || value === "kelvin" || value === "imperial";
 }
 
 export function resolveUnitSystem(value: unknown): UnitSystem {
-  if (typeof value === "string" && value in UNIT_SYSTEM_ALIASES) {
-    return UNIT_SYSTEM_ALIASES[value];
-  }
-  return DEFAULT_UNIT_SYSTEM;
+  return isUnitSystem(value) ? value : DEFAULT_UNIT_SYSTEM;
 }
 
 /**

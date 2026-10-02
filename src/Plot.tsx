@@ -11,7 +11,6 @@ import {
   diagramLabel,
   viewRange,
 } from "./lib/plotUtils";
-import { propertyLabel, propertyToPlain } from "./lib/unitsFormat";
 import { loadPlotly, type PlotlyLike } from "./lib/plotly";
 import { displayUnit, resolveUnitSystem } from "./lib/units";
 import type { UnitSystem } from "./lib/units";
@@ -28,7 +27,10 @@ type ThermoPlotProps = {
   onPlotError?: (hasError: boolean) => void;
   points: PlotPoint[];
   isolineCount?: number;
+  /** States per isoline. */
   isolinePoints?: number;
+  /** States per branch of the saturation dome. */
+  domePoints?: number;
   units?: string;
 };
 
@@ -72,7 +74,12 @@ export function ThermoPlot({
   onPlotError,
   points,
   isolineCount = 7,
+  // Kept low for low-end devices: computed on the main thread. In desktop
+  // Chromium, over every fluid, diagram and family, 120 points per isoline
+  // take ~15 ms per diagram (median), ~50 ms at the 95th percentile and
+  // ~0.15 s for the slowest fluid; the dome adds ~3 ms.
   isolinePoints = 120,
+  domePoints = 120,
   units,
 }: ThermoPlotProps) {
   const unitSystem: UnitSystem = resolveUnitSystem(units);
@@ -118,6 +125,7 @@ export function ThermoPlot({
             },
           ],
           points: isolinePoints,
+          dome_points: domePoints,
         });
         const { x, y } = data;
 
@@ -199,6 +207,7 @@ export function ThermoPlot({
     isolineKind,
     isolineCount,
     isolinePoints,
+    domePoints,
     points,
     legendPlacement,
     onPlotError,
@@ -233,11 +242,14 @@ export function ThermoPlot({
             value={isolineKind}
             onChange={(event) => onIsolineChange?.(event.target.value as InputName)}
           >
-            {diagram.isolines.map((kind) => (
-              <option key={kind} value={kind}>
-                {`${propertyLabel(kind) ?? kind} (${propertyToPlain(kind)})`}
-              </option>
-            ))}
+            {coolprop()
+              .inputs()
+              .filter((input) => diagram.isolines.includes(input.name))
+              .map((input) => (
+                <option key={input.name} value={input.name}>
+                  {`${input.description} (${input.symbol})`}
+                </option>
+              ))}
           </select>
         </div>
       </div>

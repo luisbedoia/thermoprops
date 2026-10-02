@@ -711,32 +711,39 @@
     ],
     "phases": [
       {
-        "description": "Subcritical liquid",
-        "name": "liquid"
+        "name": "liquid",
+        "label": "liquid",
+        "description": "Subcritical liquid"
       },
       {
-        "description": "Supercritical fluid (p > pc, T > Tc)",
-        "name": "supercritical"
+        "name": "supercritical",
+        "label": "supercritical",
+        "description": "Supercritical fluid (p > pc, T > Tc)"
       },
       {
-        "description": "Supercritical gas (p < pc, T > Tc)",
-        "name": "supercritical_gas"
+        "name": "supercritical_gas",
+        "label": "supercritical gas",
+        "description": "Supercritical gas (p < pc, T > Tc)"
       },
       {
-        "description": "Supercritical liquid (p > pc, T < Tc)",
-        "name": "supercritical_liquid"
+        "name": "supercritical_liquid",
+        "label": "supercritical liquid",
+        "description": "Supercritical liquid (p > pc, T < Tc)"
       },
       {
-        "description": "At the critical point",
-        "name": "critical_point"
+        "name": "critical_point",
+        "label": "critical point",
+        "description": "At the critical point"
       },
       {
-        "description": "Subcritical gas",
-        "name": "gas"
+        "name": "gas",
+        "label": "gas",
+        "description": "Subcritical gas"
       },
       {
-        "description": "Liquid-vapor mixture inside the saturation dome",
-        "name": "two_phase"
+        "name": "two_phase",
+        "label": "two-phase",
+        "description": "Liquid-vapor mixture inside the saturation dome"
       }
     ],
     "plot_properties": [

@@ -1,15 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import type { InputName } from "@luisbedoia/coolprop-rs-wasm";
-import {
-  areCompatibleInputs,
-  inputs,
-  isInputName,
-  resolveUnitSystem,
-  solveState,
-  toSI,
-} from "./lib";
+import type { InputName, StateInputs } from "@luisbedoia/coolprop-rs-wasm";
+import { resolveUnitSystem, toSI } from "./lib/units";
 import { normalizeNumericInput } from "./lib/normalizeNumericInput";
 import { coolprop } from "./coolprop";
 import { ThermoPlot } from "./Plot";
@@ -26,9 +19,14 @@ const UNIT_LABELS: Record<string, string> = {
   celsius: "Default",
   kelvin: "Kelvin",
   imperial: "Imperial",
-  // Legacy alias — older URLs may still carry units=si.
-  si: "SI",
 };
+
+/** Whether CoolProp solves a state from inputs `a` and `b` (either order). */
+function solvable(a: InputName, b: InputName): boolean {
+  return coolprop()
+    .pairs()
+    .some(([x, y]) => (x === a && y === b) || (x === b && y === a));
+}
 
 type FormState = {
   property1: InputName;
@@ -208,7 +206,14 @@ export function WorkspaceView() {
     const value2 = toSI(formState.property2, displayValue2, system);
 
     try {
-      solveState(fluid, formState.property1, value1, formState.property2, value2);
+      // The pair comes from the form, so TypeScript cannot check it;
+      // CoolProp rejects unsupported pairs.
+      coolprop()
+        .fluid(fluid)
+        .state({
+          [formState.property1]: value1,
+          [formState.property2]: value2,
+        } as unknown as StateInputs);
     } catch (error) {
       console.error("State validation failed", error);
       setFormError(
@@ -262,15 +267,19 @@ export function WorkspaceView() {
     (field: keyof FormState, value: string) => {
       setFormState((prev) => {
         if (field === "property1" || field === "property2") {
-          if (!isInputName(value)) return prev;
+          const input = coolprop()
+            .inputs()
+            .find((i) => i.name === value);
+          if (!input) return prev;
           const other = field === "property1" ? "property2" : "property1";
           // Keep the other input if it still forms a solvable pair; else
           // switch it to the first one that does.
-          const otherValue = areCompatibleInputs(value, prev[other])
+          const otherValue = solvable(input.name, prev[other])
             ? prev[other]
-            : (inputs().find((i) => areCompatibleInputs(i.name, value))?.name ??
-              prev[other]);
-          return { ...prev, [field]: value, [other]: otherValue };
+            : (coolprop()
+                .inputs()
+                .find((i) => solvable(i.name, input.name))?.name ?? prev[other]);
+          return { ...prev, [field]: input.name, [other]: otherValue };
         }
         return { ...prev, [field]: value };
       });
@@ -279,12 +288,18 @@ export function WorkspaceView() {
   );
 
   const propertyOptions1 = useMemo(
-    () => inputs().filter((i) => areCompatibleInputs(i.name, formState.property2)),
+    () =>
+      coolprop()
+        .inputs()
+        .filter((i) => solvable(i.name, formState.property2)),
     [formState.property2],
   );
 
   const propertyOptions2 = useMemo(
-    () => inputs().filter((i) => areCompatibleInputs(i.name, formState.property1)),
+    () =>
+      coolprop()
+        .inputs()
+        .filter((i) => solvable(i.name, formState.property1)),
     [formState.property1],
   );
 
