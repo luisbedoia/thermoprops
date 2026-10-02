@@ -8,7 +8,7 @@
     <title>Thermoprops – Thermodynamic Properties Calculator</title>
     <meta name="description" content="Free online calculator for thermodynamic properties of fluids and refrigerants. Compute temperature, pressure, enthalpy, entropy, density and more using CoolProp. Ideal for engineers and students in thermodynamics and refrigeration." />
     <meta name="keywords" content="thermodynamic properties, thermodynamics calculator, CoolProp, refrigerants, fluids, enthalpy, entropy, pressure, temperature, saturation curve, PropsSI" />
-    <meta name="author" content="Luis Fernando Arias Bedoya" />
+    <meta name="author" content="Department of Mechanical Engineering, Universidad de Antioquia" />
     <link rel="canonical" href="https://luisbedoia.github.io/thermoprops/" />
 
     <!-- Open Graph (Facebook, LinkedIn, WhatsApp) -->
@@ -45,9 +45,13 @@
         "priceCurrency": "USD"
       },
       "author": {
-        "@type": "Person",
-        "name": "Luis Fernando Arias Bedoya",
-        "url": "https://github.com/luisbedoia"
+        "@type": "Organization",
+        "name": "Department of Mechanical Engineering, Universidad de Antioquia",
+        "parentOrganization": {
+          "@type": "CollegeOrUniversity",
+          "name": "Universidad de Antioquia",
+          "url": "https://www.udea.edu.co"
+        }
       }
     }
     </script>
@@ -80,7 +84,7 @@
             <ul>
               <li>30 common fluids and refrigerants: water, air, ammonia, CO₂, nitrogen, R134a, R410A, R32, R1234yf, propane…</li>
               <li>SI and imperial units, with temperature in °C, K or °F.</li>
-              <li>P–h, T–s, P–T and ρ–h diagrams with saturation curves, isolines and all your states plotted together.</li>
+              <li>p–h, T–s, h–s, p–v, T–v and p–T diagrams with saturation curves, isolines and all your states plotted together.</li>
               <li>Shareable links that keep your fluid, units and states.</li>
             </ul>
             <p class="static-loader" role="status">Loading calculator…</p>
@@ -88,7 +92,7 @@
           </section>
         </main>
         <footer class="app-footer">
-          <span>Powered by CoolProp WASM</span>
+          <span>Properties by <a href="https://coolprop.org">CoolProp</a> · WebAssembly via <a href="https://github.com/luisbedoia/coolprop-rs">coolprop-rs</a></span>
         </footer>
       </div>
     </div>

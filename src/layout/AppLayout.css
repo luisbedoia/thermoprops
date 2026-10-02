@@ -121,6 +121,30 @@
   color: var(--text-muted);
 }
 
+.about-modal__body p {
+  margin: 0;
+}
+
+.about-modal__citation {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--border-soft);
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.app-footer a,
+.about-modal__body a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.app-footer a:hover,
+.about-modal__body a:hover {
+  color: var(--text-primary);
+}
+
 .static-intro {
   display: grid;
   gap: 0.75rem;

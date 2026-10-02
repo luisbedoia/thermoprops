@@ -24,7 +24,20 @@ export function AppLayout() {
         <Outlet />
       </main>
       <footer className="app-footer">
-        <span>Powered by CoolProp WASM</span>
+        <span>
+          Properties by{" "}
+          <a href="https://coolprop.org" target="_blank" rel="noopener noreferrer">
+            CoolProp
+          </a>
+          {" · "}WebAssembly via{" "}
+          <a
+            href="https://github.com/luisbedoia/coolprop-rs"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            coolprop-rs
+          </a>
+        </span>
         <span className="app-version">{import.meta.env.VITE_APP_VERSION}</span>
       </footer>
       <Modal
@@ -47,8 +60,53 @@ export function AppLayout() {
         </header>
         <div className="about-modal__body">
           <p>
-            Thermoprops is a lightweight interface over CoolProp WASM that helps
-            you explore thermodynamic states.
+            Thermoprops is a free calculator to explore thermodynamic states and
+            property diagrams of fluids and refrigerants.
+          </p>
+          <p>
+            Every property is computed by{" "}
+            <a href="https://coolprop.org" target="_blank" rel="noopener noreferrer">
+              CoolProp
+            </a>
+            , the open-source thermophysical property library created by Ian Bell
+            and the CoolProp contributors. If you use these results in academic
+            work, please cite:
+          </p>
+          <blockquote className="about-modal__citation">
+            Bell, I. H.; Wronski, J.; Quoilin, S.; Lemort, V. Pure and
+            Pseudo-pure Fluid Thermophysical Property Evaluation and the
+            Open-Source Thermophysical Property Library CoolProp.{" "}
+            <i>Ind. Eng. Chem. Res.</i> <b>2014</b>, 53 (6), 2498–2508.{" "}
+            <a
+              href="https://doi.org/10.1021/ie4033999"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              doi:10.1021/ie4033999
+            </a>
+          </blockquote>
+          <p>
+            CoolProp runs in your browser as WebAssembly through{" "}
+            <a
+              href="https://github.com/luisbedoia/coolprop-rs"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              coolprop-rs
+            </a>
+            , a thin layer that makes it easier to use on the web.
+          </p>
+          <p>
+            Developed by the Department of Mechanical Engineering, Universidad de
+            Antioquia.{" "}
+            <a
+              href="https://github.com/luisbedoia/thermoprops"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Source code
+            </a>
+            .
           </p>
         </div>
       </Modal>
