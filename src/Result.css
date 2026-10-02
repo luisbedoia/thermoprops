@@ -114,6 +114,23 @@
   opacity: 1;
 }
 
+.workspace__notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #fcd34d;
+  border-radius: 0.6rem;
+  background: #fffbeb;
+  color: #78350f;
+  font-size: 0.9rem;
+}
+
+.workspace__notice p {
+  margin: 0;
+}
+
 .workspace__content {
   display: grid;
   gap: clamp(1.5rem, 2vw + 1rem, 2.2rem);

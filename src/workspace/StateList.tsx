@@ -6,10 +6,12 @@ import {
   phaseLabel,
   propertyLabel,
   propertyToMath,
+  quantityValue,
   resolveUnitSystem,
+  tableQuantities,
   unitToMath,
 } from "../lib";
-import type { UnitSystem } from "../lib";
+import type { Quantity, UnitSystem } from "../lib";
 import type { ComputedState, StateDefinition } from "./types";
 
 function UnitMath({ unit, className }: { unit: string; className?: string }) {
@@ -38,17 +40,17 @@ const NUMBER_FORMAT = new Intl.NumberFormat(undefined, {
 });
 
 // Çengel-style basic state subset surfaced in the chart-view accordion.
-// state.results already excludes whichever pair the user picked as inputs,
-// so this set just whitelists "introductory" properties — anything else
-// (Z, k, μ, Pr, c_p, c_v, G, phase) lives in the full Table view.
-const QUICK_BASIC_PROPERTIES: ReadonlySet<string> = new Set([
-  "T",
-  "P",
-  "D",
-  "H",
-  "U",
-  "S",
-  "Q",
+// The inputs themselves are left out of the metrics, so this set just
+// whitelists "introductory" properties — anything else (Z, k, μ, Pr, c_p,
+// c_v, g, c, phase) lives in the full Table view.
+const QUICK_BASIC_PROPERTIES: ReadonlySet<string> = new Set<Quantity>([
+  "temperature",
+  "pressure",
+  "density",
+  "enthalpy",
+  "internal_energy",
+  "entropy",
+  "quality",
 ]);
 
 function formatInputValue(
@@ -273,58 +275,56 @@ type StateMetricsProps = {
 };
 
 function StateMetrics({ state, variant, units, filter }: StateMetricsProps) {
-  if (state.error) {
+  if (state.error || !state.state) {
     return (
-      <p className={`state-error state-error--${variant}`}>{state.error}</p>
+      <p className={`state-error state-error--${variant}`}>
+        {state.error ?? "Unable to evaluate this state."}
+      </p>
     );
   }
+  const solved = state.state;
+  const { property1, property2 } = state.definition;
 
-  const metrics = filter
-    ? state.results.filter((result) => filter.has(result.name))
-    : state.results;
+  // Every quantity defined for this state except the two inputs, in catalog
+  // order; the phase goes after the thermodynamic properties.
+  const metrics = tableQuantities()
+    .filter((q) => q !== property1 && q !== property2)
+    .filter((q) => !filter || filter.has(q))
+    .flatMap((q) => {
+      const value = quantityValue(solved, q);
+      return value === null ? [] : [{ name: q, value }];
+    });
+  const showPhase = !filter || filter.has("phase");
 
   return (
     <dl className={`state-metrics state-metrics--${variant}`}>
-      {metrics.map((result) => {
-        if (result.name === "PHASE") {
-          const label = propertyLabel(result.name);
-          return (
-            <div key={result.name} className="state-metrics__row">
-              <dt title={label}>
-                <PropertyMath name={result.name} />
-                {label ? (
-                  <span className="state-metrics__name">{label}</span>
-                ) : null}
-              </dt>
-              <dd>{phaseLabel(result.value)}</dd>
-            </div>
-          );
-        }
-        const displayValue = fromSI(result.name, result.value, units);
-        const displayUnit = getDisplayUnit(result.name, units);
-        const label = propertyLabel(result.name) ?? result.description;
-        const isQuality = result.name === "Q";
-        const qualityOutOfRange =
-          isQuality && (result.value < 0 || result.value > 1);
+      {metrics.map(({ name, value }) => {
+        const displayUnit = getDisplayUnit(name, units);
+        const label = propertyLabel(name);
         return (
-          <div key={result.name} className="state-metrics__row">
+          <div key={name} className="state-metrics__row">
             <dt title={label}>
-              <PropertyMath name={result.name} />
+              <PropertyMath name={name} />
               {label ? (
                 <span className="state-metrics__name">{label}</span>
               ) : null}
             </dt>
             <dd>
-              {qualityOutOfRange ? "-" : (
-                <>
-                  {NUMBER_FORMAT.format(displayValue)}
-                  <UnitMath unit={displayUnit} />
-                </>
-              )}
+              {NUMBER_FORMAT.format(fromSI(name, value, units))}
+              <UnitMath unit={displayUnit} />
             </dd>
           </div>
         );
       })}
+      {showPhase ? (
+        <div className="state-metrics__row">
+          <dt title={propertyLabel("phase")}>
+            <PropertyMath name="phase" />
+            <span className="state-metrics__name">{propertyLabel("phase")}</span>
+          </dt>
+          <dd>{phaseLabel(solved.phase)}</dd>
+        </div>
+      ) : null}
     </dl>
   );
 }

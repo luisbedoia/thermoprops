@@ -3,16 +3,14 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import "./layout/AppLayout.css";
 import App from "./App.tsx";
-import { CP } from "./coolprop";
+import { initCoolProp } from "./coolprop";
 
 // The static shell in index.html stays on screen (and visible to crawlers)
 // until CoolProp is ready; only then does React take over #root.
 const root = createRoot(document.getElementById("root")!);
 
-CP()
-  .then(({ cpp, rs }) => {
-    window.CP = cpp as typeof window.CP;
-    window.CPRS = rs;
+initCoolProp()
+  .then(() => {
     root.render(
       <StrictMode>
         <App />

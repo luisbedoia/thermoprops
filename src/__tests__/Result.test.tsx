@@ -5,6 +5,8 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { WorkspaceView } from "../Result";
 import { encodeStates } from "../workspace/utils";
 import type { StateDefinition } from "../workspace/types";
+import { setCoolProp } from "../coolprop";
+import { fakeCoolProp } from "../test-fixtures/fakeCoolProp";
 
 vi.mock("../Plot", () => ({
   ThermoPlot: () => <div data-testid="thermo-plot" />,
@@ -12,66 +14,7 @@ vi.mock("../Plot", () => ({
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function makeCPMock() {
-  return {
-    describeFluidPlots: vi.fn().mockReturnValue({
-      fluid: "Water",
-      plots: [{ id: "ph", label: "P-H", isolineOptions: [] }],
-    }),
-    propsSI: vi.fn().mockReturnValue(300),
-    getParameterInformation: vi.fn().mockReturnValue(""),
-    buildPropertyPlot: vi.fn().mockReturnValue({ isolines: [] }),
-  } as unknown as typeof window.CP;
-}
-
-// The 14 pairs coolprop-rs solves (cp.pairs()).
-const RS_PAIRS = [
-  ["pressure", "temperature"],
-  ["pressure", "quality"],
-  ["quality", "temperature"],
-  ["density", "pressure"],
-  ["enthalpy", "pressure"],
-  ["pressure", "entropy"],
-  ["pressure", "internal_energy"],
-  ["density", "temperature"],
-  ["entropy", "temperature"],
-  ["density", "quality"],
-  ["density", "enthalpy"],
-  ["density", "entropy"],
-  ["density", "internal_energy"],
-  ["enthalpy", "entropy"],
-];
-
-function makeCPRSMock() {
-  const state = vi.fn().mockReturnValue({
-    pressure: 101325,
-    temperature: 300,
-    density: 996.5,
-    enthalpy: 112654,
-    entropy: 393,
-    internal_energy: 112552,
-    quality: null,
-    phase: "liquid",
-    cp: 4180,
-    cv: 4130,
-    viscosity: 8.5e-4,
-    conductivity: 0.61,
-    prandtl: 5.8,
-    gibbs: -5300,
-    compressibility: 0.0007,
-    speed_of_sound: 1501,
-  });
-  return {
-    pairs: vi.fn().mockReturnValue(RS_PAIRS),
-    catalog: vi.fn().mockReturnValue([]),
-    fluid: vi.fn().mockReturnValue({
-      name: "Water",
-      data: { name: "Water", aliases: ["H2O"], formula: "H_{2}O_{1}" },
-      critical: { temperature: 647.096, pressure: 22.064e6, density: 322 },
-      state,
-    }),
-  } as unknown as typeof window.CPRS;
-}
+let fake: ReturnType<typeof fakeCoolProp>;
 
 function renderWorkspace(params = "fluid=Water&units=si&view=table") {
   return render(
@@ -88,9 +31,9 @@ function makeState(overrides: Partial<StateDefinition> = {}): StateDefinition {
   return {
     id: "s1",
     label: "State 1",
-    property1: "T",
+    property1: "temperature",
     value1: "300",
-    property2: "P",
+    property2: "pressure",
     value2: "101325",
     ...overrides,
   };
@@ -108,8 +51,8 @@ async function openModal() {
 
 describe("WorkspaceView", () => {
   beforeEach(() => {
-    window.CP = makeCPMock();
-    window.CPRS = makeCPRSMock();
+    fake = fakeCoolProp();
+    setCoolProp(fake.cp);
     vi.stubGlobal(
       "ResizeObserver",
       vi.fn(function ResizeObserverMock(this: object) {
@@ -253,8 +196,8 @@ describe("WorkspaceView", () => {
       });
     });
 
-    it("shows CoolProp error when calculateProperties throws", async () => {
-      window.CPRS.fluid("Water").state = vi.fn().mockImplementation(() => {
+    it("shows CoolProp error when the state cannot be solved", async () => {
+      fake.cp.fluid("Water").state = vi.fn().mockImplementation(() => {
         throw new Error("CoolProp failure");
       });
 
@@ -271,6 +214,29 @@ describe("WorkspaceView", () => {
       await waitFor(() => {
         expect(screen.getByText(/CoolProp rejected these inputs/)).toBeInTheDocument();
       });
+    });
+  });
+
+  // ── Legacy links ───────────────────────────────────────────────────────────
+
+  describe("legacy links", () => {
+    it("explains that states from an earlier version cannot be opened", () => {
+      const old = [{ ...makeState(), property1: "T", property2: "P" }];
+      renderWorkspace(`fluid=Water&units=si&view=table&states=${btoa(JSON.stringify(old))}`);
+      expect(screen.getByRole("status")).toHaveTextContent(/earlier version/);
+      expect(screen.getAllByText(/No states tracked yet/).length).toBeGreaterThan(0);
+    });
+
+    it("can be dismissed", () => {
+      const old = [{ ...makeState(), property1: "T", property2: "P" }];
+      renderWorkspace(`fluid=Water&units=si&view=table&states=${btoa(JSON.stringify(old))}`);
+      fireEvent.click(screen.getByRole("button", { name: /dismiss/i }));
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    });
+
+    it("does not show for current links", () => {
+      renderWorkspace(`fluid=Water&units=si&view=table&states=${encodeStates([makeState()])}`);
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
     });
   });
 
@@ -331,7 +297,7 @@ describe("WorkspaceView", () => {
   // ── View mode ──────────────────────────────────────────────────────────────
 
   describe("view mode", () => {
-    it("renders ThermoPlot when view=graph and fluid has plots", () => {
+    it("renders ThermoPlot when view=graph", () => {
       renderWorkspace("fluid=Water&units=si&view=graph");
       expect(screen.getByTestId("thermo-plot")).toBeInTheDocument();
     });

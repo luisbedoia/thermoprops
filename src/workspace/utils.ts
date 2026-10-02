@@ -1,34 +1,48 @@
-import type { Result } from "../lib";
+import type { DiagramInfo } from "@luisbedoia/coolprop-rs-wasm";
+import { isInputName, plotValue } from "../lib";
 import type { PlotPoint } from "../lib/plotUtils";
 import { normalizeNumericInput } from "../lib/normalizeNumericInput";
 import type { ComputedState, StateDefinition } from "./types";
 
-export function decodeStates(encoded: string | null): StateDefinition[] {
+export type DecodedStates = {
+  states: StateDefinition[];
+  /**
+   * The link was made by an earlier version of the app (states named with
+   * CoolProp's short names such as "T"), which is no longer supported.
+   */
+  legacy: boolean;
+};
+
+export function decodeStates(encoded: string | null): DecodedStates {
   if (!encoded) {
-    return [];
+    return { states: [], legacy: false };
   }
   try {
-    const raw = atob(encoded);
-    const parsed = JSON.parse(raw) as unknown;
+    const parsed = JSON.parse(atob(encoded)) as unknown;
     if (!Array.isArray(parsed)) {
-      return [];
+      return { states: [], legacy: false };
     }
-    return parsed
-      .map((item) => item as Partial<StateDefinition>)
-      .filter((item): item is StateDefinition =>
-        Boolean(
+    const wellFormed = parsed
+      .map((item) => item as Partial<Record<keyof StateDefinition, unknown>>)
+      .filter(
+        (item) =>
           item &&
-            typeof item.id === "string" &&
-            typeof item.property1 === "string" &&
-            typeof item.property2 === "string" &&
-            typeof item.value1 === "string" &&
-            typeof item.value2 === "string" &&
-            typeof item.label === "string",
-        ),
+          typeof item.id === "string" &&
+          typeof item.property1 === "string" &&
+          typeof item.property2 === "string" &&
+          typeof item.value1 === "string" &&
+          typeof item.value2 === "string" &&
+          typeof item.label === "string",
       );
+    const states = wellFormed.filter(
+      (item): item is StateDefinition =>
+        isInputName(item.property1 as string) &&
+        isInputName(item.property2 as string),
+    );
+    return { states, legacy: states.length < wellFormed.length };
   } catch (error) {
     console.error("Unable to decode states", error);
-    return [];
+    return { states: [], legacy: false };
   }
 }
 
@@ -45,21 +59,6 @@ export function generateId() {
     return crypto.randomUUID();
   }
   return `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
-}
-
-export function getPropertyValue(
-  definition: StateDefinition,
-  results: Result[],
-  propertyName: string,
-): number | null {
-  if (definition.property1 === propertyName) {
-    return Number(definition.value1);
-  }
-  if (definition.property2 === propertyName) {
-    return Number(definition.value2);
-  }
-  const result = results.find((item) => item.name === propertyName);
-  return result ? result.value : null;
 }
 
 export function statesEqual(a: StateDefinition[], b: StateDefinition[]) {
@@ -103,27 +102,22 @@ export function normalizeStateDefinition(
   };
 }
 
-const PLOT_AXES: Record<string, { x: string; y: string }> = {
-  ph: { x: "H", y: "P" },
-  Ts: { x: "S", y: "T" },
-  pt: { x: "T", y: "P" },
-  rh: { x: "H", y: "D" },
-};
-
+/** Tracked states as points on the axes of `diagram`. */
 export function getPlotPoints(
   computedStates: ComputedState[],
-  plotId: string,
+  diagram: DiagramInfo | undefined,
 ): PlotPoint[] {
-  const axes = PLOT_AXES[plotId];
-  if (!axes) return [];
-
-  return computedStates
-    .map((state) => {
-      if (state.error) return null;
-      const x = getPropertyValue(state.definition, state.results, axes.x);
-      const y = getPropertyValue(state.definition, state.results, axes.y);
-      if (x == null || y == null) return null;
-      return { id: state.definition.id, label: state.definition.label, x, y };
-    })
-    .filter((point): point is PlotPoint => Boolean(point));
+  if (!diagram) return [];
+  return computedStates.flatMap(({ definition, state }) =>
+    state
+      ? [
+          {
+            id: definition.id,
+            label: definition.label,
+            x: plotValue(state, diagram.x.property),
+            y: plotValue(state, diagram.y.property),
+          },
+        ]
+      : [],
+  );
 }

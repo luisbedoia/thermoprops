@@ -1,43 +1,34 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
+import type { DiagramInfo, InputName } from "@luisbedoia/coolprop-rs-wasm";
 import "./Plot.css";
+import { coolprop } from "./coolprop";
 import {
-  getParameterInfo,
-  computeSaturationDomeRange,
-  computeTemperatureViewMax,
-  buildIsolineLabel,
+  buildDomeTraces,
   buildIsolineTraces,
-  buildPointTrace,
   buildPlotLayout,
+  buildPointTrace,
+  diagramLabel,
+  viewRange,
 } from "./lib/plotUtils";
+import { propertyLabel, propertyToPlain } from "./lib/unitsFormat";
+import { loadPlotly, type PlotlyLike } from "./lib/plotly";
 import { resolveUnitSystem } from "./lib/units";
 import type { UnitSystem } from "./lib/units";
 
 export type { PlotPoint } from "./lib/plotUtils";
 import type { PlotPoint } from "./lib/plotUtils";
 
-type PlotlyLike = {
-  newPlot: (
-    element: HTMLElement,
-    data: unknown[],
-    layout?: unknown,
-    config?: unknown,
-  ) => Promise<unknown> | void;
-  purge?: (element: HTMLElement) => void;
-  Plots?: { resize?: (element: HTMLElement) => Promise<unknown> | void };
-};
-
 type ThermoPlotProps = {
   fluid: string;
-  onPlotChange?: (plotId: string) => void;
-  onIsolineParameterChange?: (parameter: number) => void;
+  diagram: DiagramInfo;
+  isolineKind: InputName;
+  onDiagramChange?: (id: string) => void;
+  onIsolineChange?: (kind: InputName) => void;
   onPlotError?: (hasError: boolean) => void;
   points: PlotPoint[];
-  plotId?: string;
-  isolineParameter?: number;
   isolineCount?: number;
   isolinePoints?: number;
-  includeSaturation?: boolean;
   units?: string;
 };
 
@@ -74,15 +65,14 @@ function useLegendPlacement(wrapperRef: RefObject<HTMLDivElement | null>): "bott
 
 export function ThermoPlot({
   fluid,
-  onPlotChange,
-  onIsolineParameterChange,
+  diagram,
+  isolineKind,
+  onDiagramChange,
+  onIsolineChange,
   onPlotError,
   points,
-  plotId: selectedPlotId,
-  isolineParameter: selectedIsolineParameter,
   isolineCount = 7,
-  isolinePoints = 200,
-  includeSaturation = true,
+  isolinePoints = 120,
   units,
 }: ThermoPlotProps) {
   const unitSystem: UnitSystem = resolveUnitSystem(units);
@@ -93,61 +83,6 @@ export function ThermoPlot({
   const [error, setError] = useState<string | null>(null);
   const legendPlacement = useLegendPlacement(wrapperRef);
 
-  const [catalogue, setCatalogue] = useState<FluidPlotCatalogue | null>(null);
-
-  useEffect(() => {
-    if (!fluid || !window.CP?.describeFluidPlots) {
-      setCatalogue(null);
-      return;
-    }
-    setCatalogue(window.CP.describeFluidPlots(fluid));
-  }, [fluid]);
-
-  const currentPlotId = useMemo(() => {
-    if (!catalogue || catalogue.plots.length === 0) return selectedPlotId;
-    if (selectedPlotId && catalogue.plots.some((p) => p.id === selectedPlotId)) {
-      return selectedPlotId;
-    }
-    return catalogue.plots[0]?.id;
-  }, [selectedPlotId, catalogue]);
-
-  useEffect(() => {
-    if (currentPlotId && currentPlotId !== selectedPlotId) {
-      onPlotChange?.(currentPlotId);
-    }
-  }, [currentPlotId, selectedPlotId, onPlotChange]);
-
-  const currentPlotDef = useMemo(() => {
-    if (!catalogue || !currentPlotId) return null;
-    return catalogue.plots.find((p) => p.id === currentPlotId) ?? null;
-  }, [catalogue, currentPlotId]);
-
-  const currentIsolineParameter = useMemo(() => {
-    if (!currentPlotDef) return selectedIsolineParameter;
-    if (
-      selectedIsolineParameter !== undefined &&
-      currentPlotDef.isolineOptions.some((opt) => opt.parameter === selectedIsolineParameter)
-    ) {
-      return selectedIsolineParameter;
-    }
-    return currentPlotDef.isolineOptions[0]?.parameter;
-  }, [selectedIsolineParameter, currentPlotDef]);
-
-  useEffect(() => {
-    if (currentIsolineParameter !== undefined && currentIsolineParameter !== selectedIsolineParameter) {
-      onIsolineParameterChange?.(currentIsolineParameter);
-    }
-  }, [currentIsolineParameter, selectedIsolineParameter, onIsolineParameterChange]);
-
-  const currentIsolineOption = useMemo(() => {
-    if (!currentPlotDef || currentIsolineParameter === undefined) return null;
-    return (
-      currentPlotDef.isolineOptions.find(
-        (opt) => opt.parameter === currentIsolineParameter,
-      ) ?? null
-    );
-  }, [currentPlotDef, currentIsolineParameter]);
-
   useEffect(() => {
     let isMounted = true;
     let plotlyInstance: PlotlyLike | null = null;
@@ -155,12 +90,6 @@ export function ThermoPlot({
     if (!fluid) {
       setStatus("error");
       setError("Select a fluid in settings to render a chart.");
-      return () => { /* noop */ };
-    }
-
-    if (!window.CP?.buildPropertyPlot || !window.CP?.describeFluidPlots) {
-      setStatus("error");
-      setError("CoolProp plot API is not available.");
       return () => { /* noop */ };
     }
 
@@ -173,95 +102,38 @@ export function ThermoPlot({
       return () => { /* noop */ };
     }
 
-    if (
-      !currentPlotId ||
-      !currentPlotDef ||
-      currentIsolineParameter === undefined ||
-      !currentIsolineOption
-    ) {
-      setStatus("loading");
-      return () => { /* noop */ };
-    }
-
     const renderPlot = async () => {
       setStatus("loading");
       setError(null);
 
       try {
-        let isolineRange = currentIsolineOption.range;
-        const parameterShort = getParameterInfo(currentIsolineParameter, "short");
-        const domeRange = computeSaturationDomeRange(parameterShort, fluid);
-        if (domeRange) {
-          isolineRange = {
-            min: Math.max(isolineRange.min, domeRange.min),
-            max: Math.min(isolineRange.max, domeRange.max),
-          };
-        }
-
-        const plotData = window.CP.buildPropertyPlot({
-          fluid,
-          plotId: currentPlotId,
-          isolines: [
-            {
-              parameter: currentIsolineParameter,
-              valueCount: isolineCount,
-              points: isolinePoints,
-              useCustomRange: true,
-              customRange: isolineRange,
-            },
-          ],
-          includeSaturationCurves: includeSaturation,
-          defaultPointsPerIsoline: isolinePoints,
+        const fluidApi = coolprop().fluid(fluid);
+        const data = fluidApi.diagram({
+          diagram: diagram.id,
+          isolines: [{ kind: isolineKind, count: isolineCount }],
+          points: isolinePoints,
         });
+        const { x, y } = data;
 
-        if (!plotData.isolines || plotData.isolines.length === 0) {
-          setStatus("error");
-          setError("CoolProp did not return isolines for this chart.");
-          return;
-        }
+        const traces = [
+          ...buildDomeTraces(data.dome, x.property, y.property, unitSystem),
+          ...buildIsolineTraces(data.isolines, x.property, y.property, unitSystem),
+        ];
+        const pointTrace = buildPointTrace(points, x.property, y.property, unitSystem);
+        if (pointTrace) traces.push(pointTrace);
 
-        const isolineTraces = buildIsolineTraces(
-          plotData.isolines,
-          plotData.xAxis.parameter,
-          plotData.yAxis.parameter,
-          unitSystem,
-        );
-        const pointTrace = buildPointTrace(
-          points,
-          plotData.xAxis.parameter,
-          plotData.yAxis.parameter,
-          unitSystem,
-        );
-        const traces = pointTrace
-          ? [...isolineTraces, pointTrace]
-          : isolineTraces;
-
-        const xAxisShort = getParameterInfo(plotData.xAxis.parameter, "short");
-        const yAxisShort = getParameterInfo(plotData.yAxis.parameter, "short");
-        const xAxisRange = xAxisShort === "T"
-          ? { min: plotData.xAxis.range.min, max: computeTemperatureViewMax(fluid, plotData.xAxis.range.max) }
-          : undefined;
-        const yAxisRange = yAxisShort === "T"
-          ? { min: plotData.yAxis.range.min, max: computeTemperatureViewMax(fluid, plotData.yAxis.range.max) }
-          : undefined;
-
+        const tc = fluidApi.critical.temperature;
         const layout = buildPlotLayout(
-          plotData.fluid,
-          currentPlotDef.label,
-          plotData.xAxis.parameter,
-          plotData.yAxis.parameter,
-          plotData.xAxis.scale,
-          plotData.yAxis.scale,
+          `${fluidApi.name} - ${diagramLabel(diagram)}`,
+          x,
+          y,
           legendPlacement,
-          xAxisRange,
-          yAxisRange,
+          viewRange(x, tc),
+          viewRange(y, tc),
           unitSystem,
         );
 
-        const plotlyModule = (await import(
-          "plotly.js-dist-min"
-        )) as unknown as PlotlyLike & { default?: PlotlyLike };
-        const plotly = plotlyModule.default ?? plotlyModule;
+        const plotly = await loadPlotly();
 
         if (!isMounted) return;
 
@@ -317,13 +189,10 @@ export function ThermoPlot({
     };
   }, [
     fluid,
-    currentPlotId,
-    currentPlotDef,
-    currentIsolineParameter,
-    currentIsolineOption,
+    diagram,
+    isolineKind,
     isolineCount,
     isolinePoints,
-    includeSaturation,
     points,
     legendPlacement,
     onPlotError,
@@ -338,33 +207,29 @@ export function ThermoPlot({
           <select
             id="plot-type"
             name="plot-type"
-            value={currentPlotId || ""}
-            onChange={(event) => onPlotChange?.(event.target.value)}
-            disabled={!catalogue || catalogue.plots.length === 0}
+            value={diagram.id}
+            onChange={(event) => onDiagramChange?.(event.target.value)}
           >
-            {catalogue?.plots.map((plot) => (
-              <option key={plot.id} value={plot.id}>
-                {plot.label}
-              </option>
-            ))}
+            {coolprop()
+              .diagrams()
+              .map((d) => (
+                <option key={d.id} value={d.id}>
+                  {diagramLabel(d)}
+                </option>
+              ))}
           </select>
         </div>
         <div className="control">
-          <label htmlFor="isolines">Isoline parameter</label>
+          <label htmlFor="isolines">Isolines</label>
           <select
             id="isolines"
             name="isolines"
-            value={currentIsolineParameter ?? ""}
-            onChange={(event) =>
-              onIsolineParameterChange?.(Number(event.target.value))
-            }
-            disabled={
-              !currentPlotDef || currentPlotDef.isolineOptions.length === 0
-            }
+            value={isolineKind}
+            onChange={(event) => onIsolineChange?.(event.target.value as InputName)}
           >
-            {currentPlotDef?.isolineOptions.map((option) => (
-              <option key={option.parameter} value={option.parameter}>
-                {buildIsolineLabel(option.parameter, option.range.min, unitSystem)}
+            {diagram.isolines.map((kind) => (
+              <option key={kind} value={kind}>
+                {`${propertyLabel(kind) ?? kind} (${propertyToPlain(kind)})`}
               </option>
             ))}
           </select>
@@ -377,18 +242,17 @@ export function ThermoPlot({
       >
         {status === "error" && error ? (
           <div className="plot-message error">{error}</div>
-        ) : (
-          <>
-            {status === "loading" && (
-              <div className="plot-message">Preparing plot...</div>
-            )}
-            <div
-              ref={containerRef}
-              className="plot-container"
-              aria-live="polite"
-            />
-          </>
+        ) : null}
+        {status === "loading" && (
+          <div className="plot-message">Preparing plot...</div>
         )}
+        {/* Always mounted, so a re-render after an error still finds it. */}
+        <div
+          ref={containerRef}
+          className="plot-container"
+          aria-live="polite"
+          hidden={status === "error"}
+        />
       </div>
     </div>
   );

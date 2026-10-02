@@ -1,4 +1,5 @@
 import { FormEvent, RefObject, useEffect } from "react";
+import type { InputInfo, InputName } from "@luisbedoia/coolprop-rs-wasm";
 import { Button } from "../components/Button";
 import { Modal } from "../components/Modal";
 import {
@@ -6,12 +7,12 @@ import {
   getDisplayUnit,
   propertyLabel,
   propertyToPlain,
+  quantityValue,
   resolveUnitSystem,
   unitToPlain,
 } from "../lib";
-import type { Property, UnitSystem } from "../lib";
+import type { UnitSystem } from "../lib";
 import type { ComputedState } from "./types";
-import { getPropertyValue } from "./utils";
 
 const PICKER_NUMBER_FORMAT = new Intl.NumberFormat(undefined, {
   maximumSignificantDigits: 6,
@@ -25,8 +26,8 @@ function toggleSign(value: string): string {
 }
 
 type StateModalFormState = {
-  property1: string;
-  property2: string;
+  property1: InputName;
+  property2: InputName;
   value1: string;
   value2: string;
 };
@@ -37,8 +38,8 @@ type StateModalProps = {
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   formState: StateModalFormState;
   onFormChange: (field: keyof StateModalFormState, value: string) => void;
-  propertyOptions1: Property[];
-  propertyOptions2: Property[];
+  propertyOptions1: readonly InputInfo[];
+  propertyOptions2: readonly InputInfo[];
   formError: string | null;
   firstValueRef: RefObject<HTMLInputElement | null>;
   units: string;
@@ -224,7 +225,7 @@ export function StateModal({
 }
 
 type PropertyOptionProps = {
-  property: Property;
+  property: InputInfo;
   units: UnitSystem;
 };
 
@@ -242,7 +243,7 @@ function PropertyOption({ property, units }: PropertyOptionProps) {
 }
 
 type FromStatePickerProps = {
-  propertyName: string;
+  propertyName: InputName;
   states: ComputedState[];
   units: UnitSystem;
   onPick: (value: string) => void;
@@ -254,13 +255,10 @@ function FromStatePicker({
   units,
   onPick,
 }: FromStatePickerProps) {
-  const candidates = states
-    .map((state) => {
-      const si = getPropertyValue(state.definition, state.results, propertyName);
-      if (si == null || !Number.isFinite(si)) return null;
-      return { state, si };
-    })
-    .filter((entry): entry is { state: ComputedState; si: number } => entry != null);
+  const candidates = states.flatMap((state) => {
+    const si = state.state ? quantityValue(state.state, propertyName) : null;
+    return si != null && Number.isFinite(si) ? [{ state, si }] : [];
+  });
 
   if (candidates.length === 0) return null;
 

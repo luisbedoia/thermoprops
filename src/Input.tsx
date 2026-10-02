@@ -19,48 +19,17 @@ type FormState = {
 export function SettingsView() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [fluids, setFluids] = useState<string[]>([]);
-  const [details, setDetails] = useState<{
-    aliases: string[];
-    formula?: string;
-  } | null>(null);
-  const [formState, setFormState] = useState<FormState>(() => ({
-    fluid: searchParams.get("fluid") ?? "",
-    units: resolveUnitSystem(searchParams.get("units")),
-  }));
+  const fluids = useMemo(() => getFluidsList(), []);
+  const [formState, setFormState] = useState<FormState>(() => {
+    const requested = searchParams.get("fluid") ?? "";
+    return {
+      fluid: fluids.includes(requested) ? requested : (fluids[0] ?? ""),
+      units: resolveUnitSystem(searchParams.get("units")),
+    };
+  });
 
   const searchSnapshot = useMemo(() => searchParams.toString(), [searchParams]);
   const statesParam = useMemo(() => searchParams.get("states"), [searchParams]);
-
-  useEffect(() => {
-    let active = true;
-    const loadFluids = async () => {
-      try {
-        const list = await getFluidsList();
-        if (!active) {
-          return;
-        }
-        setFluids(list);
-
-        setFormState((prev) => {
-          const chosen =
-            prev.fluid && list.includes(prev.fluid)
-              ? prev.fluid
-              : (list[0] ?? "");
-          if (chosen === prev.fluid) {
-            return prev;
-          }
-          return { ...prev, fluid: chosen };
-        });
-      } catch (error) {
-        console.error("Unable to load fluids", error);
-      }
-    };
-    void loadFluids();
-    return () => {
-      active = false;
-    };
-  }, []);
 
   useEffect(() => {
     const next = new URLSearchParams(searchSnapshot);
@@ -95,30 +64,10 @@ export function SettingsView() {
     setSearchParams,
   ]);
 
-  useEffect(() => {
-    let active = true;
-    if (!formState.fluid) {
-      setDetails(null);
-      return;
-    }
-
-    const loadDetails = async () => {
-      try {
-        const info = await getFluidDetails(formState.fluid);
-        if (!active) {
-          return;
-        }
-        setDetails(info);
-      } catch (error) {
-        console.error("Unable to load fluid metadata", error);
-      }
-    };
-
-    void loadDetails();
-    return () => {
-      active = false;
-    };
-  }, [formState.fluid]);
+  const details = useMemo(
+    () => (formState.fluid ? getFluidDetails(formState.fluid) : null),
+    [formState.fluid],
+  );
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

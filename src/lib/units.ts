@@ -1,5 +1,3 @@
-import { getPropertyDefinition } from "./index";
-
 export type UnitSystem = "celsius" | "kelvin" | "imperial";
 
 export const DEFAULT_UNIT_SYSTEM: UnitSystem = "celsius";
@@ -15,6 +13,7 @@ const J_KG_K_PER_BTU_LB_R = 4186.8;
 const W_M_K_PER_BTU_H_FT_F = 1.730734666;
 // 1 lb/(ft·s) = 1.488163944 Pa·s
 const PA_S_PER_LB_FT_S = 1.488163944;
+const M_PER_FT = 0.3048;
 
 type Kind =
   | "temperature"
@@ -25,21 +24,8 @@ type Kind =
   | "specHeat"
   | "conductivity"
   | "viscosity"
+  | "speed"
   | "dimensionless";
-
-const COOLPROP_SHORT_ALIASES: Record<string, string> = {
-  Hmass: "H",
-  Smass: "S",
-  Umass: "U",
-  Dmass: "D",
-  Cpmass: "CPMASS",
-  Cvmass: "CVMASS",
-  Gmass: "G",
-};
-
-export function normalizePropertyName(name: string): string {
-  return COOLPROP_SHORT_ALIASES[name] ?? name;
-}
 
 const UNIT_SYSTEM_ALIASES: Record<string, UnitSystem> = {
   celsius: "celsius",
@@ -61,32 +47,31 @@ export function resolveUnitSystem(value: unknown): UnitSystem {
   return DEFAULT_UNIT_SYSTEM;
 }
 
-function kindOf(propertyName: string): Kind | null {
-  const def = getPropertyDefinition(normalizePropertyName(propertyName));
-  if (!def) return null;
-  switch (def.unit) {
-    case "K":
-      return "temperature";
-    case "Pa":
-      return "pressure";
-    case "kg/m^3":
-      return "density";
-    case "m^3/kg":
-      return "specVolume";
-    case "J/kg":
-      return "specEnergy";
-    case "J/(kg*K)":
-      return "specHeat";
-    case "W/(m*K)":
-      return "conductivity";
-    case "Pa*s":
-      return "viscosity";
-    case "":
-    case "mol/mol":
-      return "dimensionless";
-    default:
-      return null;
-  }
+/**
+ * What each quantity measures, by its coolprop-rs name (state properties,
+ * inputs and diagram axes share names, e.g. "temperature").
+ */
+const KIND: Record<string, Kind> = {
+  temperature: "temperature",
+  pressure: "pressure",
+  density: "density",
+  specific_volume: "specVolume",
+  enthalpy: "specEnergy",
+  internal_energy: "specEnergy",
+  gibbs: "specEnergy",
+  entropy: "specHeat",
+  cp: "specHeat",
+  cv: "specHeat",
+  conductivity: "conductivity",
+  viscosity: "viscosity",
+  speed_of_sound: "speed",
+  quality: "dimensionless",
+  prandtl: "dimensionless",
+  compressibility: "dimensionless",
+};
+
+function kindOf(name: string): Kind | null {
+  return KIND[name] ?? null;
 }
 
 const LABELS: Record<UnitSystem, Record<Kind, string>> = {
@@ -99,6 +84,7 @@ const LABELS: Record<UnitSystem, Record<Kind, string>> = {
     specHeat: "kJ/(kg*K)",
     conductivity: "W/(m*K)",
     viscosity: "Pa*s",
+    speed: "m/s",
     dimensionless: "",
   },
   kelvin: {
@@ -110,6 +96,7 @@ const LABELS: Record<UnitSystem, Record<Kind, string>> = {
     specHeat: "kJ/(kg*K)",
     conductivity: "W/(m*K)",
     viscosity: "Pa*s",
+    speed: "m/s",
     dimensionless: "",
   },
   imperial: {
@@ -121,19 +108,15 @@ const LABELS: Record<UnitSystem, Record<Kind, string>> = {
     specHeat: "BTU/(lb*°R)",
     conductivity: "BTU/(h*ft*°F)",
     viscosity: "lb/(ft*s)",
+    speed: "ft/s",
     dimensionless: "",
   },
 };
 
-export function getDisplayUnit(
-  propertyName: string,
-  system: UnitSystem,
-): string {
-  const def = getPropertyDefinition(normalizePropertyName(propertyName));
-  if (!def) return "";
-  const kind = kindOf(propertyName);
-  if (kind == null) return def.unit;
-  if (kind === "dimensionless") return "";
+/** Display unit of `name` in `system`; "" for dimensionless quantities. */
+export function getDisplayUnit(name: string, system: UnitSystem): string {
+  const kind = kindOf(name);
+  if (kind == null || kind === "dimensionless") return "";
   return LABELS[system][kind];
 }
 
@@ -160,11 +143,11 @@ function toSITemperature(value: number, system: UnitSystem): number {
 }
 
 export function fromSI(
-  propertyName: string,
+  name: string,
   value: number,
   system: UnitSystem,
 ): number {
-  const kind = kindOf(propertyName);
+  const kind = kindOf(name);
   switch (kind) {
     case "temperature":
       return fromSITemperature(value, system);
@@ -185,6 +168,8 @@ export function fromSI(
       return system === "imperial" ? value / W_M_K_PER_BTU_H_FT_F : value;
     case "viscosity":
       return system === "imperial" ? value / PA_S_PER_LB_FT_S : value;
+    case "speed":
+      return system === "imperial" ? value / M_PER_FT : value;
     case "dimensionless":
     case null:
     default:
@@ -192,12 +177,8 @@ export function fromSI(
   }
 }
 
-export function toSI(
-  propertyName: string,
-  value: number,
-  system: UnitSystem,
-): number {
-  const kind = kindOf(propertyName);
+export function toSI(name: string, value: number, system: UnitSystem): number {
+  const kind = kindOf(name);
   switch (kind) {
     case "temperature":
       return toSITemperature(value, system);
@@ -217,6 +198,8 @@ export function toSI(
       return system === "imperial" ? value * W_M_K_PER_BTU_H_FT_F : value;
     case "viscosity":
       return system === "imperial" ? value * PA_S_PER_LB_FT_S : value;
+    case "speed":
+      return system === "imperial" ? value * M_PER_FT : value;
     case "dimensionless":
     case null:
     default:

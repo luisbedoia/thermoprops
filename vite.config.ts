@@ -9,11 +9,6 @@ export default defineConfig({
   worker: {
     format: "es",
   },
-  server: {
-    fs: {
-      allow: ["..", "../coolprop-wasm"],
-    },
-  },
   plugins: [
     react(),
     VitePWA({
@@ -54,10 +49,7 @@ export default defineConfig({
     }),
   ],
   optimizeDeps: {
-    // Pre-bundling would break how each package locates its .wasm.
-    exclude: ["@luisbedoia/coolprop-wasm", "@luisbedoia/coolprop-rs-wasm"],
-  },
-  ssr: {
-    noExternal: ["@luisbedoia/coolprop-wasm"],
+    // Pre-bundling would break how the package locates its .wasm.
+    exclude: ["@luisbedoia/coolprop-rs-wasm"],
   },
 });

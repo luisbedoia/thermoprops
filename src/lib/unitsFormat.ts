@@ -14,7 +14,7 @@
 // fallback handles anything else (e.g. legacy SI strings or future additions)
 // without crashing.
 
-import { normalizePropertyName } from "./units";
+import type { Phase } from "@luisbedoia/coolprop-rs-wasm";
 
 const UNIT_MATH: Record<string, string> = {
   "": "",
@@ -41,7 +41,8 @@ const UNIT_MATH: Record<string, string> = {
   "BTU/(h*ft*°F)":
     "\\mathrm{BTU}/(\\mathrm{h}\\cdot\\mathrm{ft}\\cdot{}^{\\circ}\\mathrm{F})",
   "lb/(ft*s)": "\\mathrm{lb}/(\\mathrm{ft}\\cdot\\mathrm{s})",
-  "mol/mol": "",
+  "m/s": "\\mathrm{m}/\\mathrm{s}",
+  "ft/s": "\\mathrm{ft}/\\mathrm{s}",
 };
 
 const UNIT_PLAIN: Record<string, string> = {
@@ -68,7 +69,8 @@ const UNIT_PLAIN: Record<string, string> = {
   "Pa*s": "Pa·s",
   "BTU/(h*ft*°F)": "BTU/(h·ft·°F)",
   "lb/(ft*s)": "lb/(ft·s)",
-  "mol/mol": "",
+  "m/s": "m/s",
+  "ft/s": "ft/s",
 };
 
 const SUPERSCRIPT_DIGITS: Record<string, string> = {
@@ -114,107 +116,92 @@ export function unitToPlain(unit: string): string {
 }
 
 // ── Property symbols (Çengel nomenclature) ───────────────────────────────────
+//
+// Keyed by coolprop-rs names: state properties, inputs and diagram axes share
+// them (e.g. "temperature", "specific_volume").
 
 const PROPERTY_MATH: Record<string, string> = {
-  T: "T",
-  P: "P",
-  D: "\\rho",
-  SPECVOL: "v",
-  H: "h",
-  S: "s",
-  U: "u",
-  Q: "x",
-  G: "g",
-  CPMASS: "c_p",
-  CVMASS: "c_v",
-  Z: "Z",
-  L: "k",
-  V: "\\mu",
-  PRANDTL: "\\mathit{Pr}",
-  // PHASE is CoolProp's enum identifier (not a thermodynamic symbol). Rendered
-  // as italic "phase" via \mathit so it visually matches the other symbols.
-  PHASE: "\\mathit{phase}",
-  TMIN: "T_{\\min}",
-  TMAX: "T_{\\max}",
-  PMIN: "P_{\\min}",
-  PMAX: "P_{\\max}",
+  temperature: "T",
+  pressure: "P",
+  density: "\\rho",
+  specific_volume: "v",
+  enthalpy: "h",
+  entropy: "s",
+  internal_energy: "u",
+  quality: "x",
+  gibbs: "g",
+  cp: "c_p",
+  cv: "c_v",
+  compressibility: "Z",
+  conductivity: "k",
+  viscosity: "\\mu",
+  prandtl: "\\mathit{Pr}",
+  speed_of_sound: "c",
+  phase: "\\mathit{phase}",
 };
 
 const PROPERTY_PLAIN: Record<string, string> = {
-  T: "T",
-  P: "P",
-  D: "ρ",
-  SPECVOL: "v",
-  H: "h",
-  S: "s",
-  U: "u",
-  Q: "x",
-  G: "g",
-  CPMASS: "cₚ",
-  CVMASS: "cᵥ",
-  Z: "Z",
-  L: "k",
-  V: "μ",
-  PRANDTL: "Pr",
-  PHASE: "phase",
-  TMIN: "Tmin",
-  TMAX: "Tmax",
-  PMIN: "Pmin",
-  PMAX: "Pmax",
+  temperature: "T",
+  pressure: "P",
+  density: "ρ",
+  specific_volume: "v",
+  enthalpy: "h",
+  entropy: "s",
+  internal_energy: "u",
+  quality: "x",
+  gibbs: "g",
+  cp: "cₚ",
+  cv: "cᵥ",
+  compressibility: "Z",
+  conductivity: "k",
+  viscosity: "μ",
+  prandtl: "Pr",
+  speed_of_sound: "c",
+  phase: "phase",
 };
-
-// CoolProp phase enum (matches iphase_* values in CoolProp.h).
-const PHASE_LABELS: Record<number, string> = {
-  0: "liquid",
-  1: "supercritical",
-  2: "supercritical gas",
-  3: "supercritical liquid",
-  4: "critical point",
-  5: "gas",
-  6: "two-phase",
-  7: "unknown",
-  8: "not imposed",
-};
-
-export function phaseLabel(code: number): string {
-  if (!Number.isFinite(code)) return "unknown";
-  return PHASE_LABELS[Math.round(code)] ?? "unknown";
-}
 
 const PROPERTY_LABEL: Record<string, string> = {
-  T: "Temperature",
-  P: "Pressure",
-  D: "Density",
-  SPECVOL: "Specific volume",
-  H: "Specific enthalpy",
-  S: "Specific entropy",
-  U: "Specific internal energy",
-  Q: "Vapor quality",
-  G: "Specific Gibbs free energy",
-  CPMASS: "Specific heat at constant pressure",
-  CVMASS: "Specific heat at constant volume",
-  Z: "Compressibility factor",
-  L: "Thermal conductivity",
-  V: "Dynamic viscosity",
-  PRANDTL: "Prandtl number",
-  PHASE: "Phase at current state",
-  TMIN: "Minimum temperature",
-  TMAX: "Maximum temperature",
-  PMIN: "Minimum pressure",
-  PMAX: "Maximum pressure",
+  temperature: "Temperature",
+  pressure: "Pressure",
+  density: "Density",
+  specific_volume: "Specific volume",
+  enthalpy: "Specific enthalpy",
+  entropy: "Specific entropy",
+  internal_energy: "Specific internal energy",
+  quality: "Vapor quality",
+  gibbs: "Specific Gibbs free energy",
+  cp: "Specific heat at constant pressure",
+  cv: "Specific heat at constant volume",
+  compressibility: "Compressibility factor",
+  conductivity: "Thermal conductivity",
+  viscosity: "Dynamic viscosity",
+  prandtl: "Prandtl number",
+  speed_of_sound: "Speed of sound",
+  phase: "Phase at current state",
 };
 
+const PHASE_LABELS: Record<Phase, string> = {
+  liquid: "liquid",
+  supercritical: "supercritical",
+  supercritical_gas: "supercritical gas",
+  supercritical_liquid: "supercritical liquid",
+  critical_point: "critical point",
+  gas: "gas",
+  two_phase: "two-phase",
+};
+
+export function phaseLabel(phase: Phase | null): string {
+  return phase ? PHASE_LABELS[phase] : "unknown";
+}
+
 export function propertyToMath(name: string): string {
-  const canonical = normalizePropertyName(name);
-  return PROPERTY_MATH[canonical] ?? canonical;
+  return PROPERTY_MATH[name] ?? name;
 }
 
 export function propertyToPlain(name: string): string {
-  const canonical = normalizePropertyName(name);
-  return PROPERTY_PLAIN[canonical] ?? canonical;
+  return PROPERTY_PLAIN[name] ?? name;
 }
 
 export function propertyLabel(name: string): string | undefined {
-  const canonical = normalizePropertyName(name);
-  return PROPERTY_LABEL[canonical];
+  return PROPERTY_LABEL[name];
 }

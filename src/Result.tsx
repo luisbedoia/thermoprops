@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import type { InputName } from "@luisbedoia/coolprop-rs-wasm";
 import {
   areCompatibleInputs,
-  properties,
+  inputs,
+  isInputName,
   resolveUnitSystem,
+  solveState,
   toSI,
-  validateStateInputs,
 } from "./lib";
 import { normalizeNumericInput } from "./lib/normalizeNumericInput";
+import { coolprop } from "./coolprop";
 import { ThermoPlot } from "./Plot";
 import type { PlotPoint } from "./Plot";
 import { Button } from "./components/Button";
@@ -27,11 +30,9 @@ const UNIT_LABELS: Record<string, string> = {
   si: "SI",
 };
 
-const numericProperties = properties.filter((prop) => prop.input);
-
 type FormState = {
-  property1: string;
-  property2: string;
+  property1: InputName;
+  property2: InputName;
   value1: string;
   value2: string;
 };
@@ -41,7 +42,6 @@ type FormState = {
 type WorkspaceHeaderProps = {
   fluid: string;
   canViewGraph: boolean;
-  hasPlots: boolean;
   effectiveViewMode: WorkspaceViewMode;
   unitLabel: string;
   statesSummary: string;
@@ -52,7 +52,6 @@ type WorkspaceHeaderProps = {
 function WorkspaceHeader({
   fluid,
   canViewGraph,
-  hasPlots,
   effectiveViewMode,
   unitLabel,
   statesSummary,
@@ -90,11 +89,7 @@ function WorkspaceHeader({
           ) : (
             <span
               className="workspace__view-disabled-tip"
-              data-tooltip={
-                hasPlots
-                  ? "The chart could not be generated for this fluid. Only the table view is available."
-                  : "Charts are not available for this fluid. Use the table to view thermodynamic properties."
-              }
+              data-tooltip="The chart could not be generated for this fluid. Only the table view is available."
             >
               <Button
                 variant="plain"
@@ -131,15 +126,16 @@ export function WorkspaceView() {
   const {
     fluid,
     units,
-    plotId,
-    setPlotId,
-    isolineParameter,
-    setIsolineParameter,
+    diagram,
+    setDiagramId,
+    isolineKind,
+    setIsolineKind,
     viewMode,
     setViewMode,
     states,
     setStates,
-    hasPlots,
+    legacyLink,
+    dismissLegacyLink,
     canViewGraph,
     effectiveViewMode,
   } = useWorkspaceUrlParams({ plotFailed });
@@ -157,15 +153,15 @@ export function WorkspaceView() {
   const computedStates = useComputedStates(states, fluid);
 
   const plotPoints: PlotPoint[] = useMemo(
-    () => getPlotPoints(computedStates, plotId),
-    [computedStates, plotId],
+    () => getPlotPoints(computedStates, diagram),
+    [computedStates, diagram],
   );
 
   // ── Modal / form state ─────────────────────────────────────────────────────
 
+  // Default pair: the first catalog pair (pressure, temperature).
   const [formState, setFormState] = useState<FormState>(() => {
-    const primary = numericProperties[0]?.name ?? "T";
-    const secondary = numericProperties[1]?.name ?? "P";
+    const [primary, secondary] = coolprop().pairs()[0];
     return { property1: primary, property2: secondary, value1: "", value2: "" };
   });
   const [formError, setFormError] = useState<string | null>(null);
@@ -212,13 +208,7 @@ export function WorkspaceView() {
     const value2 = toSI(formState.property2, displayValue2, system);
 
     try {
-      validateStateInputs(
-        formState.property1,
-        value1,
-        formState.property2,
-        value2,
-        fluid,
-      );
+      solveState(fluid, formState.property1, value1, formState.property2, value2);
     } catch (error) {
       console.error("State validation failed", error);
       setFormError(
@@ -271,31 +261,16 @@ export function WorkspaceView() {
   const handleFormChange = useCallback(
     (field: keyof FormState, value: string) => {
       setFormState((prev) => {
-        if (field === "property1") {
-          if (!areCompatibleInputs(value, prev.property2)) {
-            const fallback = numericProperties.find((prop) =>
-              areCompatibleInputs(prop.name, value),
-            );
-            return {
-              ...prev,
-              property1: value,
-              property2: fallback?.name ?? prev.property2,
-            };
-          }
-          return { ...prev, property1: value };
-        }
-        if (field === "property2") {
-          if (!areCompatibleInputs(prev.property1, value)) {
-            const fallback = numericProperties.find((prop) =>
-              areCompatibleInputs(prop.name, value),
-            );
-            return {
-              ...prev,
-              property1: fallback?.name ?? prev.property1,
-              property2: value,
-            };
-          }
-          return { ...prev, property2: value };
+        if (field === "property1" || field === "property2") {
+          if (!isInputName(value)) return prev;
+          const other = field === "property1" ? "property2" : "property1";
+          // Keep the other input if it still forms a solvable pair; else
+          // switch it to the first one that does.
+          const otherValue = areCompatibleInputs(value, prev[other])
+            ? prev[other]
+            : (inputs().find((i) => areCompatibleInputs(i.name, value))?.name ??
+              prev[other]);
+          return { ...prev, [field]: value, [other]: otherValue };
         }
         return { ...prev, [field]: value };
       });
@@ -304,18 +279,12 @@ export function WorkspaceView() {
   );
 
   const propertyOptions1 = useMemo(
-    () =>
-      numericProperties.filter((prop) =>
-        areCompatibleInputs(prop.name, formState.property2),
-      ),
+    () => inputs().filter((i) => areCompatibleInputs(i.name, formState.property2)),
     [formState.property2],
   );
 
   const propertyOptions2 = useMemo(
-    () =>
-      numericProperties.filter((prop) =>
-        areCompatibleInputs(prop.name, formState.property1),
-      ),
+    () => inputs().filter((i) => areCompatibleInputs(i.name, formState.property1)),
     [formState.property1],
   );
 
@@ -333,7 +302,6 @@ export function WorkspaceView() {
       <WorkspaceHeader
         fluid={fluid}
         canViewGraph={canViewGraph}
-        hasPlots={hasPlots}
         effectiveViewMode={effectiveViewMode}
         unitLabel={unitLabel}
         statesSummary={statesSummary}
@@ -341,15 +309,28 @@ export function WorkspaceView() {
         onNavigateBack={handleNavigateBack}
       />
 
+      {legacyLink ? (
+        <div className="workspace__notice" role="status">
+          <p>
+            This link was created with an earlier version of Thermoprops and
+            its states can no longer be opened. Add them again to share an
+            up-to-date link.
+          </p>
+          <Button variant="ghost" size="sm" onClick={dismissLegacyLink}>
+            Dismiss
+          </Button>
+        </div>
+      ) : null}
+
       <div className="workspace__content">
         {effectiveViewMode === "graph" ? (
           <div className="workspace__panel workspace__panel--graph">
             <ThermoPlot
               fluid={fluid}
-              plotId={plotId}
-              isolineParameter={isolineParameter}
-              onPlotChange={setPlotId}
-              onIsolineParameterChange={setIsolineParameter}
+              diagram={diagram}
+              isolineKind={isolineKind}
+              onDiagramChange={setDiagramId}
+              onIsolineChange={setIsolineKind}
               onPlotError={setPlotFailed}
               points={plotPoints}
               units={units}

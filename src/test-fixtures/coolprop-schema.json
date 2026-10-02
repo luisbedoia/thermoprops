@@ -1,0 +1,1162 @@
+{
+  "_note": "Generated from coolprop-rs (coolprop-wasm schema() and catalog()). Do not edit by hand.",
+  "catalog": [
+    {
+      "acentric": 0.3442920843,
+      "aliases": [
+        "water",
+        "WATER",
+        "H2O",
+        "h2o",
+        "R718"
+      ],
+      "cas": "7732-18-5",
+      "formula": "H_{2}O_{1}",
+      "molar_mass": 0.018015268,
+      "name": "Water",
+      "p_max": 1000000000.0,
+      "p_triple": 611.6548008968684,
+      "t_max": 2000.0,
+      "t_triple": 273.16
+    },
+    {
+      "acentric": 0.0335,
+      "aliases": [
+        "air",
+        "AIR",
+        "R729"
+      ],
+      "cas": "AIR.PPF",
+      "formula": "",
+      "molar_mass": 0.02896546,
+      "name": "Air",
+      "p_max": 2000000000.0,
+      "p_triple": 5264.1810687705665,
+      "t_max": 2000.0,
+      "t_triple": 59.75
+    },
+    {
+      "acentric": 0.2556905229865023,
+      "aliases": [
+        "NH3",
+        "ammonia",
+        "R717",
+        "AMMONIA"
+      ],
+      "cas": "7664-41-7",
+      "formula": "H_{3}N_{1}",
+      "molar_mass": 0.01703052,
+      "name": "Ammonia",
+      "p_max": 1000000000.0,
+      "p_triple": 6055.81357453296,
+      "t_max": 725.0,
+      "t_triple": 195.495
+    },
+    {
+      "acentric": 0.32684,
+      "aliases": [
+        "R134A"
+      ],
+      "cas": "811-97-2",
+      "formula": "C_{2}F_{4}H_{2}",
+      "molar_mass": 0.102032,
+      "name": "R134a",
+      "p_max": 70000000.0,
+      "p_triple": 389.5637885619895,
+      "t_max": 455.0,
+      "t_triple": 169.85
+    },
+    {
+      "acentric": 0.22082,
+      "aliases": [],
+      "cas": "75-45-6",
+      "formula": "C_{1}Cl_{1}F_{2}H_{1}",
+      "molar_mass": 0.086468,
+      "name": "R22",
+      "p_max": 60000000.0,
+      "p_triple": 0.3794747321972858,
+      "t_max": 550.0,
+      "t_triple": 115.73
+    },
+    {
+      "acentric": 0.0372,
+      "aliases": [
+        "nitrogen",
+        "NITROGEN",
+        "N2",
+        "R728"
+      ],
+      "cas": "7727-37-9",
+      "formula": "N_{2}",
+      "molar_mass": 0.02801348,
+      "name": "Nitrogen",
+      "p_max": 2200000000.0,
+      "p_triple": 12519.78348430944,
+      "t_max": 2000.0,
+      "t_triple": 63.151
+    },
+    {
+      "acentric": 0.0222,
+      "aliases": [
+        "oxygen",
+        "OXYGEN",
+        "O2",
+        "R732"
+      ],
+      "cas": "7782-44-7",
+      "formula": "O_{2}",
+      "molar_mass": 0.0319988,
+      "name": "Oxygen",
+      "p_max": 80000000.0,
+      "p_triple": 146.27764705809653,
+      "t_max": 2000.0,
+      "t_triple": 54.361
+    },
+    {
+      "acentric": 0.22394,
+      "aliases": [
+        "R744",
+        "co2",
+        "CO2",
+        "carbondioxide",
+        "CARBONDIOXIDE"
+      ],
+      "cas": "124-38-9",
+      "formula": "C_{1}O_{2}",
+      "molar_mass": 0.0440098,
+      "name": "CarbonDioxide",
+      "p_max": 800000000.0,
+      "p_triple": 517964.34344772575,
+      "t_max": 2000.0,
+      "t_triple": 216.592
+    },
+    {
+      "acentric": -0.219,
+      "aliases": [
+        "hydrogen",
+        "HYDROGEN",
+        "H2",
+        "R702"
+      ],
+      "cas": "1333-74-0",
+      "formula": "H_{2}",
+      "molar_mass": 0.00201588,
+      "name": "Hydrogen",
+      "p_max": 2000000000.0,
+      "p_triple": 7357.828141607672,
+      "t_max": 1000.0,
+      "t_triple": 13.957
+    },
+    {
+      "acentric": -0.38353992538323034,
+      "aliases": [
+        "helium",
+        "HELIUM",
+        "He",
+        "R704"
+      ],
+      "cas": "7440-59-7",
+      "formula": "He_{1}",
+      "molar_mass": 0.004002602,
+      "name": "Helium",
+      "p_max": 1000000000.0,
+      "p_triple": 5039.330380576782,
+      "t_max": 2000.0,
+      "t_triple": 2.1768
+    },
+    {
+      "acentric": -0.00219,
+      "aliases": [
+        "argon",
+        "ARGON",
+        "R740",
+        "Ar"
+      ],
+      "cas": "7440-37-1",
+      "formula": "Ar_{1}",
+      "molar_mass": 0.039948,
+      "name": "Argon",
+      "p_max": 1000000000.0,
+      "p_triple": 68892.4770797671,
+      "t_max": 2000.0,
+      "t_triple": 83.806
+    },
+    {
+      "acentric": 0.01142,
+      "aliases": [
+        "CH4",
+        "methane",
+        "METHANE",
+        "R50",
+        "n-C1H4"
+      ],
+      "cas": "74-82-8",
+      "formula": "C_{1}H_{4}",
+      "molar_mass": 0.0160428,
+      "name": "Methane",
+      "p_max": 1000000000.0,
+      "p_triple": 11696.064114962215,
+      "t_max": 625.0,
+      "t_triple": 90.6941
+    },
+    {
+      "acentric": 0.0497,
+      "aliases": [
+        "CO",
+        "CARBONMONOXIDE"
+      ],
+      "cas": "630-08-0",
+      "formula": "C_{1}O_{1}",
+      "molar_mass": 0.0280101,
+      "name": "CarbonMonoxide",
+      "p_max": 100000000.0,
+      "p_triple": 15536.876656446811,
+      "t_max": 500.0,
+      "t_triple": 68.16
+    },
+    {
+      "acentric": 0.2769,
+      "aliases": [],
+      "cas": "75-10-5",
+      "formula": "C_{1}F_{2}H_{2}",
+      "molar_mass": 0.052024,
+      "name": "R32",
+      "p_max": 70000000.0,
+      "p_triple": 47.999893876059375,
+      "t_max": 435.0,
+      "t_triple": 136.34
+    },
+    {
+      "acentric": 0.296,
+      "aliases": [
+        "R410a"
+      ],
+      "cas": "R410A.PPF",
+      "formula": "",
+      "molar_mass": 0.07258540000000001,
+      "name": "R410A",
+      "p_max": 50000000.0,
+      "p_triple": 29160.33537476026,
+      "t_max": 500.0,
+      "t_triple": 200.0
+    },
+    {
+      "acentric": 0.276,
+      "aliases": [
+        "R1234YF"
+      ],
+      "cas": "754-12-1",
+      "formula": "C_{3}F_{4}H_{2}",
+      "molar_mass": 0.1140416,
+      "name": "R1234yf",
+      "p_max": 100000000.0,
+      "p_triple": 0.4127,
+      "t_max": 410.0,
+      "t_triple": 121.6
+    },
+    {
+      "acentric": 0.3131224184598984,
+      "aliases": [
+        "R1234ZE",
+        "R1234ZEE",
+        "R1234zeE",
+        "R1234ZE(E)"
+      ],
+      "cas": "29118-24-9",
+      "formula": "C_{3}F_{4}H_{2}",
+      "molar_mass": 0.1140415928,
+      "name": "R1234ze(E)",
+      "p_max": 15000000.0,
+      "p_triple": 218.65493176440043,
+      "t_max": 420.0,
+      "t_triple": 168.62
+    },
+    {
+      "acentric": 0.293,
+      "aliases": [
+        "R404a"
+      ],
+      "cas": "R404A.PPF",
+      "formula": "",
+      "molar_mass": 0.0976038,
+      "name": "R404A",
+      "p_max": 50000000.0,
+      "p_triple": 22649.187475165232,
+      "t_max": 500.0,
+      "t_triple": 200.0
+    },
+    {
+      "acentric": 0.286,
+      "aliases": [
+        "R507a"
+      ],
+      "cas": "R507A.PPF",
+      "formula": "",
+      "molar_mass": 0.0988592,
+      "name": "R507A",
+      "p_max": 50000000.0,
+      "p_triple": 23232.992819809653,
+      "t_max": 500.0,
+      "t_triple": 200.0
+    },
+    {
+      "acentric": 0.3052,
+      "aliases": [],
+      "cas": "354-33-6",
+      "formula": "C_{2}F_{5}H_{1}",
+      "molar_mass": 0.1200214,
+      "name": "R125",
+      "p_max": 60000000.0,
+      "p_triple": 2914.046009255466,
+      "t_max": 500.0,
+      "t_triple": 172.52
+    },
+    {
+      "acentric": 0.261489646224,
+      "aliases": [
+        "R143A"
+      ],
+      "cas": "420-46-2",
+      "formula": "C_{2}F_{3}H_{3}",
+      "molar_mass": 0.08404099999999999,
+      "name": "R143a",
+      "p_max": 150000000.0,
+      "p_triple": 1074.9454424528103,
+      "t_max": 650.0,
+      "t_triple": 161.34
+    },
+    {
+      "acentric": 0.275217114532099,
+      "aliases": [
+        "R152a"
+      ],
+      "cas": "75-37-6",
+      "formula": "C_{2}F_{2}H_{4}",
+      "molar_mass": 0.066051,
+      "name": "R152A",
+      "p_max": 58000000.0,
+      "p_triple": 64.13864973694703,
+      "t_max": 500.0,
+      "t_triple": 154.56
+    },
+    {
+      "acentric": 0.251031912680427,
+      "aliases": [
+        "nPentane",
+        "Pentane",
+        "PENTANE",
+        "N-PENTANE",
+        "R601",
+        "NC5H12",
+        "n-C5H12"
+      ],
+      "cas": "109-66-0",
+      "formula": "C_{5}H_{12}",
+      "molar_mass": 0.07214878,
+      "name": "n-Pentane",
+      "p_max": 780000000.0,
+      "p_triple": 0.0780280732735637,
+      "t_max": 650.0,
+      "t_triple": 143.47
+    },
+    {
+      "acentric": 0.2274,
+      "aliases": [
+        "ipentane",
+        "R601a",
+        "ISOPENTANE",
+        "IPENTANE"
+      ],
+      "cas": "78-78-4",
+      "formula": "C_{5}H_{12}",
+      "molar_mass": 0.07214878,
+      "name": "Isopentane",
+      "p_max": 1000000000.0,
+      "p_triple": 0.00008949025483876957,
+      "t_max": 500.0,
+      "t_triple": 112.65
+    },
+    {
+      "acentric": 0.200810094644,
+      "aliases": [
+        "nButane",
+        "butane",
+        "Butane",
+        "BUTANE",
+        "N-BUTANE",
+        "R600",
+        "NC4H10",
+        "n-C4H10"
+      ],
+      "cas": "106-97-8",
+      "formula": "C_{4}H_{10}",
+      "molar_mass": 0.0581222,
+      "name": "n-Butane",
+      "p_max": 12000000.0,
+      "p_triple": 0.6656582208078881,
+      "t_max": 575.0,
+      "t_triple": 134.895
+    },
+    {
+      "acentric": 0.183531783208,
+      "aliases": [
+        "isobutane",
+        "Isobutane",
+        "ISOBUTANE",
+        "R600A",
+        "R600a",
+        "ISOBUTAN"
+      ],
+      "cas": "75-28-5",
+      "formula": "C_{4}H_{10}",
+      "molar_mass": 0.0581222,
+      "name": "IsoButane",
+      "p_max": 35000000.0,
+      "p_triple": 0.022890839011893836,
+      "t_max": 575.0,
+      "t_triple": 113.73
+    },
+    {
+      "acentric": 0.2657,
+      "aliases": [
+        "toluene",
+        "TOLUENE"
+      ],
+      "cas": "108-88-3",
+      "formula": "C_{7}H_{8}",
+      "molar_mass": 0.09213842,
+      "name": "Toluene",
+      "p_max": 500000000.0,
+      "p_triple": 0.03939340898242913,
+      "t_max": 700.0,
+      "t_triple": 178.0
+    },
+    {
+      "acentric": 0.3776,
+      "aliases": [
+        "R245FA"
+      ],
+      "cas": "460-73-1",
+      "formula": "C_{3}F_{5}H_{3}",
+      "molar_mass": 0.13404794,
+      "name": "R245fa",
+      "p_max": 200000000.0,
+      "p_triple": 13.75743250947722,
+      "t_max": 440.0,
+      "t_triple": 171.05
+    },
+    {
+      "acentric": 0.644,
+      "aliases": [
+        "C2H6O",
+        "ethanol",
+        "ETHANOL"
+      ],
+      "cas": "64-17-5",
+      "formula": "C_{2}H_{6}O_{1}",
+      "molar_mass": 0.04606844,
+      "name": "Ethanol",
+      "p_max": 280000000.0,
+      "p_triple": 0.0007353928225172699,
+      "t_max": 650.0,
+      "t_triple": 159.10000000000002
+    },
+    {
+      "acentric": 0.1521,
+      "aliases": [
+        "Propane",
+        "propane",
+        "R290",
+        "C3H8",
+        "PROPANE",
+        "N-PROPANE",
+        "NC3H8",
+        "n-C3H8"
+      ],
+      "cas": "74-98-6",
+      "formula": "C_{3}H_{8}",
+      "molar_mass": 0.04409562,
+      "name": "n-Propane",
+      "p_max": 1000000000.0,
+      "p_triple": 0.00017184840809308612,
+      "t_max": 650.0,
+      "t_triple": 85.525
+    }
+  ],
+  "schema": {
+    "diagrams": [
+      {
+        "id": "pressure_temperature",
+        "isolines": [
+          "density",
+          "enthalpy",
+          "entropy",
+          "internal_energy"
+        ],
+        "x": {
+          "property": "temperature",
+          "scale": "linear"
+        },
+        "y": {
+          "property": "pressure",
+          "scale": "log"
+        }
+      },
+      {
+        "id": "pressure_density",
+        "isolines": [
+          "temperature",
+          "enthalpy",
+          "entropy",
+          "internal_energy",
+          "quality"
+        ],
+        "x": {
+          "property": "density",
+          "scale": "log"
+        },
+        "y": {
+          "property": "pressure",
+          "scale": "log"
+        }
+      },
+      {
+        "id": "pressure_specific_volume",
+        "isolines": [
+          "temperature",
+          "enthalpy",
+          "entropy",
+          "internal_energy",
+          "quality"
+        ],
+        "x": {
+          "property": "specific_volume",
+          "scale": "log"
+        },
+        "y": {
+          "property": "pressure",
+          "scale": "log"
+        }
+      },
+      {
+        "id": "pressure_enthalpy",
+        "isolines": [
+          "temperature",
+          "density",
+          "entropy",
+          "internal_energy",
+          "quality"
+        ],
+        "x": {
+          "property": "enthalpy",
+          "scale": "linear"
+        },
+        "y": {
+          "property": "pressure",
+          "scale": "log"
+        }
+      },
+      {
+        "id": "pressure_entropy",
+        "isolines": [
+          "temperature",
+          "density",
+          "enthalpy",
+          "internal_energy",
+          "quality"
+        ],
+        "x": {
+          "property": "entropy",
+          "scale": "linear"
+        },
+        "y": {
+          "property": "pressure",
+          "scale": "log"
+        }
+      },
+      {
+        "id": "pressure_internal_energy",
+        "isolines": [
+          "temperature",
+          "density",
+          "enthalpy",
+          "entropy",
+          "quality"
+        ],
+        "x": {
+          "property": "internal_energy",
+          "scale": "linear"
+        },
+        "y": {
+          "property": "pressure",
+          "scale": "log"
+        }
+      },
+      {
+        "id": "temperature_density",
+        "isolines": [
+          "pressure",
+          "enthalpy",
+          "entropy",
+          "internal_energy",
+          "quality"
+        ],
+        "x": {
+          "property": "density",
+          "scale": "log"
+        },
+        "y": {
+          "property": "temperature",
+          "scale": "linear"
+        }
+      },
+      {
+        "id": "temperature_specific_volume",
+        "isolines": [
+          "pressure",
+          "enthalpy",
+          "entropy",
+          "internal_energy",
+          "quality"
+        ],
+        "x": {
+          "property": "specific_volume",
+          "scale": "log"
+        },
+        "y": {
+          "property": "temperature",
+          "scale": "linear"
+        }
+      },
+      {
+        "id": "temperature_enthalpy",
+        "isolines": [
+          "pressure",
+          "density",
+          "entropy",
+          "internal_energy",
+          "quality"
+        ],
+        "x": {
+          "property": "enthalpy",
+          "scale": "linear"
+        },
+        "y": {
+          "property": "temperature",
+          "scale": "linear"
+        }
+      },
+      {
+        "id": "temperature_entropy",
+        "isolines": [
+          "pressure",
+          "density",
+          "enthalpy",
+          "internal_energy",
+          "quality"
+        ],
+        "x": {
+          "property": "entropy",
+          "scale": "linear"
+        },
+        "y": {
+          "property": "temperature",
+          "scale": "linear"
+        }
+      },
+      {
+        "id": "temperature_internal_energy",
+        "isolines": [
+          "pressure",
+          "density",
+          "enthalpy",
+          "entropy",
+          "quality"
+        ],
+        "x": {
+          "property": "internal_energy",
+          "scale": "linear"
+        },
+        "y": {
+          "property": "temperature",
+          "scale": "linear"
+        }
+      },
+      {
+        "id": "enthalpy_density",
+        "isolines": [
+          "pressure",
+          "temperature",
+          "entropy",
+          "internal_energy",
+          "quality"
+        ],
+        "x": {
+          "property": "density",
+          "scale": "log"
+        },
+        "y": {
+          "property": "enthalpy",
+          "scale": "linear"
+        }
+      },
+      {
+        "id": "density_entropy",
+        "isolines": [
+          "pressure",
+          "temperature",
+          "enthalpy",
+          "internal_energy",
+          "quality"
+        ],
+        "x": {
+          "property": "entropy",
+          "scale": "linear"
+        },
+        "y": {
+          "property": "density",
+          "scale": "log"
+        }
+      },
+      {
+        "id": "internal_energy_density",
+        "isolines": [
+          "pressure",
+          "temperature",
+          "enthalpy",
+          "entropy",
+          "quality"
+        ],
+        "x": {
+          "property": "density",
+          "scale": "log"
+        },
+        "y": {
+          "property": "internal_energy",
+          "scale": "linear"
+        }
+      },
+      {
+        "id": "enthalpy_specific_volume",
+        "isolines": [
+          "pressure",
+          "temperature",
+          "entropy",
+          "internal_energy",
+          "quality"
+        ],
+        "x": {
+          "property": "specific_volume",
+          "scale": "log"
+        },
+        "y": {
+          "property": "enthalpy",
+          "scale": "linear"
+        }
+      },
+      {
+        "id": "specific_volume_entropy",
+        "isolines": [
+          "pressure",
+          "temperature",
+          "enthalpy",
+          "internal_energy",
+          "quality"
+        ],
+        "x": {
+          "property": "entropy",
+          "scale": "linear"
+        },
+        "y": {
+          "property": "specific_volume",
+          "scale": "log"
+        }
+      },
+      {
+        "id": "internal_energy_specific_volume",
+        "isolines": [
+          "pressure",
+          "temperature",
+          "enthalpy",
+          "entropy",
+          "quality"
+        ],
+        "x": {
+          "property": "specific_volume",
+          "scale": "log"
+        },
+        "y": {
+          "property": "internal_energy",
+          "scale": "linear"
+        }
+      },
+      {
+        "id": "enthalpy_entropy",
+        "isolines": [
+          "pressure",
+          "temperature",
+          "density",
+          "internal_energy",
+          "quality"
+        ],
+        "x": {
+          "property": "entropy",
+          "scale": "linear"
+        },
+        "y": {
+          "property": "enthalpy",
+          "scale": "linear"
+        }
+      },
+      {
+        "id": "enthalpy_internal_energy",
+        "isolines": [
+          "pressure",
+          "temperature",
+          "density",
+          "entropy",
+          "quality"
+        ],
+        "x": {
+          "property": "internal_energy",
+          "scale": "linear"
+        },
+        "y": {
+          "property": "enthalpy",
+          "scale": "linear"
+        }
+      },
+      {
+        "id": "internal_energy_entropy",
+        "isolines": [
+          "pressure",
+          "temperature",
+          "density",
+          "enthalpy",
+          "quality"
+        ],
+        "x": {
+          "property": "entropy",
+          "scale": "linear"
+        },
+        "y": {
+          "property": "internal_energy",
+          "scale": "linear"
+        }
+      }
+    ],
+    "inputs": [
+      {
+        "description": "Pressure",
+        "max": null,
+        "min": null,
+        "name": "pressure",
+        "symbol": "p",
+        "unit": "Pa"
+      },
+      {
+        "description": "Temperature",
+        "max": null,
+        "min": null,
+        "name": "temperature",
+        "symbol": "T",
+        "unit": "K"
+      },
+      {
+        "description": "Mass density",
+        "max": null,
+        "min": null,
+        "name": "density",
+        "symbol": "ρ",
+        "unit": "kg/m³"
+      },
+      {
+        "description": "Specific enthalpy",
+        "max": null,
+        "min": null,
+        "name": "enthalpy",
+        "symbol": "h",
+        "unit": "J/kg"
+      },
+      {
+        "description": "Specific entropy",
+        "max": null,
+        "min": null,
+        "name": "entropy",
+        "symbol": "s",
+        "unit": "J/(kg·K)"
+      },
+      {
+        "description": "Specific internal energy",
+        "max": null,
+        "min": null,
+        "name": "internal_energy",
+        "symbol": "u",
+        "unit": "J/kg"
+      },
+      {
+        "description": "Vapor quality (vapor mass fraction)",
+        "max": 1.0,
+        "min": 0.0,
+        "name": "quality",
+        "symbol": "x",
+        "unit": ""
+      }
+    ],
+    "pairs": [
+      [
+        "pressure",
+        "temperature"
+      ],
+      [
+        "pressure",
+        "quality"
+      ],
+      [
+        "quality",
+        "temperature"
+      ],
+      [
+        "density",
+        "pressure"
+      ],
+      [
+        "enthalpy",
+        "pressure"
+      ],
+      [
+        "pressure",
+        "entropy"
+      ],
+      [
+        "pressure",
+        "internal_energy"
+      ],
+      [
+        "density",
+        "temperature"
+      ],
+      [
+        "entropy",
+        "temperature"
+      ],
+      [
+        "density",
+        "quality"
+      ],
+      [
+        "density",
+        "enthalpy"
+      ],
+      [
+        "density",
+        "entropy"
+      ],
+      [
+        "density",
+        "internal_energy"
+      ],
+      [
+        "enthalpy",
+        "entropy"
+      ]
+    ],
+    "phases": [
+      {
+        "description": "Subcritical liquid",
+        "name": "liquid"
+      },
+      {
+        "description": "Supercritical fluid (p > pc, T > Tc)",
+        "name": "supercritical"
+      },
+      {
+        "description": "Supercritical gas (p < pc, T > Tc)",
+        "name": "supercritical_gas"
+      },
+      {
+        "description": "Supercritical liquid (p > pc, T < Tc)",
+        "name": "supercritical_liquid"
+      },
+      {
+        "description": "At the critical point",
+        "name": "critical_point"
+      },
+      {
+        "description": "Subcritical gas",
+        "name": "gas"
+      },
+      {
+        "description": "Liquid-vapor mixture inside the saturation dome",
+        "name": "two_phase"
+      }
+    ],
+    "plot_properties": [
+      {
+        "description": "Pressure",
+        "name": "pressure",
+        "symbol": "p",
+        "unit": "Pa"
+      },
+      {
+        "description": "Temperature",
+        "name": "temperature",
+        "symbol": "T",
+        "unit": "K"
+      },
+      {
+        "description": "Mass density",
+        "name": "density",
+        "symbol": "ρ",
+        "unit": "kg/m³"
+      },
+      {
+        "description": "Specific volume",
+        "name": "specific_volume",
+        "symbol": "v",
+        "unit": "m³/kg"
+      },
+      {
+        "description": "Specific enthalpy",
+        "name": "enthalpy",
+        "symbol": "h",
+        "unit": "J/kg"
+      },
+      {
+        "description": "Specific entropy",
+        "name": "entropy",
+        "symbol": "s",
+        "unit": "J/(kg·K)"
+      },
+      {
+        "description": "Specific internal energy",
+        "name": "internal_energy",
+        "symbol": "u",
+        "unit": "J/kg"
+      }
+    ],
+    "properties": [
+      {
+        "category": "thermodynamic",
+        "description": "Pressure",
+        "name": "pressure",
+        "nullable": false,
+        "symbol": "p",
+        "unit": "Pa"
+      },
+      {
+        "category": "thermodynamic",
+        "description": "Temperature",
+        "name": "temperature",
+        "nullable": false,
+        "symbol": "T",
+        "unit": "K"
+      },
+      {
+        "category": "thermodynamic",
+        "description": "Mass density",
+        "name": "density",
+        "nullable": false,
+        "symbol": "ρ",
+        "unit": "kg/m³"
+      },
+      {
+        "category": "thermodynamic",
+        "description": "Specific enthalpy",
+        "name": "enthalpy",
+        "nullable": false,
+        "symbol": "h",
+        "unit": "J/kg"
+      },
+      {
+        "category": "thermodynamic",
+        "description": "Specific entropy",
+        "name": "entropy",
+        "nullable": false,
+        "symbol": "s",
+        "unit": "J/(kg·K)"
+      },
+      {
+        "category": "thermodynamic",
+        "description": "Specific internal energy",
+        "name": "internal_energy",
+        "nullable": false,
+        "symbol": "u",
+        "unit": "J/kg"
+      },
+      {
+        "category": "thermodynamic",
+        "description": "Vapor quality; only inside the two-phase region",
+        "name": "quality",
+        "nullable": true,
+        "symbol": "x",
+        "unit": ""
+      },
+      {
+        "category": "thermodynamic",
+        "description": "Specific heat at constant pressure",
+        "name": "cp",
+        "nullable": true,
+        "symbol": "cp",
+        "unit": "J/(kg·K)"
+      },
+      {
+        "category": "thermodynamic",
+        "description": "Specific heat at constant volume",
+        "name": "cv",
+        "nullable": true,
+        "symbol": "cv",
+        "unit": "J/(kg·K)"
+      },
+      {
+        "category": "transport",
+        "description": "Dynamic viscosity",
+        "name": "viscosity",
+        "nullable": true,
+        "symbol": "μ",
+        "unit": "Pa·s"
+      },
+      {
+        "category": "transport",
+        "description": "Thermal conductivity",
+        "name": "conductivity",
+        "nullable": true,
+        "symbol": "λ",
+        "unit": "W/(m·K)"
+      },
+      {
+        "category": "transport",
+        "description": "Prandtl number",
+        "name": "prandtl",
+        "nullable": true,
+        "symbol": "Pr",
+        "unit": ""
+      },
+      {
+        "category": "thermodynamic",
+        "description": "Specific Gibbs energy",
+        "name": "gibbs",
+        "nullable": true,
+        "symbol": "g",
+        "unit": "J/kg"
+      },
+      {
+        "category": "thermodynamic",
+        "description": "Compressibility factor pv/(RT)",
+        "name": "compressibility",
+        "nullable": true,
+        "symbol": "Z",
+        "unit": ""
+      },
+      {
+        "category": "thermodynamic",
+        "description": "Speed of sound",
+        "name": "speed_of_sound",
+        "nullable": true,
+        "symbol": "a",
+        "unit": "m/s"
+      }
+    ]
+  },
+  "version": "8.0.0"
+}
