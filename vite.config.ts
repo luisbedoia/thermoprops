@@ -4,6 +4,11 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   assetsInclude: ["**/*.wasm"],
+  // coolprop-rs ships a module worker (its async API); Vite 6 defaults to
+  // IIFE workers, which cannot hold its dynamic import of the wasm glue.
+  worker: {
+    format: "es",
+  },
   server: {
     fs: {
       allow: ["..", "../coolprop-wasm"],
@@ -49,7 +54,8 @@ export default defineConfig({
     }),
   ],
   optimizeDeps: {
-    exclude: ["@luisbedoia/coolprop-wasm"],
+    // Pre-bundling would break how each package locates its .wasm.
+    exclude: ["@luisbedoia/coolprop-wasm", "@luisbedoia/coolprop-rs-wasm"],
   },
   ssr: {
     noExternal: ["@luisbedoia/coolprop-wasm"],

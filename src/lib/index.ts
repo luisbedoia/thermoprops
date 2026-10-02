@@ -1,3 +1,10 @@
+import type {
+  InputName,
+  Phase,
+  State,
+  StateInputs,
+} from "@luisbedoia/coolprop-rs-wasm";
+
 export interface Property {
   name: string;
   unit: string;
@@ -209,15 +216,90 @@ export function getPropertyDefinition(name: string) {
   return properties.find((prop) => prop.name === name);
 }
 
-// CoolProp accepts most pair-combinations of (T, P, D, H, S, U) for pure
-// fluids, but vapor quality (Q) is only meaningful on the saturation curve —
-// it must be paired with T or P. Other combinations would always error.
-export function areCompatibleInputs(a: string, b: string): boolean {
-  if (a === b) return false;
-  if (a === "Q" || b === "Q") {
-    return a === "T" || a === "P" || b === "T" || b === "P";
+// The app keeps CoolProp's short property names (they are stored in shared
+// URLs); coolprop-rs uses descriptive names. These maps translate between them.
+
+/** App input name → coolprop-rs input name. */
+const RS_INPUT: Record<string, InputName> = {
+  T: "temperature",
+  P: "pressure",
+  D: "density",
+  H: "enthalpy",
+  S: "entropy",
+  U: "internal_energy",
+  Q: "quality",
+};
+
+/** App output name → how to read it from a solved coolprop-rs `State`. */
+const RS_OUTPUT: Record<string, (s: State) => number | null> = {
+  T: (s) => s.temperature,
+  P: (s) => s.pressure,
+  D: (s) => s.density,
+  H: (s) => s.enthalpy,
+  S: (s) => s.entropy,
+  U: (s) => s.internal_energy,
+  Q: (s) => s.quality,
+  SPECVOL: (s) => 1 / s.density,
+  CPMASS: (s) => s.cp,
+  CVMASS: (s) => s.cv,
+  PHASE: (s) => (s.phase === null ? null : PHASE_CODE[s.phase]),
+  G: (s) => s.gibbs,
+  Z: (s) => s.compressibility,
+  L: (s) => s.conductivity,
+  V: (s) => s.viscosity,
+  PRANDTL: (s) => s.prandtl,
+};
+
+/** coolprop-rs phase → CoolProp's numeric `iphase_*` code (see phaseLabel). */
+const PHASE_CODE: Record<Phase, number> = {
+  liquid: 0,
+  supercritical: 1,
+  supercritical_gas: 2,
+  supercritical_liquid: 3,
+  critical_point: 4,
+  gas: 5,
+  two_phase: 6,
+};
+
+function coolprop() {
+  if (!window.CPRS) {
+    throw new Error("CoolProp module is not loaded.");
   }
-  return true;
+  return window.CPRS;
+}
+
+/**
+ * Whether two inputs can fix a state together. Only the pairs CoolProp can
+ * actually solve are accepted (e.g. T with H is not).
+ */
+export function areCompatibleInputs(a: string, b: string): boolean {
+  const ra = RS_INPUT[a];
+  const rb = RS_INPUT[b];
+  if (!ra || !rb || ra === rb) return false;
+  return coolprop()
+    .pairs()
+    .some(([x, y]) => (x === ra && y === rb) || (x === rb && y === ra));
+}
+
+/** Solves the full state fixed by two inputs. Throws if CoolProp cannot. */
+function solveState(
+  property1: string,
+  value1: number,
+  property2: string,
+  value2: number,
+  fluid: string,
+): State {
+  checkValidInputProperty(property1);
+  checkValidInputProperty(property2);
+  // The names come from runtime data (URL, form), so the pair cannot be
+  // checked by TypeScript; the module rejects unsupported pairs at runtime.
+  const inputs = {
+    [RS_INPUT[property1]]: value1,
+    [RS_INPUT[property2]]: value2,
+  };
+  return coolprop()
+    .fluid(fluid)
+    .state(inputs as unknown as StateInputs);
 }
 
 export function calculateProperty(
@@ -229,36 +311,19 @@ export function calculateProperty(
   fluid: string,
 ) {
   checkValidProperty(property);
-  checkValidInputProperty(property1);
-  checkValidInputProperty(property2);
-  if (!window.CP?.propsSI) {
-    throw new Error("CoolProp PropsSI API is not available.");
+  const read = RS_OUTPUT[property];
+  if (!read) {
+    throw new Error(`Property ${property} is not available.`);
   }
-  // CoolProp does not expose specific volume directly; derive it from density.
-  if (property === "SPECVOL") {
-    const density = window.CP.propsSI(
-      "D",
-      property1,
-      value1,
-      property2,
-      value2,
-      fluid,
-    );
-    return 1 / density;
+  const value = read(solveState(property1, value1, property2, value2, fluid));
+  if (value === null) {
+    throw new Error(`Property ${property} is undefined for this state.`);
   }
-  return window.CP.propsSI(
-    property,
-    property1,
-    value1,
-    property2,
-    value2,
-    fluid,
-  );
+  return value;
 }
 
 // Throws if CoolProp cannot evaluate the given (property1, property2) pair —
-// useful as a precondition check before storing a state. We probe density
-// because it is well-defined across single-phase and two-phase regions.
+// useful as a precondition check before storing a state.
 export function validateStateInputs(
   property1: string,
   value1: number,
@@ -266,7 +331,7 @@ export function validateStateInputs(
   value2: number,
   fluid: string,
 ): void {
-  calculateProperty("D", property1, value1, property2, value2, fluid);
+  solveState(property1, value1, property2, value2, fluid);
 }
 
 export function calculateProperties(
@@ -276,44 +341,20 @@ export function calculateProperties(
   value2: number,
   fluid: string,
 ): Result[] {
-  const propertiesToCalculate: Property[] = properties.filter(
-    (property) => property.output && !property.trivial,
-  );
-
-  const result: Result[] = [];
-
-  propertiesToCalculate.forEach((property) => {
-    if (property.name === property1 || property.name === property2) {
-      return;
-    }
-    let propertyResult: number;
-    try {
-      propertyResult = calculateProperty(
-        property.name,
-        property1,
-        value1,
-        property2,
-        value2,
-        fluid,
-      );
-    } catch {
-      // Transport properties (Z, L, V, PRANDTL) and a few others are not
-      // defined for every state — typically two-phase mixtures. Skip silently
-      // so one undefined property doesn't blank out the whole row.
-      return;
-    }
-    if (!Number.isFinite(propertyResult)) {
-      return;
-    }
-    result.push({
-      name: property.name,
-      unit: property.unit,
-      description: property.description,
-      value: propertyResult,
+  // One solve gives every property; the inputs themselves are not repeated.
+  const state = solveState(property1, value1, property2, value2, fluid);
+  return properties
+    .filter((p) => p.output && !p.trivial)
+    .filter((p) => p.name !== property1 && p.name !== property2)
+    .flatMap((p) => {
+      // Properties undefined for this state (e.g. transport properties
+      // inside the two-phase region) come back as null and are skipped.
+      const value = RS_OUTPUT[p.name]?.(state) ?? null;
+      if (value === null || !Number.isFinite(value)) return [];
+      return [
+        { name: p.name, unit: p.unit, description: p.description, value },
+      ];
     });
-  });
-
-  return result;
 }
 
 export function fluidHasPlots(fluid: string): boolean {
@@ -325,34 +366,16 @@ export function fluidHasPlots(fluid: string): boolean {
 }
 
 export async function getFluidsList(): Promise<string[]> {
-  if (!window.CP?.getGlobalParamString) {
-    throw new Error("CoolProp fluids API is not available.");
-  }
-  return window.CP.getGlobalParamString("fluids_list", "long")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean)
+  return coolprop()
+    .catalog()
+    .map((f) => f.name)
     .sort();
 }
 
 export async function getFluidDetails(fluid: string): Promise<FluidDetails> {
-  if (!window.CP?.getFluidParamString) {
-    throw new Error("CoolProp fluid metadata API is not available.");
-  }
-
-  const aliasesRaw = window.CP.getFluidParamString(fluid, "aliases") ?? "";
-  const formulaRaw = window.CP.getFluidParamString(fluid, "formula") ?? "";
-
-  const aliases = aliasesRaw
-    .split(",")
-    .map((item) => item.trim())
-    .filter((item) => item.length > 0 && item.toLowerCase() !== "none");
-
-  const formula = formulaRaw.trim();
-  const hasFormula = formula.length > 0 && formula.toLowerCase() !== "none";
-
+  const data = coolprop().fluid(fluid).data;
   return {
-    aliases,
-    formula: hasFormula ? formula : undefined,
+    aliases: data.aliases,
+    formula: data.formula || undefined,
   };
 }

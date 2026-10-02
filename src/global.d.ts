@@ -1,4 +1,5 @@
 import { EmbindModule } from "@luisbedoia/coolprop-wasm";
+import type { CoolProp } from "@luisbedoia/coolprop-rs-wasm";
 
 declare global {
   interface ParameterRange {
@@ -78,7 +79,10 @@ declare global {
   }
 
   interface Window {
+    /** C++ CoolProp build; only used for plots until they move to coolprop-rs. */
     CP: CoolPropExtendedModule;
+    /** coolprop-rs: states and fluid metadata. */
+    CPRS: CoolProp;
   }
 }
 

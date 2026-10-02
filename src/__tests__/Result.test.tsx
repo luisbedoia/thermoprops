@@ -24,6 +24,55 @@ function makeCPMock() {
   } as unknown as typeof window.CP;
 }
 
+// The 14 pairs coolprop-rs solves (cp.pairs()).
+const RS_PAIRS = [
+  ["pressure", "temperature"],
+  ["pressure", "quality"],
+  ["quality", "temperature"],
+  ["density", "pressure"],
+  ["enthalpy", "pressure"],
+  ["pressure", "entropy"],
+  ["pressure", "internal_energy"],
+  ["density", "temperature"],
+  ["entropy", "temperature"],
+  ["density", "quality"],
+  ["density", "enthalpy"],
+  ["density", "entropy"],
+  ["density", "internal_energy"],
+  ["enthalpy", "entropy"],
+];
+
+function makeCPRSMock() {
+  const state = vi.fn().mockReturnValue({
+    pressure: 101325,
+    temperature: 300,
+    density: 996.5,
+    enthalpy: 112654,
+    entropy: 393,
+    internal_energy: 112552,
+    quality: null,
+    phase: "liquid",
+    cp: 4180,
+    cv: 4130,
+    viscosity: 8.5e-4,
+    conductivity: 0.61,
+    prandtl: 5.8,
+    gibbs: -5300,
+    compressibility: 0.0007,
+    speed_of_sound: 1501,
+  });
+  return {
+    pairs: vi.fn().mockReturnValue(RS_PAIRS),
+    catalog: vi.fn().mockReturnValue([]),
+    fluid: vi.fn().mockReturnValue({
+      name: "Water",
+      data: { name: "Water", aliases: ["H2O"], formula: "H_{2}O_{1}" },
+      critical: { temperature: 647.096, pressure: 22.064e6, density: 322 },
+      state,
+    }),
+  } as unknown as typeof window.CPRS;
+}
+
 function renderWorkspace(params = "fluid=Water&units=si&view=table") {
   return render(
     <MemoryRouter initialEntries={[`/workspace?${params}`]}>
@@ -60,6 +109,7 @@ async function openModal() {
 describe("WorkspaceView", () => {
   beforeEach(() => {
     window.CP = makeCPMock();
+    window.CPRS = makeCPRSMock();
     vi.stubGlobal(
       "ResizeObserver",
       vi.fn(function ResizeObserverMock(this: object) {
@@ -204,7 +254,7 @@ describe("WorkspaceView", () => {
     });
 
     it("shows CoolProp error when calculateProperties throws", async () => {
-      window.CP.propsSI = vi.fn().mockImplementation(() => {
+      window.CPRS.fluid("Water").state = vi.fn().mockImplementation(() => {
         throw new Error("CoolProp failure");
       });
 

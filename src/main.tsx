@@ -10,8 +10,9 @@ import { CP } from "./coolprop";
 const root = createRoot(document.getElementById("root")!);
 
 CP()
-  .then((instance) => {
-    window.CP = instance as typeof window.CP;
+  .then(({ cpp, rs }) => {
+    window.CP = cpp as typeof window.CP;
+    window.CPRS = rs;
     root.render(
       <StrictMode>
         <App />
