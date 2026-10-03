@@ -168,7 +168,8 @@ export function ThermoPlot({
             plotlyInstance.Plots.resize(targetElement);
           }
         });
-        observer.observe(wrapperElement);
+        // The container is what Plotly measures: resize whenever it changes.
+        observer.observe(targetElement);
         resizeObserverRef.current = observer;
 
         requestAnimationFrame(() => {

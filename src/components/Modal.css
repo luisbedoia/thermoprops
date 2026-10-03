@@ -3,19 +3,26 @@
   inset: 0;
   z-index: 40;
   display: flex;
-  align-items: center;
+  /* Centered by the dialog's auto margins: when the dialog is taller than
+     the screen it starts at the top and the modal scrolls, on its own. */
+  align-items: flex-start;
   justify-content: center;
   padding: clamp(1rem, 3vw + 0.5rem, 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal__backdrop {
-  position: absolute;
+  position: fixed;
   inset: 0;
+  touch-action: none;
   background: rgba(15, 23, 42, 0.45);
   backdrop-filter: blur(4px);
 }
 
 .modal__dialog {
+  margin: auto 0;
   position: relative;
   z-index: 1;
   width: min(520px, 100%);
@@ -25,5 +32,18 @@
   box-shadow: 0 30px 70px rgba(15, 23, 42, 0.28);
   padding: clamp(1.5rem, 2vw + 1.2rem, 2.25rem);
   display: grid;
+  /* One column that may shrink below its content's width: otherwise a long
+     <select> option widens the dialog past a narrow screen. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.2rem;
+}
+
+/* On phones, opening a native picker or the keyboard changes the visible
+   height (Safari's toolbars, Android's keyboard). A vertically centered
+   dialog would move under the finger while that happens: anchor it to the
+   top instead. */
+@media (max-width: 640px) {
+  .modal__dialog {
+    margin: 0;
+  }
 }

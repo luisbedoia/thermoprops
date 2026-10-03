@@ -65,7 +65,12 @@
   height: 100%;
 }
 
+/* Laid over the plot, not beside it: the container keeps the full width, so
+   Plotly measures the right size when it draws. */
 .plot-message {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
