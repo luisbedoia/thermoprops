@@ -42,10 +42,16 @@ function makeState(overrides: Partial<StateDefinition> = {}): StateDefinition {
 // Open the Add state modal and wait for the first input to be visible.
 async function openModal() {
   fireEvent.click(screen.getByRole("button", { name: /add state/i }));
-  await waitFor(() =>
-    expect(screen.getByPlaceholderText("e.g. 300")).toBeInTheDocument(),
-  );
+  await waitFor(() => expect(screen.getByLabelText("Property A")).toBeInTheDocument());
 }
+
+/** The value fields of properties A and B. */
+function valueFields() {
+  const [a, b] = screen.getAllByLabelText("Value") as HTMLInputElement[];
+  return { a, b };
+}
+
+const selected = (label: string) => (screen.getByLabelText(label) as HTMLSelectElement).value;
 
 // ── Suite ─────────────────────────────────────────────────────────────────────
 
@@ -161,10 +167,10 @@ describe("WorkspaceView", () => {
       await openModal();
 
       // value1 placeholder "e.g. 300", value2 placeholder "e.g. 101325"
-      fireEvent.change(screen.getByPlaceholderText("e.g. 300"), {
+      fireEvent.change(valueFields().a, {
         target: { value: "300" },
       });
-      fireEvent.change(screen.getByPlaceholderText("e.g. 101325"), {
+      fireEvent.change(valueFields().b, {
         target: { value: "101325" },
       });
       fireEvent.click(screen.getByRole("button", { name: /add to workspace/i }));
@@ -177,10 +183,10 @@ describe("WorkspaceView", () => {
     it("closes the modal after a successful add", async () => {
       renderWorkspace();
       await openModal();
-      fireEvent.change(screen.getByPlaceholderText("e.g. 300"), {
+      fireEvent.change(valueFields().a, {
         target: { value: "300" },
       });
-      fireEvent.change(screen.getByPlaceholderText("e.g. 101325"), {
+      fireEvent.change(valueFields().b, {
         target: { value: "101325" },
       });
       fireEvent.click(screen.getByRole("button", { name: /add to workspace/i }));
@@ -190,14 +196,51 @@ describe("WorkspaceView", () => {
       });
     });
 
-    it("offers only inputs that form a solvable pair with the other one", async () => {
+    it("offers every input in both selectors", async () => {
       renderWorkspace();
       await openModal();
       const options = (id: string) =>
         [...screen.getByLabelText(id).querySelectorAll("option")].map((o) => o.value);
-      expect(options("Property A")).not.toContain("temperature");
+      const all = fake.cp.inputs().map((i) => i.name);
+      expect(options("Property A")).toEqual(all);
+      expect(options("Property B")).toEqual(all);
+    });
+
+    it("hints each value with its unit or bounds", async () => {
+      renderWorkspace();
+      await openModal();
+      expect(valueFields().a).toHaveAttribute("placeholder", "in kPa");
       fireEvent.change(screen.getByLabelText("Property B"), { target: { value: "quality" } });
-      expect(options("Property A")).toEqual(["pressure", "temperature", "density"]);
+      expect(valueFields().b).toHaveAttribute("placeholder", "0 – 1");
+    });
+
+    it("swaps A and B, values included", async () => {
+      renderWorkspace();
+      await openModal();
+      fireEvent.change(valueFields().a, { target: { value: "101.3" } });
+      fireEvent.change(valueFields().b, { target: { value: "300" } });
+      fireEvent.click(screen.getByRole("button", { name: /swap properties/i }));
+      expect([selected("Property A"), selected("Property B")]).toEqual(["temperature", "pressure"]);
+      expect([valueFields().a.value, valueFields().b.value]).toEqual(["300", "101.3"]);
+      // Picking the other selector's input swaps too.
+      fireEvent.change(screen.getByLabelText("Property A"), { target: { value: "pressure" } });
+      expect([selected("Property A"), selected("Property B")]).toEqual(["pressure", "temperature"]);
+    });
+
+    it("keeps an unsolvable pick and explains the input it changed", async () => {
+      renderWorkspace();
+      await openModal();
+      fireEvent.change(valueFields().b, { target: { value: "300" } });
+      // B = temperature; enthalpy and temperature do not fix a state.
+      fireEvent.change(screen.getByLabelText("Property A"), { target: { value: "enthalpy" } });
+      expect([selected("Property A"), selected("Property B")]).toEqual(["enthalpy", "pressure"]);
+      expect(valueFields().b.value).toBe("");
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "Property B changed from T to p: h and T do not fix a state together.",
+      );
+      // The next change clears the notice.
+      fireEvent.change(screen.getByLabelText("Property B"), { target: { value: "entropy" } });
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
     });
 
     it("shows 'Both values must be numeric' when values are empty", async () => {
@@ -218,10 +261,10 @@ describe("WorkspaceView", () => {
 
       renderWorkspace();
       await openModal();
-      fireEvent.change(screen.getByPlaceholderText("e.g. 300"), {
+      fireEvent.change(valueFields().a, {
         target: { value: "300" },
       });
-      fireEvent.change(screen.getByPlaceholderText("e.g. 101325"), {
+      fireEvent.change(valueFields().b, {
         target: { value: "101325" },
       });
       fireEvent.click(screen.getByRole("button", { name: /add to workspace/i }));

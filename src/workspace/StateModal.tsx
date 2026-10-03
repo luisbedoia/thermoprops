@@ -1,4 +1,5 @@
 import { FormEvent, RefObject, useEffect } from "react";
+import { coolprop } from "../coolprop";
 import type { InputInfo, InputName } from "@luisbedoia/coolprop-rs-wasm";
 import { Button } from "../components/Button";
 import { Modal } from "../components/Modal";
@@ -7,6 +8,7 @@ import { fromSI, getDisplayUnit, resolveUnitSystem } from "../lib/units";
 import type { UnitSystem } from "../lib/units";
 import { unitToPlain } from "../lib/unitsFormat";
 import type { ComputedState } from "./types";
+import type { Replacement } from "./pairs";
 
 const PICKER_NUMBER_FORMAT = new Intl.NumberFormat(undefined, {
   maximumSignificantDigits: 6,
@@ -32,8 +34,10 @@ type StateModalProps = {
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   formState: StateModalFormState;
   onFormChange: (field: keyof StateModalFormState, value: string) => void;
-  propertyOptions1: readonly InputInfo[];
-  propertyOptions2: readonly InputInfo[];
+  /** Swaps properties A and B, values included. */
+  onSwap: () => void;
+  /** The property the form last changed on its own, if any. */
+  replacement: Replacement | null;
   formError: string | null;
   firstValueRef: RefObject<HTMLInputElement | null>;
   units: string;
@@ -46,8 +50,8 @@ export function StateModal({
   onSubmit,
   formState,
   onFormChange,
-  propertyOptions1,
-  propertyOptions2,
+  onSwap,
+  replacement,
   formError,
   firstValueRef,
   units,
@@ -71,6 +75,11 @@ export function StateModal({
   if (!isOpen) {
     return null;
   }
+
+  // Every input in both selectors: picking one never needs a detour. A pair
+  // CoolProp cannot solve is fixed by changing the other input (see pairs.ts).
+  const inputs = coolprop().inputs();
+  const info = (name: InputName) => inputs.find((i) => i.name === name)!;
 
   return (
     <Modal
@@ -112,7 +121,7 @@ export function StateModal({
                 onFormChange("property1", event.target.value)
               }
             >
-              {propertyOptions1.map((property) => (
+              {inputs.map((property) => (
                 <PropertyOption
                   key={property.name}
                   property={property}
@@ -141,7 +150,7 @@ export function StateModal({
                 inputMode="decimal"
                 value={formState.value1}
                 onChange={(event) => onFormChange("value1", event.target.value)}
-                placeholder="e.g. 300"
+                placeholder={valueHint(info(formState.property1), system)}
                 required
               />
             </div>
@@ -154,6 +163,18 @@ export function StateModal({
           </div>
         </div>
 
+        <div className="state-modal__swap">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onSwap}
+            aria-label="Swap properties A and B"
+            title="Swap properties A and B"
+          >
+            ⇅ Swap
+          </Button>
+        </div>
+
         <div className="state-modal__row">
           <div className="field">
             <label htmlFor="property2">Property B</label>
@@ -164,7 +185,7 @@ export function StateModal({
                 onFormChange("property2", event.target.value)
               }
             >
-              {propertyOptions2.map((property) => (
+              {inputs.map((property) => (
                 <PropertyOption
                   key={property.name}
                   property={property}
@@ -192,7 +213,7 @@ export function StateModal({
                 inputMode="decimal"
                 value={formState.value2}
                 onChange={(event) => onFormChange("value2", event.target.value)}
-                placeholder="e.g. 101325"
+                placeholder={valueHint(info(formState.property2), system)}
                 required
               />
             </div>
@@ -205,6 +226,12 @@ export function StateModal({
           </div>
         </div>
 
+        {replacement ? (
+          <p className="state-modal__notice" role="status">
+            {replacementNotice(replacement, formState, info)}
+          </p>
+        ) : null}
+
         {formError ? <p className="state-modal__error">{formError}</p> : null}
 
         <div className="state-modal__actions">
@@ -215,6 +242,27 @@ export function StateModal({
         </div>
       </form>
     </Modal>
+  );
+}
+
+/** What a value field expects: its bounds ("0 – 1") or its unit ("kPa"). */
+function valueHint(input: InputInfo, units: UnitSystem): string {
+  if (input.min !== null && input.max !== null) return `${input.min} – ${input.max}`;
+  const unit = unitToPlain(getDisplayUnit(input.name, units));
+  return unit ? `in ${unit}` : "";
+}
+
+/** "Property B changed from h to p: T and h do not fix a state together." */
+function replacementNotice(
+  { slot, from, to }: Replacement,
+  form: StateModalFormState,
+  info: (name: InputName) => InputInfo,
+): string {
+  const picked = slot === "property1" ? form.property2 : form.property1;
+  const label = slot === "property1" ? "Property A" : "Property B";
+  return (
+    `${label} changed from ${info(from).symbol} to ${info(to).symbol}: ` +
+    `${info(picked).symbol} and ${info(from).symbol} do not fix a state together.`
   );
 }
 

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import type { InputName, StateInputs } from "@luisbedoia/coolprop-rs-wasm";
+import type { StateInputs } from "@luisbedoia/coolprop-rs-wasm";
 import { resolveUnitSystem, toSI } from "./lib/units";
 import { normalizeNumericInput } from "./lib/normalizeNumericInput";
 import { coolprop } from "./coolprop";
@@ -11,6 +11,8 @@ import { Button } from "./components/Button";
 import { StateList, StateQuickActions } from "./workspace/StateList";
 import { StateModal } from "./workspace/StateModal";
 import { createStateLabel, generateId, getPlotPoints, normalizeStateDefinition } from "./workspace/utils";
+import { pickInput, swapPair } from "./workspace/pairs";
+import type { PairForm, Replacement } from "./workspace/pairs";
 import { useComputedStates, useWorkspaceUrlParams } from "./workspace/hooks";
 import type { WorkspaceViewMode } from "./workspace/hooks";
 import "./Result.css";
@@ -21,19 +23,7 @@ const UNIT_LABELS: Record<string, string> = {
   imperial: "Imperial",
 };
 
-/** Whether CoolProp solves a state from inputs `a` and `b` (either order). */
-function solvable(a: InputName, b: InputName): boolean {
-  return coolprop()
-    .pairs()
-    .some(([x, y]) => (x === a && y === b) || (x === b && y === a));
-}
-
-type FormState = {
-  property1: InputName;
-  property2: InputName;
-  value1: string;
-  value2: string;
-};
+type FormState = PairForm;
 
 // ── WorkspaceHeader ──────────────────────────────────────────────────────────
 
@@ -163,11 +153,14 @@ export function WorkspaceView() {
     return { property1: primary, property2: secondary, value1: "", value2: "" };
   });
   const [formError, setFormError] = useState<string | null>(null);
+  // The input the form last changed on its own, to explain it.
+  const [replacement, setReplacement] = useState<Replacement | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const firstValueRef = useRef<HTMLInputElement | null>(null);
 
   const handleOpenModal = useCallback(() => {
     setFormError(null);
+    setReplacement(null);
     setIsModalOpen(true);
   }, []);
 
@@ -265,43 +258,25 @@ export function WorkspaceView() {
 
   const handleFormChange = useCallback(
     (field: keyof FormState, value: string) => {
-      setFormState((prev) => {
-        if (field === "property1" || field === "property2") {
-          const input = coolprop()
-            .inputs()
-            .find((i) => i.name === value);
-          if (!input) return prev;
-          const other = field === "property1" ? "property2" : "property1";
-          // Keep the other input if it still forms a solvable pair; else
-          // switch it to the first one that does.
-          const otherValue = solvable(input.name, prev[other])
-            ? prev[other]
-            : (coolprop()
-                .inputs()
-                .find((i) => solvable(i.name, input.name))?.name ?? prev[other]);
-          return { ...prev, [field]: input.name, [other]: otherValue };
-        }
-        return { ...prev, [field]: value };
-      });
+      if (field === "property1" || field === "property2") {
+        const input = coolprop()
+          .inputs()
+          .find((i) => i.name === value);
+        if (!input) return;
+        const next = pickInput(formState, field, input.name);
+        setFormState(next.form);
+        setReplacement(next.replaced ?? null);
+        return;
+      }
+      setFormState((prev) => ({ ...prev, [field]: value }));
     },
-    [],
+    [formState],
   );
 
-  const propertyOptions1 = useMemo(
-    () =>
-      coolprop()
-        .inputs()
-        .filter((i) => solvable(i.name, formState.property2)),
-    [formState.property2],
-  );
-
-  const propertyOptions2 = useMemo(
-    () =>
-      coolprop()
-        .inputs()
-        .filter((i) => solvable(i.name, formState.property1)),
-    [formState.property1],
-  );
+  const handleSwap = useCallback(() => {
+    setFormState(swapPair);
+    setReplacement(null);
+  }, []);
 
   // ── Derived display values ─────────────────────────────────────────────────
 
@@ -379,8 +354,8 @@ export function WorkspaceView() {
         onSubmit={handleStateSubmit}
         formState={formState}
         onFormChange={handleFormChange}
-        propertyOptions1={propertyOptions1}
-        propertyOptions2={propertyOptions2}
+        onSwap={handleSwap}
+        replacement={replacement}
         formError={formError}
         firstValueRef={firstValueRef}
         units={units}
