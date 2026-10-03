@@ -14,7 +14,9 @@ export default defineConfig({
     VitePWA({
       base: "/thermoprops/",
       registerType: "autoUpdate",
-      injectRegister: false,
+      // Register the service worker (a deferred script in index.html):
+      // without it there is no offline use nor install as an app.
+      injectRegister: "script-defer",
 
       pwaAssets: {
         disabled: false,
@@ -34,7 +36,8 @@ export default defineConfig({
       },
 
       workbox: {
-        globPatterns: ["**/*.{js,css,html,svg,png,ico}"],
+        // wasm included: without it the app loads offline but cannot compute.
+        globPatterns: ["**/*.{js,css,html,svg,png,ico,wasm}"],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
