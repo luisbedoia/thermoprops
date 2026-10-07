@@ -165,9 +165,10 @@
 
 .state-list__header-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
-  flex-shrink: 0;
+  min-width: 0;
 }
 
 .state-list__clear-all {
@@ -435,9 +436,10 @@
 
 .state-quick__header-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
-  flex-shrink: 0;
+  min-width: 0;
 }
 
 .state-quick__clear-all {

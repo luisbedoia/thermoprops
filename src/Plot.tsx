@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { ImageDown } from "lucide-react";
+import { Button } from "./components/Button";
+import { fileName } from "./lib/exportFiles";
 import type { RefObject } from "react";
 import type { DiagramInfo, InputName } from "@luisbedoia/coolprop-rs-wasm";
 import "./Plot.css";
@@ -87,6 +90,8 @@ export function ThermoPlot({
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  // The Plotly that drew the current chart, to export it.
+  const plotlyRef = useRef<PlotlyLike | null>(null);
   const [error, setError] = useState<string | null>(null);
   const legendPlacement = useLegendPlacement(wrapperRef);
 
@@ -152,6 +157,7 @@ export function ThermoPlot({
         if (!isMounted) return;
 
         plotlyInstance = plotly;
+        plotlyRef.current = plotly;
         await plotly.newPlot(targetElement, traces, layout, {
           responsive: true,
           displaylogo: false,
@@ -253,6 +259,26 @@ export function ThermoPlot({
               ))}
           </select>
         </div>
+      </div>
+
+      <div className="plot-actions">
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={status !== "ready"}
+          onClick={() => {
+            const element = containerRef.current;
+            if (!element) return;
+            void plotlyRef.current?.downloadImage?.(element, {
+              format: "png",
+              filename: fileName(fluid, diagram.id),
+              scale: 3,
+            });
+          }}
+        >
+          <ImageDown />
+          Download PNG
+        </Button>
       </div>
 
       <div

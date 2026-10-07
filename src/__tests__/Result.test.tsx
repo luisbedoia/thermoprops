@@ -300,6 +300,30 @@ describe("WorkspaceView", () => {
 
   // ── Remove state ───────────────────────────────────────────────────────────
 
+  describe("export", () => {
+    it("exports the tracked states as CSV", async () => {
+      const blobs: Blob[] = [];
+      vi.stubGlobal("URL", {
+        ...URL,
+        createObjectURL: vi.fn((blob: Blob) => {
+          blobs.push(blob);
+          return "blob:states";
+        }),
+        revokeObjectURL: vi.fn(),
+      });
+      const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+      const states = [makeState(), makeState({ id: "s2", label: "State 2" })];
+      renderWorkspace(`fluid=Water&units=kelvin&view=table&states=${encodeStates(states)}`);
+      fireEvent.click(screen.getByRole("button", { name: /export csv/i }));
+      expect(click).toHaveBeenCalledTimes(1);
+      const csv = await blobs[0].text();
+      const lines = csv.replace(/^\ufeff/, "").trimEnd().split("\r\n");
+      expect(lines).toHaveLength(3);
+      expect(lines[0]).toMatch(/^State,Defined by,Pressure p \(kPa\),Temperature T \(K\)/);
+      expect(lines[1]).toMatch(/^State 1,"T, p",/);
+    });
+  });
+
   describe("remove state", () => {
     it("removes a state when its Remove button is clicked", async () => {
       const states = [makeState({ label: "State 1" })];

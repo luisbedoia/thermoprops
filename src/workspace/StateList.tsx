@@ -1,5 +1,6 @@
 import { Button } from "../components/Button";
-import { Eraser, Plus, Trash2 } from "lucide-react";
+import { Eraser, FileDown, Plus, Trash2 } from "lucide-react";
+import { downloadText, fileName, statesToCsv } from "../lib/exportFiles";
 import { MathText } from "../components/MathText";
 import {
   phaseInfo,
@@ -58,6 +59,33 @@ function formatInputValue(
   return NUMBER_FORMAT.format(fromSI(propertyName, numeric, units));
 }
 
+function ExportCsvButton({
+  states,
+  fluid,
+  units,
+}: {
+  states: ComputedState[];
+  fluid: string;
+  units: UnitSystem;
+}) {
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={() =>
+        downloadText(
+          `${fileName(fluid, "states")}.csv`,
+          statesToCsv(states, units),
+          "text/csv;charset=utf-8",
+        )
+      }
+    >
+      <FileDown />
+      Export CSV
+    </Button>
+  );
+}
+
 type ChipsProps = {
   definition: StateDefinition;
   units: UnitSystem;
@@ -87,6 +115,8 @@ function StateChips({ definition, units, className }: ChipsProps) {
 
 type StateListProps = {
   states: ComputedState[];
+  /** The fluid the states belong to, for the export's file name. */
+  fluid: string;
   onAddState: () => void;
   onRemoveState: (id: string) => void;
   onClearAll: () => void;
@@ -96,6 +126,7 @@ type StateListProps = {
 
 export function StateList({
   states,
+  fluid,
   onAddState,
   onRemoveState,
   onClearAll,
@@ -116,6 +147,9 @@ export function StateList({
           <p className="state-list__summary">{summary}</p>
         </div>
         <div className="state-list__header-actions">
+          {states.length > 0 && (
+            <ExportCsvButton states={states} fluid={fluid} units={system} />
+          )}
           {states.length > 0 && (
             <Button
               variant="ghost"
@@ -329,6 +363,8 @@ function StateMetrics({ state, variant, units, filter }: StateMetricsProps) {
 
 type StateQuickActionsProps = {
   states: ComputedState[];
+  /** The fluid the states belong to, for the export's file name. */
+  fluid: string;
   onAddState: () => void;
   onRemoveState: (id: string) => void;
   onClearAll: () => void;
@@ -338,6 +374,7 @@ type StateQuickActionsProps = {
 
 export function StateQuickActions({
   states,
+  fluid,
   onAddState,
   onRemoveState,
   onClearAll,
@@ -350,6 +387,9 @@ export function StateQuickActions({
       <header className="state-quick__header">
         <h2>Tracked states</h2>
         <div className="state-quick__header-actions">
+          {states.length > 0 && (
+            <ExportCsvButton states={states} fluid={fluid} units={system} />
+          )}
           {states.length > 0 && (
             <Button
               variant="ghost"

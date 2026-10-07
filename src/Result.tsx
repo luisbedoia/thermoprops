@@ -333,6 +333,7 @@ export function WorkspaceView() {
             />
             <StateQuickActions
               states={computedStates}
+              fluid={fluid}
               onAddState={handleOpenModal}
               onRemoveState={handleRemoveState}
               onClearAll={handleClearAll}
@@ -344,6 +345,7 @@ export function WorkspaceView() {
           <div className="workspace__panel workspace__panel--table">
             <StateList
               states={computedStates}
+              fluid={fluid}
               onAddState={handleOpenModal}
               onRemoveState={handleRemoveState}
               onClearAll={handleClearAll}

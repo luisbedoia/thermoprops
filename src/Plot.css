@@ -20,6 +20,12 @@
   gap: 1rem;
 }
 
+.plot-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -0.75rem;
+}
+
 .plot-controls .control {
   display: flex;
   flex-direction: column;

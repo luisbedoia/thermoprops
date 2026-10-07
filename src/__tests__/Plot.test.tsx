@@ -11,6 +11,7 @@ const plotlyMocks = vi.hoisted(() => ({
   newPlot: vi.fn().mockResolvedValue(undefined),
   purge: vi.fn(),
   resize: vi.fn(),
+  downloadImage: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("../lib/plotly", () => ({
@@ -18,6 +19,7 @@ vi.mock("../lib/plotly", () => ({
     newPlot: plotlyMocks.newPlot,
     purge: plotlyMocks.purge,
     Plots: { resize: plotlyMocks.resize },
+    downloadImage: plotlyMocks.downloadImage,
   }),
 }));
 
@@ -123,6 +125,20 @@ describe("ThermoPlot", () => {
         dome_points: 90,
       });
       expect(plotlyMocks.newPlot).toHaveBeenCalledTimes(1);
+    });
+
+    it("downloads the chart as a PNG once it is drawn", async () => {
+      const onPlotError = vi.fn();
+      renderPlot({ onPlotError });
+      const button = screen.getByRole("button", { name: /download png/i });
+      await waitForSuccess(onPlotError);
+      await waitFor(() => expect(button).toBeEnabled());
+      fireEvent.click(button);
+      expect(plotlyMocks.downloadImage).toHaveBeenCalledWith(expect.any(HTMLElement), {
+        format: "png",
+        filename: "thermoprops-water-pressure-enthalpy",
+        scale: 3,
+      });
     });
 
     it("draws the dome, then the isolines", async () => {
