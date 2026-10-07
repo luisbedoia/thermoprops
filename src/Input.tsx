@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { ArrowRight } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { coolprop } from "./coolprop";
 import { resolveUnitSystem } from "./lib/units";
@@ -201,7 +202,10 @@ export function SettingsView() {
         </div>
 
         <div className="settings__actions">
-          <Button type="submit">Continue to workspace</Button>
+          <Button type="submit">
+            Continue to workspace
+            <ArrowRight />
+          </Button>
         </div>
       </form>
     </section>

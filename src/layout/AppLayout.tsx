@@ -1,4 +1,5 @@
 import { Outlet } from "react-router-dom";
+import { Info, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../components/Button";
 import { Modal } from "../components/Modal";
@@ -17,6 +18,7 @@ export function AppLayout() {
           className="about-button"
           onClick={() => setShowAbout(true)}
         >
+          <Info />
           About
         </Button>
       </header>
@@ -55,7 +57,7 @@ export function AppLayout() {
             onClick={() => setShowAbout(false)}
             aria-label="Close about dialog"
           >
-            X
+            <X />
           </Button>
         </header>
         <div className="about-modal__body">

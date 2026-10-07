@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, ChartLine, Table2, X } from "lucide-react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import type { StateInputs } from "@luisbedoia/coolprop-rs-wasm";
@@ -58,6 +59,7 @@ function WorkspaceHeader({
       </div>
       <div className="workspace__actions">
         <Button variant="ghost" size="sm" onClick={onNavigateBack}>
+          <ArrowLeft />
           Back to settings
         </Button>
         <div
@@ -72,6 +74,7 @@ function WorkspaceHeader({
               aria-pressed={effectiveViewMode === "graph"}
               onClick={() => onViewModeChange("graph")}
             >
+              <ChartLine />
               Chart
             </Button>
           ) : (
@@ -86,6 +89,7 @@ function WorkspaceHeader({
                 aria-disabled="true"
                 tabIndex={-1}
               >
+                <ChartLine />
                 Chart
               </Button>
             </span>
@@ -96,6 +100,7 @@ function WorkspaceHeader({
             aria-pressed={effectiveViewMode === "table"}
             onClick={() => onViewModeChange("table")}
           >
+            <Table2 />
             Table
           </Button>
         </div>
@@ -307,6 +312,7 @@ export function WorkspaceView() {
             up-to-date link.
           </p>
           <Button variant="ghost" size="sm" onClick={dismissLegacyLink}>
+            <X />
             Dismiss
           </Button>
         </div>

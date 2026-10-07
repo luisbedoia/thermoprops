@@ -9,11 +9,20 @@
   background: var(--accent);
   color: #f8fafc;
   font-weight: 500;
+  white-space: nowrap;
   cursor: pointer;
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease,
     background-color 0.2s ease;
+}
+
+/* Lucide icons beside the label: sized and colored by the text. */
+.app-button > svg {
+  width: 1.1em;
+  height: 1.1em;
+  flex-shrink: 0;
+  stroke-width: 2;
 }
 
 .app-button:hover {

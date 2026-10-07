@@ -1,4 +1,5 @@
 import { Button } from "../components/Button";
+import { Eraser, Plus, Trash2 } from "lucide-react";
 import { MathText } from "../components/MathText";
 import {
   phaseInfo,
@@ -126,6 +127,7 @@ export function StateList({
                 }
               }}
             >
+              <Eraser />
               Clear all
             </Button>
           )}
@@ -135,6 +137,7 @@ export function StateList({
             onClick={onAddState}
             disabled={!fluidSelected}
           >
+            <Plus />
             Add state
           </Button>
         </div>
@@ -219,6 +222,7 @@ function StateRow({ state, onRemove, units }: StateRowProps) {
           onClick={() => onRemove(state.definition.id)}
           aria-label={`Remove ${state.definition.label}`}
         >
+          <Trash2 />
           Remove
         </Button>
       </td>
@@ -253,6 +257,7 @@ function StateCard({ state, onRemove, units }: StateCardProps) {
           onClick={() => onRemove(state.definition.id)}
           aria-label={`Remove ${state.definition.label}`}
         >
+          <Trash2 />
           Remove
         </Button>
       </header>
@@ -356,10 +361,12 @@ export function StateQuickActions({
                 }
               }}
             >
+              <Eraser />
               Clear all
             </Button>
           )}
           <Button size="sm" onClick={onAddState} disabled={!fluidSelected}>
+            <Plus />
             Add state
           </Button>
         </div>
@@ -415,6 +422,7 @@ export function StateQuickActions({
                 onClick={() => onRemoveState(state.definition.id)}
                 aria-label={`Remove ${state.definition.label}`}
               >
+                <Trash2 />
                 Remove
               </Button>
             </li>

@@ -1,4 +1,5 @@
 import { FormEvent, RefObject, useEffect } from "react";
+import { ArrowUpDown, X } from "lucide-react";
 import { coolprop } from "../coolprop";
 import type { InputInfo, InputName } from "@luisbedoia/coolprop-rs-wasm";
 import { Button } from "../components/Button";
@@ -106,6 +107,7 @@ export function StateModal({
           onClick={onClose}
           aria-label="Close add state dialog"
         >
+          <X />
           Close
         </Button>
       </header>
@@ -171,7 +173,8 @@ export function StateModal({
             aria-label="Swap properties A and B"
             title="Swap properties A and B"
           >
-            ⇅ Swap
+            <ArrowUpDown />
+            Swap
           </Button>
         </div>
 
