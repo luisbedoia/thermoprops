@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ImageDown } from "lucide-react";
 import { Button } from "./components/Button";
 import { fileName } from "./lib/exportFiles";
 import type { RefObject } from "react";
-import type { DiagramInfo, InputName } from "@luisbedoia/coolprop-rs-wasm";
+import type { DiagramData, DiagramInfo, InputName } from "@luisbedoia/coolprop-rs-wasm";
 import "./Plot.css";
 import { coolprop } from "./coolprop";
 import {
@@ -88,77 +88,108 @@ export function ThermoPlot({
   const unitSystem: UnitSystem = resolveUnitSystem(units);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
-  const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   // The Plotly that drew the current chart, to export it.
   const plotlyRef = useRef<PlotlyLike | null>(null);
   const [error, setError] = useState<string | null>(null);
   const legendPlacement = useLegendPlacement(wrapperRef);
 
+  // The diagram itself: dome and isolines. It depends on the fluid, the
+  // diagram, the isoline family, the resolution and the units, not on the
+  // tracked states, so adding or removing a state does not recompute it.
+  const computed = useMemo((): { data: DiagramData } | { error: unknown } | null => {
+    if (!fluid) return null;
+    try {
+      return {
+        data: coolprop()
+          .fluid(fluid)
+          .diagram({
+            diagram: diagram.id,
+            isolines: [
+              {
+                kind: isolineKind,
+                count: isolineCount,
+                unit: displayUnit(isolineKind, unitSystem),
+              },
+            ],
+            points: isolinePoints,
+            dome_points: domePoints,
+          }),
+      };
+    } catch (error) {
+      return { error };
+    }
+  }, [fluid, diagram.id, isolineKind, isolineCount, isolinePoints, domePoints, unitSystem]);
+
+  // Resize with the container, and release Plotly when the chart goes away.
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return;
+    const observer = new ResizeObserver(() => {
+      plotlyRef.current?.Plots?.resize?.(element);
+    });
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+      plotlyRef.current?.purge?.(element);
+    };
+  }, []);
+
+  // Draw, or update in place: Plotly.react keeps the chart (and the user's
+  // zoom, through uirevision) when only the tracked states change.
   useEffect(() => {
     let isMounted = true;
-    let plotlyInstance: PlotlyLike | null = null;
 
     if (!fluid) {
       setStatus("error");
       setError("Select a fluid in settings to render a chart.");
-      return () => { /* noop */ };
+      return;
     }
-
-    const targetElement = containerRef.current;
-    const wrapperElement = wrapperRef.current;
-
-    if (!targetElement || !wrapperElement) {
+    const element = containerRef.current;
+    if (!element) {
       setStatus("error");
       setError("Plot container element was not found.");
-      return () => { /* noop */ };
+      return;
+    }
+    if (!computed || "error" in computed) {
+      console.error("Error generating plot", computed && computed.error);
+      setStatus("error");
+      setError("The plot could not be generated for the current settings.");
+      onPlotError?.(true);
+      return;
     }
 
-    const renderPlot = async () => {
-      setStatus("loading");
-      setError(null);
+    const { data } = computed;
+    const { x, y } = data;
+    const traces = [
+      ...buildDomeTraces(data.dome, x.property, y.property, unitSystem),
+      ...buildIsolineTraces(data.isolines, x.property, y.property, unitSystem),
+    ];
+    const pointTrace = buildPointTrace(points, x.property, y.property, unitSystem);
+    if (pointTrace) traces.push(pointTrace);
 
+    const { liquid, vapor } = data.dome;
+    const layout = {
+      ...buildPlotLayout(
+        `${coolprop().fluid(fluid).name} - ${diagramLabel(diagram)}`,
+        x,
+        y,
+        legendPlacement,
+        viewRange(x, [...liquid.x, ...vapor.x]),
+        viewRange(y, [...liquid.y, ...vapor.y]),
+        unitSystem,
+      ),
+      // Zoom and pan survive updates until the axes change meaning.
+      uirevision: `${fluid}|${diagram.id}|${unitSystem}`,
+    };
+
+    const draw = async () => {
+      if (!plotlyRef.current) setStatus("loading");
       try {
-        const fluidApi = coolprop().fluid(fluid);
-        const data = fluidApi.diagram({
-          diagram: diagram.id,
-          isolines: [
-            {
-              kind: isolineKind,
-              count: isolineCount,
-              unit: displayUnit(isolineKind, unitSystem),
-            },
-          ],
-          points: isolinePoints,
-          dome_points: domePoints,
-        });
-        const { x, y } = data;
-
-        const traces = [
-          ...buildDomeTraces(data.dome, x.property, y.property, unitSystem),
-          ...buildIsolineTraces(data.isolines, x.property, y.property, unitSystem),
-        ];
-        const pointTrace = buildPointTrace(points, x.property, y.property, unitSystem);
-        if (pointTrace) traces.push(pointTrace);
-
-        const { liquid, vapor } = data.dome;
-        const layout = buildPlotLayout(
-          `${fluidApi.name} - ${diagramLabel(diagram)}`,
-          x,
-          y,
-          legendPlacement,
-          viewRange(x, [...liquid.x, ...vapor.x]),
-          viewRange(y, [...liquid.y, ...vapor.y]),
-          unitSystem,
-        );
-
         const plotly = await loadPlotly();
-
         if (!isMounted) return;
-
-        plotlyInstance = plotly;
         plotlyRef.current = plotly;
-        await plotly.newPlot(targetElement, traces, layout, {
+        await plotly.react(element, traces, layout, {
           responsive: true,
           displaylogo: false,
           displayModeBar: true,
@@ -168,58 +199,24 @@ export function ThermoPlot({
             scale: 3,
           },
         });
-
-        const observer = new ResizeObserver(() => {
-          if (plotlyInstance?.Plots?.resize) {
-            plotlyInstance.Plots.resize(targetElement);
-          }
-        });
-        // The container is what Plotly measures: resize whenever it changes.
-        observer.observe(targetElement);
-        resizeObserverRef.current = observer;
-
-        requestAnimationFrame(() => {
-          if (!isMounted) return;
-          if (plotlyInstance?.Plots?.resize) {
-            plotlyInstance.Plots.resize(targetElement);
-          }
-        });
-
         if (!isMounted) return;
         setStatus("ready");
         setError(null);
         onPlotError?.(false);
       } catch (err) {
-        console.error("Error generating plot", err);
+        console.error("Error drawing plot", err);
         if (!isMounted) return;
         setStatus("error");
         setError("The plot could not be generated for the current settings.");
         onPlotError?.(true);
       }
     };
-
-    void renderPlot();
+    void draw();
 
     return () => {
       isMounted = false;
-      resizeObserverRef.current?.disconnect();
-      resizeObserverRef.current = null;
-      if (plotlyInstance && targetElement) {
-        plotlyInstance.purge?.(targetElement);
-      }
     };
-  }, [
-    fluid,
-    diagram,
-    isolineKind,
-    isolineCount,
-    isolinePoints,
-    domePoints,
-    points,
-    legendPlacement,
-    onPlotError,
-    unitSystem,
-  ]);
+  }, [computed, fluid, diagram, points, legendPlacement, onPlotError, unitSystem]);
 
   return (
     <div className="plot-card">

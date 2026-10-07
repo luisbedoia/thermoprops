@@ -6,7 +6,7 @@ import { WorkspaceView } from "../Result";
 import { encodeStates } from "../workspace/utils";
 import type { StateDefinition } from "../workspace/types";
 import { setCoolProp } from "../coolprop";
-import { fakeCoolProp } from "../test-fixtures/fakeCoolProp";
+import { fakeCoolProp, LIQUID_WATER } from "../test-fixtures/fakeCoolProp";
 
 vi.mock("../Plot", () => ({
   ThermoPlot: () => <div data-testid="thermo-plot" />,
@@ -85,6 +85,18 @@ describe("WorkspaceView", () => {
       await waitFor(() => {
         expect(screen.getByTestId("settings-page")).toBeInTheDocument();
       });
+    });
+
+    it("redirects to the settings page for a fluid not in the catalog", async () => {
+      renderWorkspace("fluid=Unobtainium&units=kelvin&view=table");
+      await waitFor(() => {
+        expect(screen.getByTestId("settings-page")).toBeInTheDocument();
+      });
+    });
+
+    it("opens a fluid by any of its aliases, under its canonical name", () => {
+      renderWorkspace("fluid=H2O&units=kelvin&view=table");
+      expect(screen.getByRole("heading", { name: "Water" })).toBeInTheDocument();
     });
 
     it("renders the workspace when fluid is present", () => {
@@ -272,6 +284,31 @@ describe("WorkspaceView", () => {
       await waitFor(() => {
         expect(screen.getByText(/CoolProp rejected these inputs/)).toBeInTheDocument();
       });
+    });
+  });
+
+  describe("equation of state range", () => {
+    const tooHot = { ...LIQUID_WATER, temperature: 5273.15 };
+
+    it("does not add a state past the equation of state's limits", async () => {
+      fake.cp.fluid("Water").state = vi.fn(() => tooHot);
+      renderWorkspace();
+      await openModal();
+      fireEvent.change(valueFields().a, { target: { value: "100" } });
+      fireEvent.change(valueFields().b, { target: { value: "5000" } });
+      fireEvent.click(screen.getByRole("button", { name: /add to workspace/i }));
+      expect(
+        await screen.findByText(/Outside the range of Water's equation of state/),
+      ).toBeInTheDocument();
+      expect(screen.getByText("Add thermodynamic state")).toBeInTheDocument();
+      expect(screen.getAllByText(/No states tracked yet/).length).toBeGreaterThan(0);
+    });
+
+    it("shows why a linked state past the limits has no values", () => {
+      fake.cp.fluid("Water").state = vi.fn(() => tooHot);
+      renderWorkspace(`fluid=Water&units=kelvin&view=table&states=${encodeStates([makeState()])}`);
+      expect(screen.getAllByText(/Outside the range of Water's equation of state/).length).toBeGreaterThan(0);
+      expect(screen.queryByText("Mass density")).not.toBeInTheDocument();
     });
   });
 

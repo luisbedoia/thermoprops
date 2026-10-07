@@ -65,6 +65,17 @@ describe("encodeStates / decodeStates", () => {
     expect(decodeStates(encoded)).toEqual({ states: [makeState()], legacy: false });
   });
 
+  it("drops states whose values are not numbers, without flagging the link", () => {
+    const bad = [
+      makeState({ id: "inf", value1: "Infinity" }),
+      makeState({ id: "hex", value2: "0x10" }),
+      makeState({ id: "txt", value1: "abc" }),
+    ];
+    const decoded = decodeStates(btoa(JSON.stringify([...bad, makeState({ id: "ok" })])));
+    expect(decoded.states.map((s) => s.id)).toEqual(["ok"]);
+    expect(decoded.legacy).toBe(false);
+  });
+
   it("flags links from earlier versions (CoolProp short names)", () => {
     const old = { ...makeState(), property1: "T", property2: "P" };
     const decoded = decodeStates(btoa(JSON.stringify([old, makeState({ id: "s2" })])));

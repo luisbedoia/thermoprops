@@ -4,6 +4,7 @@ import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import type { StateInputs } from "@luisbedoia/coolprop-rs-wasm";
 import { resolveUnitSystem, toSI } from "./lib/units";
+import { validityError } from "./lib/validity";
 import { normalizeNumericInput } from "./lib/normalizeNumericInput";
 import { coolprop } from "./coolprop";
 import { ThermoPlot } from "./Plot";
@@ -143,7 +144,7 @@ export function WorkspaceView() {
     }
   }, [fluid, navigate]);
 
-  const computedStates = useComputedStates(states, fluid);
+  const computedStates = useComputedStates(states, fluid, units);
 
   const plotPoints: PlotPoint[] = useMemo(
     () => getPlotPoints(computedStates, diagram),
@@ -206,12 +207,17 @@ export function WorkspaceView() {
     try {
       // The pair comes from the form, so TypeScript cannot check it;
       // CoolProp rejects unsupported pairs.
-      coolprop()
+      const solved = coolprop()
         .fluid(fluid)
         .state({
           [formState.property1]: value1,
           [formState.property2]: value2,
         } as unknown as StateInputs);
+      const outside = validityError(solved, coolprop().fluid(fluid).data, system);
+      if (outside) {
+        setFormError(outside);
+        return;
+      }
     } catch (error) {
       console.error("State validation failed", error);
       setFormError(

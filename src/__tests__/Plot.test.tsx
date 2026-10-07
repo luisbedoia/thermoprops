@@ -8,7 +8,7 @@ import { fakeCoolProp } from "../test-fixtures/fakeCoolProp";
 
 // vi.hoisted runs before imports, required so vi.mock factory can reference these
 const plotlyMocks = vi.hoisted(() => ({
-  newPlot: vi.fn().mockResolvedValue(undefined),
+  react: vi.fn().mockResolvedValue(undefined),
   purge: vi.fn(),
   resize: vi.fn(),
   downloadImage: vi.fn().mockResolvedValue(undefined),
@@ -16,7 +16,7 @@ const plotlyMocks = vi.hoisted(() => ({
 
 vi.mock("../lib/plotly", () => ({
   loadPlotly: async () => ({
-    newPlot: plotlyMocks.newPlot,
+    react: plotlyMocks.react,
     purge: plotlyMocks.purge,
     Plots: { resize: plotlyMocks.resize },
     downloadImage: plotlyMocks.downloadImage,
@@ -49,7 +49,7 @@ async function waitForSuccess(onPlotError: ReturnType<typeof vi.fn>) {
 }
 
 function lastTraces(): Record<string, unknown>[] {
-  const calls = plotlyMocks.newPlot.mock.calls;
+  const calls = plotlyMocks.react.mock.calls;
   return calls[calls.length - 1][1] as Record<string, unknown>[];
 }
 
@@ -124,7 +124,7 @@ describe("ThermoPlot", () => {
         points: 80,
         dome_points: 90,
       });
-      expect(plotlyMocks.newPlot).toHaveBeenCalledTimes(1);
+      expect(plotlyMocks.react).toHaveBeenCalledTimes(1);
     });
 
     it("downloads the chart as a PNG once it is drawn", async () => {
@@ -159,11 +159,58 @@ describe("ThermoPlot", () => {
       expect(traces[traces.length - 1]).toMatchObject({ mode: "markers", text: ["State 1"] });
     });
 
+    it("updates the chart in place when states change, without recomputing the diagram", async () => {
+      const onPlotError = vi.fn();
+      const { rerender } = renderPlot({ onPlotError });
+      await waitForSuccess(onPlotError);
+      const diagramCalls = vi.mocked(fake.cp.fluid("Water").diagram).mock.calls.length;
+
+      const points: PlotPoint[] = [{ id: "a", label: "State 1", x: 1e5, y: 1e5 }];
+      rerender(
+        <ThermoPlot
+          fluid="Water"
+          diagram={diagram("pressure_enthalpy")}
+          isolineKind="temperature"
+          points={points}
+          onPlotError={onPlotError}
+        />,
+      );
+      await waitFor(() => expect(plotlyMocks.react).toHaveBeenCalledTimes(2));
+      expect(fake.cp.fluid("Water").diagram).toHaveBeenCalledTimes(diagramCalls);
+      expect(lastTraces()[lastTraces().length - 1]).toMatchObject({ mode: "markers" });
+      // Same uirevision: Plotly keeps the user's zoom.
+      const revision = (call: number) =>
+        (plotlyMocks.react.mock.calls[call][2] as { uirevision: string }).uirevision;
+      expect(revision(1)).toBe(revision(0));
+      expect(plotlyMocks.purge).not.toHaveBeenCalled();
+    });
+
+    it("recomputes, and resets the view, when the diagram changes", async () => {
+      const onPlotError = vi.fn();
+      const { rerender } = renderPlot({ onPlotError });
+      await waitForSuccess(onPlotError);
+      const diagramCalls = vi.mocked(fake.cp.fluid("Water").diagram).mock.calls.length;
+      rerender(
+        <ThermoPlot
+          fluid="Water"
+          diagram={diagram("temperature_entropy")}
+          isolineKind="pressure"
+          points={[]}
+          onPlotError={onPlotError}
+        />,
+      );
+      await waitFor(() => expect(plotlyMocks.react).toHaveBeenCalledTimes(2));
+      expect(fake.cp.fluid("Water").diagram).toHaveBeenCalledTimes(diagramCalls + 1);
+      const revision = (call: number) =>
+        (plotlyMocks.react.mock.calls[call][2] as { uirevision: string }).uirevision;
+      expect(revision(1)).not.toBe(revision(0));
+    });
+
     it("uses the diagram's axis scales", async () => {
       const onPlotError = vi.fn();
       renderPlot({ onPlotError });
       await waitForSuccess(onPlotError);
-      const layout = plotlyMocks.newPlot.mock.calls[0][2] as Record<string, { type: string }>;
+      const layout = plotlyMocks.react.mock.calls[0][2] as Record<string, { type: string }>;
       expect(layout.yaxis.type).toBe("log");
       expect(layout.xaxis.type).toBe("linear");
     });
@@ -187,7 +234,7 @@ describe("ThermoPlot", () => {
 
     it("reports a Plotly failure", async () => {
       const onPlotError = vi.fn();
-      plotlyMocks.newPlot.mockRejectedValueOnce(new Error("plotly"));
+      plotlyMocks.react.mockRejectedValueOnce(new Error("plotly"));
       renderPlot({ onPlotError });
       await waitFor(() => expect(onPlotError).toHaveBeenCalledWith(true));
     });

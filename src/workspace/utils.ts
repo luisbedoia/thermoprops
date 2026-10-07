@@ -36,11 +36,17 @@ export function decodeStates(encoded: string | null): DecodedStates {
           typeof item.label === "string",
       );
     const names = new Set<unknown>(coolprop().inputs().map((i) => i.name));
-    const states = wellFormed.filter(
+    const current = wellFormed.filter(
       (item): item is StateDefinition =>
         names.has(item.property1) && names.has(item.property2),
     );
-    return { states, legacy: states.length < wellFormed.length };
+    // Values must be numbers; a hand-edited link may say otherwise.
+    const states = current.filter(
+      (item) =>
+        normalizeNumericInput(item.value1) !== "" &&
+        normalizeNumericInput(item.value2) !== "",
+    );
+    return { states, legacy: current.length < wellFormed.length };
   } catch (error) {
     console.error("Unable to decode states", error);
     return { states: [], legacy: false };

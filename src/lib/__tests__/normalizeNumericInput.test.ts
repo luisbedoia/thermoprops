@@ -109,4 +109,41 @@ describe("normalizeNumericInput", () => {
       expect(normalizeNumericInput("300,.5")).toBe("");
     });
   });
+
+  describe("rejects what it would otherwise guess", () => {
+    it("rejects thousands groups that are not three digits", () => {
+      expect(normalizeNumericInput("1.2.3")).toBe("");
+      expect(normalizeNumericInput("1,2,3")).toBe("");
+      expect(normalizeNumericInput("12.34.567")).toBe("");
+      expect(normalizeNumericInput("1.00,5")).toBe("");
+      expect(normalizeNumericInput("1,00.5")).toBe("");
+    });
+
+    it("rejects a thousands separator after the decimal one", () => {
+      expect(normalizeNumericInput("1,000.5,0")).toBe("");
+    });
+
+    it("rejects hex, infinities and other things Number() would read", () => {
+      for (const v of ["0x10", "0b11", "Infinity", "-Infinity", "NaN", "1e", "e5", "+", "-", "."]) {
+        expect(normalizeNumericInput(v), v).toBe("");
+      }
+    });
+  });
+
+  describe("signs", () => {
+    it("reads the typographic minus as a minus sign", () => {
+      expect(normalizeNumericInput("−20")).toBe("-20");
+      expect(normalizeNumericInput("−2,5")).toBe("-2.5");
+    });
+
+    it("keeps an explicit plus sign", () => {
+      expect(normalizeNumericInput("+20")).toBe("+20");
+    });
+
+    it("drops non-breaking and thin spaces used as grouping", () => {
+      expect(normalizeNumericInput("1\u00A0000")).toBe("1000");
+      expect(normalizeNumericInput("1\u202F000,5")).toBe("1000.5");
+    });
+  });
 });
+

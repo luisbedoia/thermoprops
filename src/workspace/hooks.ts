@@ -3,6 +3,8 @@ import { useSearchParams } from "react-router-dom";
 import type { DiagramInfo, InputName, StateInputs } from "@luisbedoia/coolprop-rs-wasm";
 import { coolprop } from "../coolprop";
 import { resolveUnitSystem } from "../lib/units";
+import type { UnitSystem } from "../lib/units";
+import { validityError } from "../lib/validity";
 import type { ComputedState, StateDefinition } from "./types";
 import {
   decodeStates,
@@ -15,6 +17,15 @@ export type WorkspaceViewMode = "graph" | "table";
 
 const DIAGRAM_DEFAULT = "pressure_enthalpy";
 const VIEW_DEFAULT: WorkspaceViewMode = "graph";
+
+/** The canonical name of the catalog fluid `name` refers to, or "". */
+function resolveFluid(name: string | null): string {
+  if (!name) return "";
+  const found = coolprop()
+    .catalog()
+    .find((f) => f.name === name || f.aliases.includes(name));
+  return found?.name ?? "";
+}
 
 /** The catalog diagram with this id, or the default one. */
 function resolveDiagram(id: string | null): DiagramInfo {
@@ -48,7 +59,9 @@ function readStates(param: string | null) {
 export function useWorkspaceUrlParams({ plotFailed }: { plotFailed: boolean }) {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const fluid = searchParams.get("fluid") ?? "";
+  // The catalog fluid the URL names (by name or alias); "" when it names
+  // none, which sends the user back to the settings.
+  const fluid = resolveFluid(searchParams.get("fluid"));
   const units = resolveUnitSystem(searchParams.get("units"));
 
   const [diagramId, setDiagramId] = useState<string>(
@@ -142,6 +155,7 @@ export function useWorkspaceUrlParams({ plotFailed }: { plotFailed: boolean }) {
 export function useComputedStates(
   states: StateDefinition[],
   fluid: string,
+  units: UnitSystem,
 ): ComputedState[] {
   return useMemo(() => {
     return states.map((definition) => {
@@ -159,11 +173,15 @@ export function useComputedStates(
             [definition.property1]: value1,
             [definition.property2]: value2,
           } as unknown as StateInputs);
+        // A link may hold a state past the equation of state's limits,
+        // where CoolProp's values are extrapolations.
+        const outside = validityError(state, coolprop().fluid(fluid).data, units);
+        if (outside) return { definition, error: outside };
         return { definition, state };
       } catch (error) {
         console.error("Unable to calculate state", definition, error);
         return { definition, error: "Unable to evaluate this state." };
       }
     });
-  }, [states, fluid]);
+  }, [states, fluid, units]);
 }

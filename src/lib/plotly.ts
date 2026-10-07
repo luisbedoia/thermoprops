@@ -1,6 +1,7 @@
 /** The slice of Plotly the chart uses. */
 export type PlotlyLike = {
-  newPlot: (
+  /** Draws the chart, or updates the one already in `element` in place. */
+  react: (
     element: HTMLElement,
     data: unknown[],
     layout?: unknown,
