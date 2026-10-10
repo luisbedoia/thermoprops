@@ -97,13 +97,19 @@ function StateChips({ definition, units, className }: ChipsProps) {
   const unit2 = getDisplayUnit(definition.property2, units);
   return (
     <>
-      <span className={className} title={quantityInfo(definition.property1).description}>
+      <span
+        className={className}
+        title={quantityInfo(definition.property1).description}
+      >
         <PropertyMath name={definition.property1} /> ={" "}
         {formatInputValue(definition.property1, definition.value1, units)}
         {unit1 ? " " : null}
         <UnitMath unit={unit1} />
       </span>
-      <span className={className} title={quantityInfo(definition.property2).description}>
+      <span
+        className={className}
+        title={quantityInfo(definition.property2).description}
+      >
         <PropertyMath name={definition.property2} /> ={" "}
         {formatInputValue(definition.property2, definition.value2, units)}
         {unit2 ? " " : null}
@@ -156,7 +162,11 @@ export function StateList({
               size="sm"
               className="state-list__clear-all"
               onClick={() => {
-                if (window.confirm("Remove all tracked states? This cannot be undone.")) {
+                if (
+                  window.confirm(
+                    "Remove all tracked states? This cannot be undone.",
+                  )
+                ) {
                   onClearAll();
                 }
               }}
@@ -396,7 +406,11 @@ export function StateQuickActions({
               size="sm"
               className="state-quick__clear-all"
               onClick={() => {
-                if (window.confirm("Remove all tracked states? This cannot be undone.")) {
+                if (
+                  window.confirm(
+                    "Remove all tracked states? This cannot be undone.",
+                  )
+                ) {
                   onClearAll();
                 }
               }}
@@ -431,41 +445,43 @@ export function StateQuickActions({
               system,
             );
             return (
-            <li key={state.definition.id} className="state-quick__item">
-              <details className="state-quick__details">
-                <summary className="state-quick__summary">
-                  <div className="state-quick__info">
-                    <span className="state-quick__label">
-                      {state.definition.label}
-                    </span>
-                    <span className="state-quick__inputs">
-                      <PropertyMath name={state.definition.property1} /> = {value1}
-                      {unit1 ? " " : null}
-                      <UnitMath unit={unit1} />,{" "}
-                      <PropertyMath name={state.definition.property2} /> = {value2}
-                      {unit2 ? " " : null}
-                      <UnitMath unit={unit2} />
-                    </span>
-                  </div>
-                </summary>
-                <StateMetrics
-                  state={state}
-                  variant="card"
-                  units={system}
-                  filter={QUICK_BASIC_PROPERTIES}
-                />
-              </details>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="state-quick__remove"
-                onClick={() => onRemoveState(state.definition.id)}
-                aria-label={`Remove ${state.definition.label}`}
-              >
-                <Trash2 />
-                Remove
-              </Button>
-            </li>
+              <li key={state.definition.id} className="state-quick__item">
+                <details className="state-quick__details">
+                  <summary className="state-quick__summary">
+                    <div className="state-quick__info">
+                      <span className="state-quick__label">
+                        {state.definition.label}
+                      </span>
+                      <span className="state-quick__inputs">
+                        <PropertyMath name={state.definition.property1} /> ={" "}
+                        {value1}
+                        {unit1 ? " " : null}
+                        <UnitMath unit={unit1} />,{" "}
+                        <PropertyMath name={state.definition.property2} /> ={" "}
+                        {value2}
+                        {unit2 ? " " : null}
+                        <UnitMath unit={unit2} />
+                      </span>
+                    </div>
+                  </summary>
+                  <StateMetrics
+                    state={state}
+                    variant="card"
+                    units={system}
+                    filter={QUICK_BASIC_PROPERTIES}
+                  />
+                </details>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="state-quick__remove"
+                  onClick={() => onRemoveState(state.definition.id)}
+                  aria-label={`Remove ${state.definition.label}`}
+                >
+                  <Trash2 />
+                  Remove
+                </Button>
+              </li>
             );
           })}
         </ul>

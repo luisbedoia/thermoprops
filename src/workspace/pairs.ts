@@ -69,7 +69,8 @@ export function pickInput(
   const other = OTHER[slot];
   if (picked === form[slot]) return { form };
   if (picked === form[other]) return { form: swapPair(form) };
-  if (solvable(picked, form[other])) return { form: { ...form, [slot]: picked } };
+  if (solvable(picked, form[other]))
+    return { form: { ...form, [slot]: picked } };
   const to = partnerOf(picked);
   return {
     form: { ...form, [slot]: picked, [other]: to, [VALUE[other]]: "" },

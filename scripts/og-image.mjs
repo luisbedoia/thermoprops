@@ -43,5 +43,7 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
   ${states.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="9" fill="#ffffff" stroke="#0f172a" stroke-width="3"/>`).join("\n  ")}
 </svg>`;
 
-await sharp(Buffer.from(svg)).png({ compressionLevel: 9 }).toFile("public/og-image.png");
+await sharp(Buffer.from(svg))
+  .png({ compressionLevel: 9 })
+  .toFile("public/og-image.png");
 console.log("Wrote public/og-image.png");

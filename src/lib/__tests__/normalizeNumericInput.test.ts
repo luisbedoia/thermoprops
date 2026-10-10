@@ -124,7 +124,18 @@ describe("normalizeNumericInput", () => {
     });
 
     it("rejects hex, infinities and other things Number() would read", () => {
-      for (const v of ["0x10", "0b11", "Infinity", "-Infinity", "NaN", "1e", "e5", "+", "-", "."]) {
+      for (const v of [
+        "0x10",
+        "0b11",
+        "Infinity",
+        "-Infinity",
+        "NaN",
+        "1e",
+        "e5",
+        "+",
+        "-",
+        ".",
+      ]) {
         expect(normalizeNumericInput(v), v).toBe("");
       }
     });
@@ -146,4 +157,3 @@ describe("normalizeNumericInput", () => {
     });
   });
 });
-

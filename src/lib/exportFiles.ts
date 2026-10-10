@@ -1,5 +1,10 @@
 import type { ComputedState } from "../workspace/types";
-import { phaseInfo, quantityInfo, quantityValue, tableQuantities } from "./quantities";
+import {
+  phaseInfo,
+  quantityInfo,
+  quantityValue,
+  tableQuantities,
+} from "./quantities";
 import { fromSI, getDisplayUnit } from "./units";
 import type { UnitSystem } from "./units";
 import { unitToPlain } from "./unitsFormat";
@@ -14,7 +19,10 @@ function csvField(value: string): string {
  * table, in the display units, and its phase. A state that could not be
  * solved keeps its row, with its error and no values.
  */
-export function statesToCsv(states: ComputedState[], units: UnitSystem): string {
+export function statesToCsv(
+  states: ComputedState[],
+  units: UnitSystem,
+): string {
   const quantities = tableQuantities();
   const header = [
     "State",
@@ -22,7 +30,9 @@ export function statesToCsv(states: ComputedState[], units: UnitSystem): string 
     ...quantities.map((q) => {
       const unit = unitToPlain(getDisplayUnit(q, units));
       const { description, symbol } = quantityInfo(q);
-      return unit ? `${description} ${symbol} (${unit})` : `${description} ${symbol}`;
+      return unit
+        ? `${description} ${symbol} (${unit})`
+        : `${description} ${symbol}`;
     }),
     "Phase",
   ];
@@ -31,7 +41,12 @@ export function statesToCsv(states: ComputedState[], units: UnitSystem): string 
       .map((q) => quantityInfo(q).symbol)
       .join(", ");
     if (!state) {
-      return [definition.label, definedBy, ...quantities.map(() => ""), error ?? "error"];
+      return [
+        definition.label,
+        definedBy,
+        ...quantities.map(() => ""),
+        error ?? "error",
+      ];
     }
     return [
       definition.label,
@@ -43,7 +58,10 @@ export function statesToCsv(states: ComputedState[], units: UnitSystem): string 
       phaseInfo(state.phase)?.label ?? "",
     ];
   });
-  return [header, ...rows].map((row) => row.map(csvField).join(",")).join("\r\n") + "\r\n";
+  return (
+    [header, ...rows].map((row) => row.map(csvField).join(",")).join("\r\n") +
+    "\r\n"
+  );
 }
 
 /** A file name from parts: "thermoprops-r134a-states". */

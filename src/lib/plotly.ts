@@ -11,7 +11,13 @@ export type PlotlyLike = {
   Plots?: { resize?: (element: HTMLElement) => Promise<unknown> | void };
   downloadImage?: (
     element: HTMLElement,
-    options: { format: "png"; filename: string; scale?: number; width?: number; height?: number },
+    options: {
+      format: "png";
+      filename: string;
+      scale?: number;
+      width?: number;
+      height?: number;
+    },
   ) => Promise<unknown>;
 };
 

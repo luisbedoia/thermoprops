@@ -1,8 +1,23 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { setCoolProp } from "../../coolprop";
-import { fakeCoolProp, LIQUID_WATER, TWO_PHASE_WATER } from "../../test-fixtures/fakeCoolProp";
-import { phaseInfo, quantityInfo, quantityValue, tableQuantities } from "../quantities";
-import { displayUnit, fromSI, getDisplayUnit, resolveUnitSystem, toSI } from "../units";
+import {
+  fakeCoolProp,
+  LIQUID_WATER,
+  TWO_PHASE_WATER,
+} from "../../test-fixtures/fakeCoolProp";
+import {
+  phaseInfo,
+  quantityInfo,
+  quantityValue,
+  tableQuantities,
+} from "../quantities";
+import {
+  displayUnit,
+  fromSI,
+  getDisplayUnit,
+  resolveUnitSystem,
+  toSI,
+} from "../units";
 import { symbolToMath } from "../unitsFormat";
 
 beforeEach(() => {
@@ -12,13 +27,21 @@ beforeEach(() => {
 describe("quantities", () => {
   it("follow the property catalog with specific volume after density", () => {
     const order = tableQuantities();
-    expect(order.slice(0, 4)).toEqual(["pressure", "temperature", "density", "specific_volume"]);
+    expect(order.slice(0, 4)).toEqual([
+      "pressure",
+      "temperature",
+      "density",
+      "specific_volume",
+    ]);
     expect(order).toContain("speed_of_sound");
     expect(order).not.toContain("phase");
   });
 
   it("derive specific volume and keep undefined values as null", () => {
-    expect(quantityValue(LIQUID_WATER, "specific_volume")).toBeCloseTo(1 / 996.5569, 12);
+    expect(quantityValue(LIQUID_WATER, "specific_volume")).toBeCloseTo(
+      1 / 996.5569,
+      12,
+    );
     expect(quantityValue(LIQUID_WATER, "cp")).toBe(4180.6);
     expect(quantityValue(TWO_PHASE_WATER, "cp")).toBeNull();
     expect(quantityValue(LIQUID_WATER, "enthalpy")).toBe(112654.9);
@@ -33,7 +56,10 @@ describe("quantities", () => {
   });
 
   it("take symbols and descriptions from the coolprop-rs catalogs", () => {
-    expect(quantityInfo("pressure")).toMatchObject({ symbol: "p", description: "Pressure" });
+    expect(quantityInfo("pressure")).toMatchObject({
+      symbol: "p",
+      description: "Pressure",
+    });
     expect(quantityInfo("conductivity").symbol).toBe("λ");
     // Not a State property: from the diagram-axis catalog.
     expect(quantityInfo("specific_volume")).toMatchObject({
@@ -65,8 +91,14 @@ describe("units by coolprop-rs name", () => {
   });
 
   it("describe each conversion as an affine map for coolprop-rs", () => {
-    expect(displayUnit("temperature", "celsius")).toEqual({ scale: 1, offset: -273.15 });
-    expect(displayUnit("pressure", "celsius")).toEqual({ scale: 1e-3, offset: 0 });
+    expect(displayUnit("temperature", "celsius")).toEqual({
+      scale: 1,
+      offset: -273.15,
+    });
+    expect(displayUnit("pressure", "celsius")).toEqual({
+      scale: 1e-3,
+      offset: 0,
+    });
     const f = displayUnit("temperature", "imperial");
     expect(f.scale).toBeCloseTo(1.8, 12);
     expect(f.offset).toBeCloseTo(-459.67, 9);

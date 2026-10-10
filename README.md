@@ -53,7 +53,7 @@ work, please cite:
 
 > Bell, I. H.; Wronski, J.; Quoilin, S.; Lemort, V. Pure and Pseudo-pure
 > Fluid Thermophysical Property Evaluation and the Open-Source Thermophysical
-> Property Library CoolProp. *Ind. Eng. Chem. Res.* **2014**, 53 (6),
+> Property Library CoolProp. _Ind. Eng. Chem. Res._ **2014**, 53 (6),
 > 2498–2508. [doi:10.1021/ie4033999](https://doi.org/10.1021/ie4033999)
 
 Developed by the Department of Mechanical Engineering, Universidad de

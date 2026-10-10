@@ -81,14 +81,12 @@ const SUPERSCRIPT_DIGITS: Record<string, string> = {
 };
 
 function fallbackPlain(unit: string): string {
-  return unit
-    .replace(/\*/g, "·")
-    .replace(/\^(-?\d+)/g, (_, exp: string) =>
-      exp
-        .split("")
-        .map((c) => (c === "-" ? "⁻" : (SUPERSCRIPT_DIGITS[c] ?? c)))
-        .join(""),
-    );
+  return unit.replace(/\*/g, "·").replace(/\^(-?\d+)/g, (_, exp: string) =>
+    exp
+      .split("")
+      .map((c) => (c === "-" ? "⁻" : (SUPERSCRIPT_DIGITS[c] ?? c)))
+      .join(""),
+  );
 }
 
 function fallbackMath(unit: string): string {

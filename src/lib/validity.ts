@@ -3,7 +3,9 @@ import { fromSI, getDisplayUnit } from "./units";
 import type { UnitSystem } from "./units";
 import { unitToPlain } from "./unitsFormat";
 
-const LIMIT_FORMAT = new Intl.NumberFormat(undefined, { maximumSignificantDigits: 6 });
+const LIMIT_FORMAT = new Intl.NumberFormat(undefined, {
+  maximumSignificantDigits: 6,
+});
 
 /** Rounding slack, so states right at a limit (the triple point) pass. */
 const SLACK = 1e-6;
@@ -14,7 +16,11 @@ const SLACK = 1e-6;
  * is inside. CoolProp extrapolates past these limits without complaint, so
  * the values there are not to be trusted.
  */
-export function validityError(state: State, data: FluidData, units: UnitSystem): string | null {
+export function validityError(
+  state: State,
+  data: FluidData,
+  units: UnitSystem,
+): string | null {
   const { temperature: t, pressure: p } = state;
   const inside =
     t >= data.t_triple * (1 - SLACK) &&

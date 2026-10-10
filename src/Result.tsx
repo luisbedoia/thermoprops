@@ -12,7 +12,12 @@ import type { PlotPoint } from "./Plot";
 import { Button } from "./components/Button";
 import { StateList, StateQuickActions } from "./workspace/StateList";
 import { StateModal } from "./workspace/StateModal";
-import { createStateLabel, generateId, getPlotPoints, normalizeStateDefinition } from "./workspace/utils";
+import {
+  createStateLabel,
+  generateId,
+  getPlotPoints,
+  normalizeStateDefinition,
+} from "./workspace/utils";
 import { pickInput, swapPair } from "./workspace/pairs";
 import type { PairForm, Replacement } from "./workspace/pairs";
 import { useComputedStates, useWorkspaceUrlParams } from "./workspace/hooks";
@@ -215,7 +220,11 @@ export function WorkspaceView() {
           [formState.property1]: value1,
           [formState.property2]: value2,
         } as unknown as StateInputs);
-      const outside = validityError(solved, coolprop().fluid(fluid).data, system);
+      const outside = validityError(
+        solved,
+        coolprop().fluid(fluid).data,
+        system,
+      );
       if (outside) {
         setFormError(outside);
         return;
@@ -315,8 +324,8 @@ export function WorkspaceView() {
       {legacyLink ? (
         <div className="workspace__notice" role="status">
           <p>
-            This link was created with an earlier version of Thermoprops and
-            its states can no longer be opened. Add them again to share an
+            This link was created with an earlier version of Thermoprops and its
+            states can no longer be opened. Add them again to share an
             up-to-date link.
           </p>
           <Button variant="ghost" size="sm" onClick={dismissLegacyLink}>

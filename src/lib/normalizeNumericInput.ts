@@ -38,11 +38,15 @@ export function normalizeNumericInput(value: string): string {
   let plain = compact;
 
   if (commas > 0 && dots > 0) {
-    const decimal = compact.lastIndexOf(",") > compact.lastIndexOf(".") ? "," : ".";
+    const decimal =
+      compact.lastIndexOf(",") > compact.lastIndexOf(".") ? "," : ".";
     const thousands = decimal === "," ? "." : ",";
     const at = compact.lastIndexOf(decimal);
     const integer = compact.slice(0, at);
-    if (compact.slice(at + 1).includes(thousands) || !groupedBy(thousands, integer)) {
+    if (
+      compact.slice(at + 1).includes(thousands) ||
+      !groupedBy(thousands, integer)
+    ) {
       return "";
     }
     plain = integer.split(thousands).join("") + "." + compact.slice(at + 1);

@@ -1,7 +1,14 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useEffect } from "react";
-import { render, screen, fireEvent, waitFor, cleanup, act } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  cleanup,
+  act,
+} from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useNavigate } from "react-router-dom";
 import type { NavigateFunction } from "react-router-dom";
 import { WorkspaceView } from "../Result";
@@ -73,7 +80,9 @@ function makeState(overrides: Partial<StateDefinition> = {}): StateDefinition {
 // Open the Add state modal and wait for the first input to be visible.
 async function openModal() {
   fireEvent.click(screen.getByRole("button", { name: /add state/i }));
-  await waitFor(() => expect(screen.getByLabelText("Property A")).toBeInTheDocument());
+  await waitFor(() =>
+    expect(screen.getByLabelText("Property A")).toBeInTheDocument(),
+  );
 }
 
 /** The value fields of properties A and B. */
@@ -82,7 +91,8 @@ function valueFields() {
   return { a, b };
 }
 
-const selected = (label: string) => (screen.getByLabelText(label) as HTMLSelectElement).value;
+const selected = (label: string) =>
+  (screen.getByLabelText(label) as HTMLSelectElement).value;
 
 // ── Suite ─────────────────────────────────────────────────────────────────────
 
@@ -128,12 +138,16 @@ describe("WorkspaceView", () => {
 
     it("opens a fluid by any of its aliases, under its canonical name", () => {
       renderWorkspace("fluid=H2O&units=kelvin&view=table");
-      expect(screen.getByRole("heading", { name: "Water" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "Water" }),
+      ).toBeInTheDocument();
     });
 
     it("renders the workspace when fluid is present", () => {
       renderWorkspace();
-      expect(screen.getByRole("heading", { name: "Water" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "Water" }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -142,7 +156,9 @@ describe("WorkspaceView", () => {
   describe("header", () => {
     it("shows the fluid name in the page heading", () => {
       renderWorkspace("fluid=Ammonia&units=kelvin&view=table");
-      expect(screen.getByRole("heading", { name: "Ammonia", level: 1 })).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "Ammonia", level: 1 }),
+      ).toBeInTheDocument();
     });
 
     it("shows the unit system in the subtitle", () => {
@@ -158,13 +174,19 @@ describe("WorkspaceView", () => {
     it("shows 'No states tracked yet' in the subtitle when empty", () => {
       renderWorkspace();
       // Header subtitle contains "SI units · No states tracked yet"
-      expect(screen.getByText(/Kelvin units · No states tracked yet/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Kelvin units · No states tracked yet/),
+      ).toBeInTheDocument();
     });
 
     it("shows state count in subtitle when states are present", () => {
       const states = [makeState(), makeState({ id: "s2", label: "State 2" })];
-      renderWorkspace(`fluid=Water&units=kelvin&view=table&states=${encodeStates(states)}`);
-      expect(screen.getByText(/Kelvin units · 2 states tracked/)).toBeInTheDocument();
+      renderWorkspace(
+        `fluid=Water&units=kelvin&view=table&states=${encodeStates(states)}`,
+      );
+      expect(
+        screen.getByText(/Kelvin units · 2 states tracked/),
+      ).toBeInTheDocument();
     });
   });
 
@@ -173,30 +195,46 @@ describe("WorkspaceView", () => {
   describe("URL state loading", () => {
     it("loads states encoded in URL and shows their labels", () => {
       const states = [makeState({ label: "State 1" })];
-      renderWorkspace(`fluid=Water&units=kelvin&view=table&states=${encodeStates(states)}`);
+      renderWorkspace(
+        `fluid=Water&units=kelvin&view=table&states=${encodeStates(states)}`,
+      );
       // State label appears in both StateRow (table) and StateCard (mobile) —
       // verify at least one is present.
       expect(screen.getAllByText("State 1").length).toBeGreaterThan(0);
     });
 
     it("follows the URL when it changes from outside, e.g. back and forward", async () => {
-      const first = encodeURIComponent(encodeStates([makeState({ label: "State 1" })]));
-      const second = encodeURIComponent(encodeStates([makeState({ label: "State 2" })]));
+      const first = encodeURIComponent(
+        encodeStates([makeState({ label: "State 1" })]),
+      );
+      const second = encodeURIComponent(
+        encodeStates([makeState({ label: "State 2" })]),
+      );
       renderWorkspace(`fluid=Water&units=kelvin&view=table&states=${first}`);
 
-      act(() => navigateTo(`/workspace?fluid=Water&units=kelvin&view=graph&states=${second}`));
-      await waitFor(() => expect(screen.getByTestId("thermo-plot")).toBeInTheDocument());
+      act(() =>
+        navigateTo(
+          `/workspace?fluid=Water&units=kelvin&view=graph&states=${second}`,
+        ),
+      );
+      await waitFor(() =>
+        expect(screen.getByTestId("thermo-plot")).toBeInTheDocument(),
+      );
       expect(screen.getAllByText("State 2").length).toBeGreaterThan(0);
       expect(screen.queryByText("State 1")).not.toBeInTheDocument();
 
       act(() => navigateTo(-1));
-      await waitFor(() => expect(screen.queryByTestId("thermo-plot")).not.toBeInTheDocument());
+      await waitFor(() =>
+        expect(screen.queryByTestId("thermo-plot")).not.toBeInTheDocument(),
+      );
       expect(screen.getAllByText("State 1").length).toBeGreaterThan(0);
     });
 
     it("shows the state table when view=table is in the URL", () => {
       renderWorkspace("fluid=Water&units=kelvin&view=table");
-      expect(screen.getByRole("heading", { name: "Tracked states" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "Tracked states" }),
+      ).toBeInTheDocument();
       expect(screen.queryByTestId("thermo-plot")).not.toBeInTheDocument();
     });
   });
@@ -217,7 +255,9 @@ describe("WorkspaceView", () => {
       await openModal();
       fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
       await waitFor(() => {
-        expect(screen.queryByText("Add thermodynamic state")).not.toBeInTheDocument();
+        expect(
+          screen.queryByText("Add thermodynamic state"),
+        ).not.toBeInTheDocument();
       });
     });
 
@@ -232,7 +272,9 @@ describe("WorkspaceView", () => {
       fireEvent.change(valueFields().b, {
         target: { value: "101325" },
       });
-      fireEvent.click(screen.getByRole("button", { name: /add to workspace/i }));
+      fireEvent.click(
+        screen.getByRole("button", { name: /add to workspace/i }),
+      );
 
       await waitFor(() => {
         expect(screen.getAllByText("State 1").length).toBeGreaterThan(0);
@@ -248,10 +290,14 @@ describe("WorkspaceView", () => {
       fireEvent.change(valueFields().b, {
         target: { value: "101325" },
       });
-      fireEvent.click(screen.getByRole("button", { name: /add to workspace/i }));
+      fireEvent.click(
+        screen.getByRole("button", { name: /add to workspace/i }),
+      );
 
       await waitFor(() => {
-        expect(screen.queryByText("Add thermodynamic state")).not.toBeInTheDocument();
+        expect(
+          screen.queryByText("Add thermodynamic state"),
+        ).not.toBeInTheDocument();
       });
     });
 
@@ -259,7 +305,9 @@ describe("WorkspaceView", () => {
       renderWorkspace();
       await openModal();
       const options = (id: string) =>
-        [...screen.getByLabelText(id).querySelectorAll("option")].map((o) => o.value);
+        [...screen.getByLabelText(id).querySelectorAll("option")].map(
+          (o) => o.value,
+        );
       const all = fake.cp.inputs().map((i) => i.name);
       expect(options("Property A")).toEqual(all);
       expect(options("Property B")).toEqual(all);
@@ -269,7 +317,9 @@ describe("WorkspaceView", () => {
       renderWorkspace();
       await openModal();
       expect(valueFields().a).toHaveAttribute("placeholder", "in kPa");
-      fireEvent.change(screen.getByLabelText("Property B"), { target: { value: "quality" } });
+      fireEvent.change(screen.getByLabelText("Property B"), {
+        target: { value: "quality" },
+      });
       expect(valueFields().b).toHaveAttribute("placeholder", "0 – 1");
     });
 
@@ -279,11 +329,22 @@ describe("WorkspaceView", () => {
       fireEvent.change(valueFields().a, { target: { value: "101.3" } });
       fireEvent.change(valueFields().b, { target: { value: "300" } });
       fireEvent.click(screen.getByRole("button", { name: /swap properties/i }));
-      expect([selected("Property A"), selected("Property B")]).toEqual(["temperature", "pressure"]);
-      expect([valueFields().a.value, valueFields().b.value]).toEqual(["300", "101.3"]);
+      expect([selected("Property A"), selected("Property B")]).toEqual([
+        "temperature",
+        "pressure",
+      ]);
+      expect([valueFields().a.value, valueFields().b.value]).toEqual([
+        "300",
+        "101.3",
+      ]);
       // Picking the other selector's input swaps too.
-      fireEvent.change(screen.getByLabelText("Property A"), { target: { value: "pressure" } });
-      expect([selected("Property A"), selected("Property B")]).toEqual(["pressure", "temperature"]);
+      fireEvent.change(screen.getByLabelText("Property A"), {
+        target: { value: "pressure" },
+      });
+      expect([selected("Property A"), selected("Property B")]).toEqual([
+        "pressure",
+        "temperature",
+      ]);
     });
 
     it("keeps an unsolvable pick and explains the input it changed", async () => {
@@ -291,14 +352,21 @@ describe("WorkspaceView", () => {
       await openModal();
       fireEvent.change(valueFields().b, { target: { value: "300" } });
       // B = temperature; enthalpy and temperature do not fix a state.
-      fireEvent.change(screen.getByLabelText("Property A"), { target: { value: "enthalpy" } });
-      expect([selected("Property A"), selected("Property B")]).toEqual(["enthalpy", "pressure"]);
+      fireEvent.change(screen.getByLabelText("Property A"), {
+        target: { value: "enthalpy" },
+      });
+      expect([selected("Property A"), selected("Property B")]).toEqual([
+        "enthalpy",
+        "pressure",
+      ]);
       expect(valueFields().b.value).toBe("");
       expect(screen.getByRole("status")).toHaveTextContent(
         "Property B changed from T to p: h and T do not fix a state together.",
       );
       // The next change clears the notice.
-      fireEvent.change(screen.getByLabelText("Property B"), { target: { value: "entropy" } });
+      fireEvent.change(screen.getByLabelText("Property B"), {
+        target: { value: "entropy" },
+      });
       expect(screen.queryByRole("status")).not.toBeInTheDocument();
     });
 
@@ -306,10 +374,14 @@ describe("WorkspaceView", () => {
       renderWorkspace();
       await openModal();
       // Bypass HTML5 required-field validation by submitting the form directly
-      const form = screen.getByRole("button", { name: /add to workspace/i }).closest("form")!;
+      const form = screen
+        .getByRole("button", { name: /add to workspace/i })
+        .closest("form")!;
       fireEvent.submit(form);
       await waitFor(() => {
-        expect(screen.getByText("Both values must be numeric.")).toBeInTheDocument();
+        expect(
+          screen.getByText("Both values must be numeric."),
+        ).toBeInTheDocument();
       });
     });
 
@@ -326,10 +398,14 @@ describe("WorkspaceView", () => {
       fireEvent.change(valueFields().b, {
         target: { value: "101325" },
       });
-      fireEvent.click(screen.getByRole("button", { name: /add to workspace/i }));
+      fireEvent.click(
+        screen.getByRole("button", { name: /add to workspace/i }),
+      );
 
       await waitFor(() => {
-        expect(screen.getByText(/CoolProp rejected these inputs/)).toBeInTheDocument();
+        expect(
+          screen.getByText(/CoolProp rejected these inputs/),
+        ).toBeInTheDocument();
       });
     });
   });
@@ -343,18 +419,29 @@ describe("WorkspaceView", () => {
       await openModal();
       fireEvent.change(valueFields().a, { target: { value: "100" } });
       fireEvent.change(valueFields().b, { target: { value: "5000" } });
-      fireEvent.click(screen.getByRole("button", { name: /add to workspace/i }));
+      fireEvent.click(
+        screen.getByRole("button", { name: /add to workspace/i }),
+      );
       expect(
-        await screen.findByText(/Outside the range of Water's equation of state/),
+        await screen.findByText(
+          /Outside the range of Water's equation of state/,
+        ),
       ).toBeInTheDocument();
       expect(screen.getByText("Add thermodynamic state")).toBeInTheDocument();
-      expect(screen.getAllByText(/No states tracked yet/).length).toBeGreaterThan(0);
+      expect(
+        screen.getAllByText(/No states tracked yet/).length,
+      ).toBeGreaterThan(0);
     });
 
     it("shows why a linked state past the limits has no values", () => {
       fake.cp.fluid("Water").state = vi.fn(() => tooHot);
-      renderWorkspace(`fluid=Water&units=kelvin&view=table&states=${encodeStates([makeState()])}`);
-      expect(screen.getAllByText(/Outside the range of Water's equation of state/).length).toBeGreaterThan(0);
+      renderWorkspace(
+        `fluid=Water&units=kelvin&view=table&states=${encodeStates([makeState()])}`,
+      );
+      expect(
+        screen.getAllByText(/Outside the range of Water's equation of state/)
+          .length,
+      ).toBeGreaterThan(0);
       expect(screen.queryByText("Mass density")).not.toBeInTheDocument();
     });
   });
@@ -364,20 +451,28 @@ describe("WorkspaceView", () => {
   describe("legacy links", () => {
     it("explains that states from an earlier version cannot be opened", () => {
       const old = [{ ...makeState(), property1: "T", property2: "P" }];
-      renderWorkspace(`fluid=Water&units=kelvin&view=table&states=${btoa(JSON.stringify(old))}`);
+      renderWorkspace(
+        `fluid=Water&units=kelvin&view=table&states=${btoa(JSON.stringify(old))}`,
+      );
       expect(screen.getByRole("status")).toHaveTextContent(/earlier version/);
-      expect(screen.getAllByText(/No states tracked yet/).length).toBeGreaterThan(0);
+      expect(
+        screen.getAllByText(/No states tracked yet/).length,
+      ).toBeGreaterThan(0);
     });
 
     it("can be dismissed", () => {
       const old = [{ ...makeState(), property1: "T", property2: "P" }];
-      renderWorkspace(`fluid=Water&units=kelvin&view=table&states=${btoa(JSON.stringify(old))}`);
+      renderWorkspace(
+        `fluid=Water&units=kelvin&view=table&states=${btoa(JSON.stringify(old))}`,
+      );
       fireEvent.click(screen.getByRole("button", { name: /dismiss/i }));
       expect(screen.queryByRole("status")).not.toBeInTheDocument();
     });
 
     it("does not show for current links", () => {
-      renderWorkspace(`fluid=Water&units=kelvin&view=table&states=${encodeStates([makeState()])}`);
+      renderWorkspace(
+        `fluid=Water&units=kelvin&view=table&states=${encodeStates([makeState()])}`,
+      );
       expect(screen.queryByRole("status")).not.toBeInTheDocument();
     });
   });
@@ -399,15 +494,24 @@ describe("WorkspaceView", () => {
           revokeObjectURL: vi.fn(),
         }),
       );
-      const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+      const click = vi
+        .spyOn(HTMLAnchorElement.prototype, "click")
+        .mockImplementation(() => {});
       const states = [makeState(), makeState({ id: "s2", label: "State 2" })];
-      renderWorkspace(`fluid=Water&units=kelvin&view=table&states=${encodeStates(states)}`);
+      renderWorkspace(
+        `fluid=Water&units=kelvin&view=table&states=${encodeStates(states)}`,
+      );
       fireEvent.click(screen.getByRole("button", { name: /export csv/i }));
       expect(click).toHaveBeenCalledTimes(1);
       const csv = await blobs[0].text();
-      const lines = csv.replace(/^\ufeff/, "").trimEnd().split("\r\n");
+      const lines = csv
+        .replace(/^\ufeff/, "")
+        .trimEnd()
+        .split("\r\n");
       expect(lines).toHaveLength(3);
-      expect(lines[0]).toMatch(/^State,Defined by,Pressure p \(kPa\),Temperature T \(K\)/);
+      expect(lines[0]).toMatch(
+        /^State,Defined by,Pressure p \(kPa\),Temperature T \(K\)/,
+      );
       expect(lines[1]).toMatch(/^State 1,"T, p",/);
     });
   });
@@ -422,7 +526,9 @@ describe("WorkspaceView", () => {
       expect(screen.getAllByText("State 1").length).toBeGreaterThan(0);
 
       // StateRow and StateCard both render a "Remove State 1" button
-      const removeButtons = screen.getAllByRole("button", { name: "Remove State 1" });
+      const removeButtons = screen.getAllByRole("button", {
+        name: "Remove State 1",
+      });
       fireEvent.click(removeButtons[0]);
 
       await waitFor(() => {
@@ -521,7 +627,9 @@ describe("WorkspaceView", () => {
 
       act(() => navigateTo("/workspace?fluid=Air&units=kelvin&view=graph"));
 
-      await waitFor(() => expect(screen.getByTestId("thermo-plot")).toBeInTheDocument());
+      await waitFor(() =>
+        expect(screen.getByTestId("thermo-plot")).toBeInTheDocument(),
+      );
     });
   });
 });

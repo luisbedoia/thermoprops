@@ -8,7 +8,12 @@ beforeEach(() => {
   setCoolProp(fakeCoolProp().cp);
 });
 
-const PT: PairForm = { property1: "pressure", value1: "101.3", property2: "temperature", value2: "25" };
+const PT: PairForm = {
+  property1: "pressure",
+  value1: "101.3",
+  property2: "temperature",
+  value2: "25",
+};
 
 describe("solvable", () => {
   it("follows the catalog pairs, in either order", () => {
@@ -52,18 +57,37 @@ describe("pickInput", () => {
 
   it("keeps the pick and replaces the other input when the pair is not solvable", () => {
     // T–h does not fix a state: B becomes T's usual partner, p, emptied.
-    const ph: PairForm = { property1: "pressure", value1: "101.3", property2: "enthalpy", value2: "2500" };
+    const ph: PairForm = {
+      property1: "pressure",
+      value1: "101.3",
+      property2: "enthalpy",
+      value2: "2500",
+    };
     expect(pickInput(ph, "property1", "temperature")).toEqual({
-      form: { property1: "temperature", value1: "101.3", property2: "pressure", value2: "" },
+      form: {
+        property1: "temperature",
+        value1: "101.3",
+        property2: "pressure",
+        value2: "",
+      },
       replaced: { slot: "property2", from: "enthalpy", to: "pressure" },
     });
   });
 
   it("reaches any solvable pair in two picks, from any pair", () => {
-    const inputs = fakeCoolProp().cp.inputs().map((i) => i.name);
-    const pairs = inputs.flatMap((a) => inputs.filter((b) => solvable(a, b)).map((b) => [a, b] as const));
+    const inputs = fakeCoolProp()
+      .cp.inputs()
+      .map((i) => i.name);
+    const pairs = inputs.flatMap((a) =>
+      inputs.filter((b) => solvable(a, b)).map((b) => [a, b] as const),
+    );
     for (const [s1, s2] of pairs) {
-      const start: PairForm = { property1: s1, value1: "1", property2: s2, value2: "2" };
+      const start: PairForm = {
+        property1: s1,
+        value1: "1",
+        property2: s2,
+        value2: "2",
+      };
       for (const [a, b] of pairs) {
         const { form } = pickInput(start, "property1", a);
         const end = pickInput(form, "property2", b).form;

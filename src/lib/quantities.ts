@@ -1,4 +1,9 @@
-import type { Phase, PhaseInfo, PropertyName, State } from "@luisbedoia/coolprop-rs-wasm";
+import type {
+  Phase,
+  PhaseInfo,
+  PropertyName,
+  State,
+} from "@luisbedoia/coolprop-rs-wasm";
 import { coolprop } from "../coolprop";
 
 /**
@@ -37,7 +42,8 @@ export function quantityInfo(quantity: Quantity): QuantityInfo {
   const info =
     cp.properties().find((p) => p.name === quantity) ??
     cp.plotProperties().find((p) => p.name === quantity);
-  if (!info) throw new Error(`"${quantity}" is not in the coolprop-rs catalogs`);
+  if (!info)
+    throw new Error(`"${quantity}" is not in the coolprop-rs catalogs`);
   return info;
 }
 

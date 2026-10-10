@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  cleanup,
+} from "@testing-library/react";
 import type { DiagramInfo } from "@luisbedoia/coolprop-rs-wasm";
 import { ThermoPlot, type PlotPoint } from "../Plot";
 import { setCoolProp } from "../coolprop";
@@ -86,16 +92,23 @@ describe("ThermoPlot", () => {
   describe("controls", () => {
     it("offers every diagram of the catalog", () => {
       renderPlot();
-      const options = screen.getByLabelText("Chart type").querySelectorAll("option");
+      const options = screen
+        .getByLabelText("Chart type")
+        .querySelectorAll("option");
       expect(options).toHaveLength(6);
-      expect(screen.getByLabelText("Chart type")).toHaveValue("pressure_enthalpy");
+      expect(screen.getByLabelText("Chart type")).toHaveValue(
+        "pressure_enthalpy",
+      );
     });
 
     it("offers the isoline families of the current diagram", () => {
-      renderPlot({ diagram: diagram("temperature_entropy"), isolineKind: "pressure" });
-      const kinds = [...screen.getByLabelText("Isolines").querySelectorAll("option")].map(
-        (o) => o.getAttribute("value"),
-      );
+      renderPlot({
+        diagram: diagram("temperature_entropy"),
+        isolineKind: "pressure",
+      });
+      const kinds = [
+        ...screen.getByLabelText("Isolines").querySelectorAll("option"),
+      ].map((o) => o.getAttribute("value"));
       expect(kinds).toEqual(diagram("temperature_entropy").isolines);
       expect(kinds).not.toContain("temperature");
     });
@@ -107,7 +120,9 @@ describe("ThermoPlot", () => {
       fireEvent.change(screen.getByLabelText("Chart type"), {
         target: { value: "temperature_entropy" },
       });
-      fireEvent.change(screen.getByLabelText("Isolines"), { target: { value: "quality" } });
+      fireEvent.change(screen.getByLabelText("Isolines"), {
+        target: { value: "quality" },
+      });
       expect(onDiagramChange).toHaveBeenCalledWith("temperature_entropy");
       expect(onIsolineChange).toHaveBeenCalledWith("quality");
     });
@@ -116,11 +131,22 @@ describe("ThermoPlot", () => {
   describe("rendering", () => {
     it("requests the diagram with the selected isoline family", async () => {
       const onPlotError = vi.fn();
-      renderPlot({ onPlotError, isolineCount: 4, isolinePoints: 80, domePoints: 90 });
+      renderPlot({
+        onPlotError,
+        isolineCount: 4,
+        isolinePoints: 80,
+        domePoints: 90,
+      });
       await waitForSuccess(onPlotError);
       expect(fake.cp.fluid("Water").diagram).toHaveBeenCalledWith({
         diagram: "pressure_enthalpy",
-        isolines: [{ kind: "temperature", count: 4, unit: { scale: 1, offset: -273.15 } }],
+        isolines: [
+          {
+            kind: "temperature",
+            count: 4,
+            unit: { scale: 1, offset: -273.15 },
+          },
+        ],
         points: 80,
         dome_points: 90,
       });
@@ -134,11 +160,14 @@ describe("ThermoPlot", () => {
       await waitForSuccess(onPlotError);
       await waitFor(() => expect(button).toBeEnabled());
       fireEvent.click(button);
-      expect(plotlyMocks.downloadImage).toHaveBeenCalledWith(expect.any(HTMLElement), {
-        format: "png",
-        filename: "thermoprops-water-pressure-enthalpy",
-        scale: 3,
-      });
+      expect(plotlyMocks.downloadImage).toHaveBeenCalledWith(
+        expect.any(HTMLElement),
+        {
+          format: "png",
+          filename: "thermoprops-water-pressure-enthalpy",
+          scale: 3,
+        },
+      );
     });
 
     it("draws the dome, then the isolines", async () => {
@@ -146,26 +175,37 @@ describe("ThermoPlot", () => {
       renderPlot({ onPlotError });
       await waitForSuccess(onPlotError);
       const names = lastTraces().map((t) => t.name);
-      expect(names.slice(0, 2)).toEqual(["Saturated liquid", "Saturated vapor"]);
+      expect(names.slice(0, 2)).toEqual([
+        "Saturated liquid",
+        "Saturated vapor",
+      ]);
       expect(names).toHaveLength(3);
     });
 
     it("adds tracked states as markers", async () => {
       const onPlotError = vi.fn();
-      const points: PlotPoint[] = [{ id: "a", label: "State 1", x: 1e5, y: 1e5 }];
+      const points: PlotPoint[] = [
+        { id: "a", label: "State 1", x: 1e5, y: 1e5 },
+      ];
       renderPlot({ onPlotError, points });
       await waitForSuccess(onPlotError);
       const traces = lastTraces();
-      expect(traces[traces.length - 1]).toMatchObject({ mode: "markers", text: ["State 1"] });
+      expect(traces[traces.length - 1]).toMatchObject({
+        mode: "markers",
+        text: ["State 1"],
+      });
     });
 
     it("updates the chart in place when states change, without recomputing the diagram", async () => {
       const onPlotError = vi.fn();
       const { rerender } = renderPlot({ onPlotError });
       await waitForSuccess(onPlotError);
-      const diagramCalls = vi.mocked(fake.cp.fluid("Water").diagram).mock.calls.length;
+      const diagramCalls = vi.mocked(fake.cp.fluid("Water").diagram).mock.calls
+        .length;
 
-      const points: PlotPoint[] = [{ id: "a", label: "State 1", x: 1e5, y: 1e5 }];
+      const points: PlotPoint[] = [
+        { id: "a", label: "State 1", x: 1e5, y: 1e5 },
+      ];
       rerender(
         <ThermoPlot
           fluid="Water"
@@ -176,11 +216,16 @@ describe("ThermoPlot", () => {
         />,
       );
       await waitFor(() => expect(plotlyMocks.react).toHaveBeenCalledTimes(2));
-      expect(fake.cp.fluid("Water").diagram).toHaveBeenCalledTimes(diagramCalls);
-      expect(lastTraces()[lastTraces().length - 1]).toMatchObject({ mode: "markers" });
+      expect(fake.cp.fluid("Water").diagram).toHaveBeenCalledTimes(
+        diagramCalls,
+      );
+      expect(lastTraces()[lastTraces().length - 1]).toMatchObject({
+        mode: "markers",
+      });
       // Same uirevision: Plotly keeps the user's zoom.
       const revision = (call: number) =>
-        (plotlyMocks.react.mock.calls[call][2] as { uirevision: string }).uirevision;
+        (plotlyMocks.react.mock.calls[call][2] as { uirevision: string })
+          .uirevision;
       expect(revision(1)).toBe(revision(0));
       expect(plotlyMocks.purge).not.toHaveBeenCalled();
     });
@@ -189,7 +234,8 @@ describe("ThermoPlot", () => {
       const onPlotError = vi.fn();
       const { rerender } = renderPlot({ onPlotError });
       await waitForSuccess(onPlotError);
-      const diagramCalls = vi.mocked(fake.cp.fluid("Water").diagram).mock.calls.length;
+      const diagramCalls = vi.mocked(fake.cp.fluid("Water").diagram).mock.calls
+        .length;
       rerender(
         <ThermoPlot
           fluid="Water"
@@ -200,9 +246,12 @@ describe("ThermoPlot", () => {
         />,
       );
       await waitFor(() => expect(plotlyMocks.react).toHaveBeenCalledTimes(2));
-      expect(fake.cp.fluid("Water").diagram).toHaveBeenCalledTimes(diagramCalls + 1);
+      expect(fake.cp.fluid("Water").diagram).toHaveBeenCalledTimes(
+        diagramCalls + 1,
+      );
       const revision = (call: number) =>
-        (plotlyMocks.react.mock.calls[call][2] as { uirevision: string }).uirevision;
+        (plotlyMocks.react.mock.calls[call][2] as { uirevision: string })
+          .uirevision;
       expect(revision(1)).not.toBe(revision(0));
     });
 
@@ -210,7 +259,10 @@ describe("ThermoPlot", () => {
       const onPlotError = vi.fn();
       renderPlot({ onPlotError });
       await waitForSuccess(onPlotError);
-      const layout = plotlyMocks.react.mock.calls[0][2] as Record<string, { type: string }>;
+      const layout = plotlyMocks.react.mock.calls[0][2] as Record<
+        string,
+        { type: string }
+      >;
       expect(layout.yaxis.type).toBe("log");
       expect(layout.xaxis.type).toBe("linear");
     });
@@ -229,7 +281,9 @@ describe("ThermoPlot", () => {
       });
       renderPlot({ onPlotError });
       await waitFor(() => expect(onPlotError).toHaveBeenCalledWith(true));
-      expect(await screen.findByText(/could not be generated/)).toBeInTheDocument();
+      expect(
+        await screen.findByText(/could not be generated/),
+      ).toBeInTheDocument();
     });
 
     it("reports a Plotly failure", async () => {

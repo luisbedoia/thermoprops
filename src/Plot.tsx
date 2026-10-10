@@ -3,7 +3,11 @@ import { ImageDown } from "lucide-react";
 import { Button } from "./components/Button";
 import { fileName } from "./lib/exportFiles";
 import type { RefObject } from "react";
-import type { DiagramData, DiagramInfo, InputName } from "@luisbedoia/coolprop-rs-wasm";
+import type {
+  DiagramData,
+  DiagramInfo,
+  InputName,
+} from "@luisbedoia/coolprop-rs-wasm";
 import "./Plot.css";
 import { coolprop } from "./coolprop";
 import {
@@ -39,7 +43,9 @@ type ThermoPlotProps = {
 
 const PLOT_FAILED = "The plot could not be generated for the current settings.";
 
-function useLegendPlacement(wrapperRef: RefObject<HTMLDivElement | null>): "bottom" | "right" {
+function useLegendPlacement(
+  wrapperRef: RefObject<HTMLDivElement | null>,
+): "bottom" | "right" {
   const [legendPlacement, setLegendPlacement] = useState<"bottom" | "right">(
     () =>
       typeof window !== "undefined" && window.innerWidth >= 768
@@ -91,7 +97,9 @@ export function ThermoPlot({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   // Of drawing with Plotly; failures known before drawing are setupError.
-  const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">(
+    "idle",
+  );
   // The Plotly that drew the current chart, to export it.
   const plotlyRef = useRef<PlotlyLike | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -100,7 +108,8 @@ export function ThermoPlot({
   // The diagram itself: dome and isolines. It depends on the fluid, the
   // diagram, the isoline family, the resolution and the units, not on the
   // tracked states, so adding or removing a state does not recompute it.
-  const computed = useMemo((): { data: DiagramData } | { error: unknown } | null => {
+  const computed = useMemo(():
+    { data: DiagramData } | { error: unknown } | null => {
     if (!fluid) return null;
     try {
       return {
@@ -122,7 +131,15 @@ export function ThermoPlot({
     } catch (error) {
       return { error };
     }
-  }, [fluid, diagram.id, isolineKind, isolineCount, isolinePoints, domePoints, unitSystem]);
+  }, [
+    fluid,
+    diagram.id,
+    isolineKind,
+    isolineCount,
+    isolinePoints,
+    domePoints,
+    unitSystem,
+  ]);
 
   const setupError = !fluid
     ? "Select a fluid in settings to render a chart."
@@ -167,7 +184,12 @@ export function ThermoPlot({
       ...buildDomeTraces(data.dome, x.property, y.property, unitSystem),
       ...buildIsolineTraces(data.isolines, x.property, y.property, unitSystem),
     ];
-    const pointTrace = buildPointTrace(points, x.property, y.property, unitSystem);
+    const pointTrace = buildPointTrace(
+      points,
+      x.property,
+      y.property,
+      unitSystem,
+    );
     if (pointTrace) traces.push(pointTrace);
 
     const { liquid, vapor } = data.dome;
@@ -220,7 +242,15 @@ export function ThermoPlot({
     return () => {
       isMounted = false;
     };
-  }, [computed, fluid, diagram, points, legendPlacement, onPlotError, unitSystem]);
+  }, [
+    computed,
+    fluid,
+    diagram,
+    points,
+    legendPlacement,
+    onPlotError,
+    unitSystem,
+  ]);
 
   return (
     <div className="plot-card">
@@ -248,7 +278,9 @@ export function ThermoPlot({
             id="isolines"
             name="isolines"
             value={isolineKind}
-            onChange={(event) => onIsolineChange?.(event.target.value as InputName)}
+            onChange={(event) =>
+              onIsolineChange?.(event.target.value as InputName)
+            }
           >
             {coolprop()
               .inputs()

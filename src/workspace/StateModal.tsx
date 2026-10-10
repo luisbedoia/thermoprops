@@ -250,7 +250,8 @@ export function StateModal({
 
 /** What a value field expects: its bounds ("0 – 1") or its unit ("kPa"). */
 function valueHint(input: InputInfo, units: UnitSystem): string {
-  if (input.min !== null && input.max !== null) return `${input.min} – ${input.max}`;
+  if (input.min !== null && input.max !== null)
+    return `${input.min} – ${input.max}`;
   const unit = unitToPlain(getDisplayUnit(input.name, units));
   return unit ? `in ${unit}` : "";
 }
@@ -330,10 +331,7 @@ function FromStatePicker({
           fromSI(propertyName, si, units),
         );
         return (
-          <option
-            key={state.definition.id}
-            value={state.definition.id}
-          >
+          <option key={state.definition.id} value={state.definition.id}>
             {state.definition.label}: {symbol} = {display}
             {unitLabel ? ` ${unitLabel}` : ""}
           </option>

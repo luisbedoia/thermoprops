@@ -35,7 +35,11 @@ export function decodeStates(encoded: string | null): DecodedStates {
           typeof item.value2 === "string" &&
           typeof item.label === "string",
       );
-    const names = new Set<unknown>(coolprop().inputs().map((i) => i.name));
+    const names = new Set<unknown>(
+      coolprop()
+        .inputs()
+        .map((i) => i.name),
+    );
     const current = wellFormed.filter(
       (item): item is StateDefinition =>
         names.has(item.property1) && names.has(item.property2),

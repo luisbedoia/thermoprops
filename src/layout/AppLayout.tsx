@@ -28,7 +28,11 @@ export function AppLayout() {
       <footer className="app-footer">
         <span>
           Properties by{" "}
-          <a href="https://coolprop.org" target="_blank" rel="noopener noreferrer">
+          <a
+            href="https://coolprop.org"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             CoolProp
           </a>
           {" · "}WebAssembly via{" "}
@@ -67,12 +71,16 @@ export function AppLayout() {
           </p>
           <p>
             Every property is computed by{" "}
-            <a href="https://coolprop.org" target="_blank" rel="noopener noreferrer">
+            <a
+              href="https://coolprop.org"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               CoolProp
             </a>
-            , the open-source thermophysical property library created by Ian Bell
-            and the CoolProp contributors. If you use these results in academic
-            work, please cite:
+            , the open-source thermophysical property library created by Ian
+            Bell and the CoolProp contributors. If you use these results in
+            academic work, please cite:
           </p>
           <blockquote className="about-modal__citation">
             Bell, I. H.; Wronski, J.; Quoilin, S.; Lemort, V. Pure and
@@ -99,8 +107,8 @@ export function AppLayout() {
             , a thin layer that makes it easier to use on the web.
           </p>
           <p>
-            Developed by the Department of Mechanical Engineering, Universidad de
-            Antioquia.{" "}
+            Developed by the Department of Mechanical Engineering, Universidad
+            de Antioquia.{" "}
             <a
               href="https://github.com/luisbedoia/thermoprops"
               target="_blank"

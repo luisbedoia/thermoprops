@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import type { DiagramInfo, InputName, StateInputs } from "@luisbedoia/coolprop-rs-wasm";
+import type {
+  DiagramInfo,
+  InputName,
+  StateInputs,
+} from "@luisbedoia/coolprop-rs-wasm";
 import { coolprop } from "../coolprop";
 import { resolveUnitSystem } from "../lib/units";
 import type { UnitSystem } from "../lib/units";
@@ -57,7 +61,11 @@ function readStates(param: string | null) {
  * ThermoPlot's render outcome,
  * not by URL params. It affects effectiveViewMode which gets written back to the URL.
  */
-export function useWorkspaceUrlParams({ plotFailedFor }: { plotFailedFor: string | null }) {
+export function useWorkspaceUrlParams({
+  plotFailedFor,
+}: {
+  plotFailedFor: string | null;
+}) {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // The catalog fluid the URL names (by name or alias); "" when it names
@@ -82,7 +90,9 @@ export function useWorkspaceUrlParams({ plotFailedFor }: { plotFailedFor: string
   const [legacyLink, setLegacyLink] = useState(initial.legacy);
 
   const canViewGraph = plotFailedFor !== fluid;
-  const effectiveViewMode: WorkspaceViewMode = canViewGraph ? viewMode : "table";
+  const effectiveViewMode: WorkspaceViewMode = canViewGraph
+    ? viewMode
+    : "table";
 
   // Write direction: state → URL
   useEffect(() => {
@@ -127,7 +137,10 @@ export function useWorkspaceUrlParams({ plotFailedFor }: { plotFailedFor: string
     const nextDiagram = resolveDiagram(searchParams.get("plot"));
     setDiagramId((prev) => (prev === nextDiagram.id ? prev : nextDiagram.id));
 
-    const nextIsoline = resolveIsoline(nextDiagram, searchParams.get("isoline"));
+    const nextIsoline = resolveIsoline(
+      nextDiagram,
+      searchParams.get("isoline"),
+    );
     setIsolineKind((prev) => (prev === nextIsoline ? prev : nextIsoline));
 
     const decoded = readStates(searchParams.get("states"));
@@ -179,7 +192,11 @@ export function useComputedStates(
           } as unknown as StateInputs);
         // A link may hold a state past the equation of state's limits,
         // where CoolProp's values are extrapolations.
-        const outside = validityError(state, coolprop().fluid(fluid).data, units);
+        const outside = validityError(
+          state,
+          coolprop().fluid(fluid).data,
+          units,
+        );
         if (outside) return { definition, error: outside };
         return { definition, state };
       } catch (error) {

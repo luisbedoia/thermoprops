@@ -160,13 +160,22 @@ describe("viewRange", () => {
   });
 
   it("centers the dome, filling 70% of the axis", () => {
-    const [a, b] = viewRange(linear([-20_000, 20_000]), [1000, 8000, null, 4000])!;
+    const [a, b] = viewRange(linear([-20_000, 20_000]), [
+      1000,
+      8000,
+      null,
+      4000,
+    ])!;
     expect((a + b) / 2).toBeCloseTo(4500, 9);
     expect(7000 / (b - a)).toBeCloseTo(0.7, 9);
   });
 
   it("centers in log space on log axes", () => {
-    const axis: AxisData = { property: "pressure", scale: "log", range: [1, 1e9] };
+    const axis: AxisData = {
+      property: "pressure",
+      scale: "log",
+      range: [1, 1e9],
+    };
     const [a, b] = viewRange(axis, [1e3, 1e7])!;
     expect(Math.sqrt(a * b)).toBeCloseTo(1e5, 3);
     expect(4 / Math.log10(b / a)).toBeCloseTo(0.7, 9);

@@ -87,7 +87,8 @@ function hoverTemplate(
 
 function sameCurve(a: Curve, b: Curve): boolean {
   const close = (u: number | null, v: number | null) =>
-    u === v || (u !== null && v !== null && Math.abs(u - v) <= 1e-9 * Math.abs(v));
+    u === v ||
+    (u !== null && v !== null && Math.abs(u - v) <= 1e-9 * Math.abs(v));
   return (
     a.x.length === b.x.length &&
     a.x.every((v, i) => close(v, b.x[i]) && close(a.y[i], b.y[i]))
