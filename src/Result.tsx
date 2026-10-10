@@ -115,7 +115,8 @@ function WorkspaceHeader({
 export function WorkspaceView() {
   const navigate = useNavigate();
 
-  const [plotFailed, setPlotFailed] = useState(false);
+  // The fluid whose chart failed: a failure is forgotten on another fluid.
+  const [plotFailedFor, setPlotFailedFor] = useState<string | null>(null);
 
   const {
     fluid,
@@ -132,17 +133,18 @@ export function WorkspaceView() {
     dismissLegacyLink,
     canViewGraph,
     effectiveViewMode,
-  } = useWorkspaceUrlParams({ plotFailed });
-
-  useEffect(() => {
-    setPlotFailed(false);
-  }, [fluid]);
+  } = useWorkspaceUrlParams({ plotFailedFor });
 
   useEffect(() => {
     if (!fluid) {
       navigate("/", { replace: true });
     }
   }, [fluid, navigate]);
+
+  const handlePlotError = useCallback(
+    (failed: boolean) => setPlotFailedFor(failed ? fluid : null),
+    [fluid],
+  );
 
   const computedStates = useComputedStates(states, fluid, units);
 
@@ -333,7 +335,7 @@ export function WorkspaceView() {
               isolineKind={isolineKind}
               onDiagramChange={setDiagramId}
               onIsolineChange={setIsolineKind}
-              onPlotError={setPlotFailed}
+              onPlotError={handlePlotError}
               points={plotPoints}
               units={units}
             />

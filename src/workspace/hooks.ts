@@ -53,10 +53,11 @@ function readStates(param: string | null) {
  * - Writes state back to URL whenever it changes (write direction)
  * - Syncs state from URL when the URL changes externally, e.g. browser back (read direction)
  *
- * plotFailed must come from the caller because it's driven by ThermoPlot's render outcome,
+ * plotFailedFor (the fluid whose chart failed) must come from the caller because it's driven by
+ * ThermoPlot's render outcome,
  * not by URL params. It affects effectiveViewMode which gets written back to the URL.
  */
-export function useWorkspaceUrlParams({ plotFailed }: { plotFailed: boolean }) {
+export function useWorkspaceUrlParams({ plotFailedFor }: { plotFailedFor: string | null }) {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // The catalog fluid the URL names (by name or alias); "" when it names
@@ -80,7 +81,7 @@ export function useWorkspaceUrlParams({ plotFailed }: { plotFailed: boolean }) {
   const [states, setStates] = useState<StateDefinition[]>(initial.states);
   const [legacyLink, setLegacyLink] = useState(initial.legacy);
 
-  const canViewGraph = !plotFailed;
+  const canViewGraph = plotFailedFor !== fluid;
   const effectiveViewMode: WorkspaceViewMode = canViewGraph ? viewMode : "table";
 
   // Write direction: state → URL
@@ -113,8 +114,11 @@ export function useWorkspaceUrlParams({ plotFailed }: { plotFailed: boolean }) {
     setSearchParams,
   ]);
 
-  // Read direction: URL → state (browser back/forward navigation)
-  useEffect(() => {
+  // Read direction: URL → state (browser back/forward navigation). Adjusted
+  // while rendering, not in an effect, so a URL change renders once.
+  const [readParams, setReadParams] = useState(searchParams);
+  if (searchParams !== readParams) {
+    setReadParams(searchParams);
     const rawView = searchParams.get("view");
     const nextView =
       rawView === "graph" || rawView === "table" ? rawView : VIEW_DEFAULT;
@@ -131,7 +135,7 @@ export function useWorkspaceUrlParams({ plotFailed }: { plotFailed: boolean }) {
       statesEqual(prev, decoded.states) ? prev : decoded.states,
     );
     if (decoded.legacy) setLegacyLink(true);
-  }, [searchParams]);
+  }
 
   return {
     fluid,

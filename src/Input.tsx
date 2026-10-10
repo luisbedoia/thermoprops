@@ -99,12 +99,13 @@ export function SettingsView() {
     [formState.units],
   );
 
+  const formula = details?.formula;
   const formulaExpression = useMemo(() => {
-    if (!details?.formula) {
+    if (!formula) {
       return null;
     }
 
-    const trimmed = details.formula.trim();
+    const trimmed = formula.trim();
     const unwrapped =
       trimmed.startsWith("$") && trimmed.endsWith("$")
         ? trimmed.slice(1, -1)
@@ -115,7 +116,7 @@ export function SettingsView() {
     }
 
     return `\\mathrm{${escapeForMath(unwrapped)}}`;
-  }, [details?.formula]);
+  }, [formula]);
 
   const unitExpression = useMemo(
     () => formatUnitLabelForMath(unitLabel),

@@ -1,24 +1,55 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import { render, screen, fireEvent, waitFor, cleanup, act } from "@testing-library/react";
+import { MemoryRouter, Route, Routes, useNavigate } from "react-router-dom";
+import type { NavigateFunction } from "react-router-dom";
 import { WorkspaceView } from "../Result";
 import { encodeStates } from "../workspace/utils";
 import type { StateDefinition } from "../workspace/types";
 import { setCoolProp } from "../coolprop";
 import { fakeCoolProp, LIQUID_WATER } from "../test-fixtures/fakeCoolProp";
 
-vi.mock("../Plot", () => ({
-  ThermoPlot: () => <div data-testid="thermo-plot" />,
-}));
+// Fluids whose chart fails to render, as ThermoPlot reports it.
+const failingFluids = vi.hoisted(() => new Set<string>());
+
+vi.mock("../Plot", async () => {
+  const { useEffect } = await import("react");
+  return {
+    ThermoPlot: ({
+      fluid,
+      onPlotError,
+    }: {
+      fluid: string;
+      onPlotError?: (failed: boolean) => void;
+    }) => {
+      useEffect(() => {
+        onPlotError?.(failingFluids.has(fluid));
+      }, [fluid, onPlotError]);
+      return <div data-testid="thermo-plot" />;
+    },
+  };
+});
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 let fake: ReturnType<typeof fakeCoolProp>;
 
+// Navigates as the browser does outside the app (back/forward, a pasted link).
+let navigateTo: NavigateFunction;
+
+function CaptureNavigate() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    navigateTo = navigate;
+  }, [navigate]);
+  return null;
+}
+
 function renderWorkspace(params = "fluid=Water&units=kelvin&view=table") {
   return render(
     <MemoryRouter initialEntries={[`/workspace?${params}`]}>
+      <CaptureNavigate />
       <Routes>
         <Route path="/workspace" element={<WorkspaceView />} />
         <Route path="/" element={<div data-testid="settings-page" />} />
@@ -72,6 +103,7 @@ describe("WorkspaceView", () => {
   });
 
   afterEach(() => {
+    failingFluids.clear();
     cleanup();
     vi.clearAllMocks();
     vi.unstubAllGlobals();
@@ -144,6 +176,21 @@ describe("WorkspaceView", () => {
       renderWorkspace(`fluid=Water&units=kelvin&view=table&states=${encodeStates(states)}`);
       // State label appears in both StateRow (table) and StateCard (mobile) —
       // verify at least one is present.
+      expect(screen.getAllByText("State 1").length).toBeGreaterThan(0);
+    });
+
+    it("follows the URL when it changes from outside, e.g. back and forward", async () => {
+      const first = encodeURIComponent(encodeStates([makeState({ label: "State 1" })]));
+      const second = encodeURIComponent(encodeStates([makeState({ label: "State 2" })]));
+      renderWorkspace(`fluid=Water&units=kelvin&view=table&states=${first}`);
+
+      act(() => navigateTo(`/workspace?fluid=Water&units=kelvin&view=graph&states=${second}`));
+      await waitFor(() => expect(screen.getByTestId("thermo-plot")).toBeInTheDocument());
+      expect(screen.getAllByText("State 2").length).toBeGreaterThan(0);
+      expect(screen.queryByText("State 1")).not.toBeInTheDocument();
+
+      act(() => navigateTo(-1));
+      await waitFor(() => expect(screen.queryByTestId("thermo-plot")).not.toBeInTheDocument());
       expect(screen.getAllByText("State 1").length).toBeGreaterThan(0);
     });
 
@@ -446,6 +493,31 @@ describe("WorkspaceView", () => {
       await waitFor(() => {
         expect(screen.getByTestId("thermo-plot")).toBeInTheDocument();
       });
+    });
+
+    it("falls back to the table when the chart cannot be drawn", async () => {
+      failingFluids.add("Water");
+      renderWorkspace("fluid=Water&units=kelvin&view=graph");
+
+      await waitFor(() => {
+        expect(screen.queryByTestId("thermo-plot")).not.toBeInTheDocument();
+      });
+      expect(screen.getByRole("button", { name: /^chart$/i })).toHaveAttribute(
+        "aria-disabled",
+        "true",
+      );
+    });
+
+    it("offers the chart again for another fluid", async () => {
+      failingFluids.add("Water");
+      renderWorkspace("fluid=Water&units=kelvin&view=graph");
+      await waitFor(() => {
+        expect(screen.queryByTestId("thermo-plot")).not.toBeInTheDocument();
+      });
+
+      act(() => navigateTo("/workspace?fluid=Air&units=kelvin&view=graph"));
+
+      await waitFor(() => expect(screen.getByTestId("thermo-plot")).toBeInTheDocument());
     });
   });
 });

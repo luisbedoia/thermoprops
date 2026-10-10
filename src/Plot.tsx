@@ -37,6 +37,8 @@ type ThermoPlotProps = {
   units?: string;
 };
 
+const PLOT_FAILED = "The plot could not be generated for the current settings.";
+
 function useLegendPlacement(wrapperRef: RefObject<HTMLDivElement | null>): "bottom" | "right" {
   const [legendPlacement, setLegendPlacement] = useState<"bottom" | "right">(
     () =>
@@ -88,6 +90,7 @@ export function ThermoPlot({
   const unitSystem: UnitSystem = resolveUnitSystem(units);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
+  // Of drawing with Plotly; failures known before drawing are setupError.
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   // The Plotly that drew the current chart, to export it.
   const plotlyRef = useRef<PlotlyLike | null>(null);
@@ -121,6 +124,14 @@ export function ThermoPlot({
     }
   }, [fluid, diagram.id, isolineKind, isolineCount, isolinePoints, domePoints, unitSystem]);
 
+  const setupError = !fluid
+    ? "Select a fluid in settings to render a chart."
+    : !computed || "error" in computed
+      ? PLOT_FAILED
+      : null;
+  const shownStatus = setupError ? "error" : status;
+  const shownError = setupError ?? error;
+
   // Resize with the container, and release Plotly when the chart goes away.
   useEffect(() => {
     const element = containerRef.current;
@@ -140,24 +151,15 @@ export function ThermoPlot({
   useEffect(() => {
     let isMounted = true;
 
-    if (!fluid) {
-      setStatus("error");
-      setError("Select a fluid in settings to render a chart.");
-      return;
-    }
-    const element = containerRef.current;
-    if (!element) {
-      setStatus("error");
-      setError("Plot container element was not found.");
-      return;
-    }
+    if (!fluid) return;
     if (!computed || "error" in computed) {
       console.error("Error generating plot", computed && computed.error);
-      setStatus("error");
-      setError("The plot could not be generated for the current settings.");
       onPlotError?.(true);
       return;
     }
+    // Always mounted (see below), so set once the effect runs.
+    const element = containerRef.current;
+    if (!element) return;
 
     const { data } = computed;
     const { x, y } = data;
@@ -207,7 +209,7 @@ export function ThermoPlot({
         console.error("Error drawing plot", err);
         if (!isMounted) return;
         setStatus("error");
-        setError("The plot could not be generated for the current settings.");
+        setError(PLOT_FAILED);
         onPlotError?.(true);
       }
     };
@@ -262,7 +264,7 @@ export function ThermoPlot({
         <Button
           variant="ghost"
           size="sm"
-          disabled={status !== "ready"}
+          disabled={shownStatus !== "ready"}
           onClick={() => {
             const element = containerRef.current;
             if (!element) return;
@@ -280,12 +282,12 @@ export function ThermoPlot({
 
       <div
         ref={wrapperRef}
-        className={`plot-wrapper${status === "ready" ? " is-ready" : ""}`}
+        className={`plot-wrapper${shownStatus === "ready" ? " is-ready" : ""}`}
       >
-        {status === "error" && error ? (
-          <div className="plot-message error">{error}</div>
+        {shownStatus === "error" && shownError ? (
+          <div className="plot-message error">{shownError}</div>
         ) : null}
-        {status === "loading" && (
+        {shownStatus === "loading" && (
           <div className="plot-message">Preparing plot...</div>
         )}
         {/* Always mounted, so a re-render after an error still finds it. */}
@@ -293,7 +295,7 @@ export function ThermoPlot({
           ref={containerRef}
           className="plot-container"
           aria-live="polite"
-          hidden={status === "error"}
+          hidden={shownStatus === "error"}
         />
       </div>
     </div>
