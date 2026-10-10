@@ -13,7 +13,6 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "preview": "vite preview",
-    "deploy": "npm run build && gh-pages -d dist",
     "og-image": "node scripts/og-image.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -38,7 +37,6 @@
     "eslint": "^10.12.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.7",
-    "gh-pages": "^6.3.0",
     "globals": "^17.13.0",
     "jsdom": "^30.1.2",
     "prettier": "^3.9.10",
