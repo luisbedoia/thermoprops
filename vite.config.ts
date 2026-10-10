@@ -4,8 +4,9 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   assetsInclude: ["**/*.wasm"],
-  // coolprop-rs ships a module worker (its async API); Vite 6 defaults to
-  // IIFE workers, which cannot hold its dynamic import of the wasm glue.
+  // coolprop-rs ships a module worker (its async API). Vite defaults to IIFE
+  // workers, which inline the wasm glue the worker imports dynamically
+  // instead of sharing its chunk with the main bundle.
   worker: {
     format: "es",
   },
@@ -37,7 +38,9 @@ export default defineConfig({
 
       workbox: {
         // wasm included: without it the app loads offline but cannot compute.
-        globPatterns: ["**/*.{js,css,html,svg,png,ico,wasm}"],
+        // woff2 only: KaTeX lists it first and every browser with service
+        // workers supports it, so its woff/ttf fallbacks are never fetched.
+        globPatterns: ["**/*.{js,css,html,svg,png,ico,wasm,woff2}"],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
