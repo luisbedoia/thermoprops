@@ -1,5 +1,6 @@
-# Google Search Console verification: its content must stay as served.
+# Search engine verification files: their content must stay as served.
 public/googlece02dd84945f969d.html
+public/BingSiteAuth.xml
 # Generated from coolprop-rs; kept as the generator writes it.
 src/test-fixtures/coolprop-schema.json
 # Local tool settings.
