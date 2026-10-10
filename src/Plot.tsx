@@ -196,6 +196,8 @@ export function ThermoPlot({
           displaylogo: false,
           displayModeBar: true,
           modeBarButtonsToRemove: ["lasso2d", "select2d"],
+          // Plotly 4 shows it by default: it uploads the chart to Plotly's cloud.
+          showSendToCloud: false,
           toImageButtonOptions: {
             format: "png",
             scale: 3,
