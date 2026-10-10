@@ -387,14 +387,18 @@ describe("WorkspaceView", () => {
   describe("export", () => {
     it("exports the tracked states as CSV", async () => {
       const blobs: Blob[] = [];
-      vi.stubGlobal("URL", {
-        ...URL,
-        createObjectURL: vi.fn((blob: Blob) => {
-          blobs.push(blob);
-          return "blob:states";
+      // A subclass, not a plain object: the router still constructs URLs.
+      // jsdom has no object URLs.
+      vi.stubGlobal(
+        "URL",
+        Object.assign(class extends URL {}, {
+          createObjectURL: vi.fn((blob: Blob) => {
+            blobs.push(blob);
+            return "blob:states";
+          }),
+          revokeObjectURL: vi.fn(),
         }),
-        revokeObjectURL: vi.fn(),
-      });
+      );
       const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
       const states = [makeState(), makeState({ id: "s2", label: "State 2" })];
       renderWorkspace(`fluid=Water&units=kelvin&view=table&states=${encodeStates(states)}`);
