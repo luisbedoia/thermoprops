@@ -6,11 +6,12 @@ import {
   fireEvent,
   waitFor,
   cleanup,
+  act,
 } from "@testing-library/react";
 import type { DiagramInfo } from "@luisbedoia/coolprop-rs-wasm";
 import { ThermoPlot, type PlotPoint } from "../Plot";
 import { setCoolProp } from "../coolprop";
-import { fakeCoolProp } from "../test-fixtures/fakeCoolProp";
+import { fakeCoolProp, fakeDiagram } from "../test-fixtures/fakeCoolProp";
 
 // vi.hoisted runs before imports, required so vi.mock factory can reference these
 const plotlyMocks = vi.hoisted(() => ({
@@ -64,7 +65,7 @@ function lastTraces(): Record<string, unknown>[] {
 describe("ThermoPlot", () => {
   beforeEach(() => {
     fake = fakeCoolProp();
-    setCoolProp(fake.cp, fake.sync);
+    setCoolProp(fake.cp);
 
     vi.stubGlobal(
       "ResizeObserver",
@@ -251,6 +252,46 @@ describe("ThermoPlot", () => {
         (plotlyMocks.react.mock.calls[call][2] as { uirevision: string })
           .uirevision;
       expect(revision(1)).not.toBe(revision(0));
+    });
+
+    it("ignores the answer to a request it no longer needs", async () => {
+      let answerLate: () => void = () => {};
+      const original = fake.workerFluid.getMockImplementation()!;
+      // The first diagram (p–h) is held back until after the second (T–s).
+      fake.workerFluid.mockImplementationOnce(async (name: string) => {
+        const f = await original(name);
+        return {
+          ...f,
+          diagram: (request) =>
+            new Promise((resolve) => {
+              answerLate = () => resolve(fakeDiagram(request));
+            }),
+        };
+      });
+      const onPlotError = vi.fn();
+      const { rerender } = renderPlot({ onPlotError });
+      const props = {
+        fluid: "Water",
+        diagram: diagram("temperature_entropy"),
+        isolineKind: "pressure" as const,
+        onPlotError,
+      };
+      rerender(<ThermoPlot {...props} points={[]} />);
+      await waitForSuccess(onPlotError);
+      await act(async () => answerLate());
+
+      // The chart keeps following the current diagram: new states still
+      // reach it.
+      const points: PlotPoint[] = [
+        { id: "a", label: "State 1", x: 1e3, y: 300 },
+      ];
+      rerender(<ThermoPlot {...props} points={points} />);
+      await waitFor(() =>
+        expect(lastTraces()[lastTraces().length - 1]).toMatchObject({
+          mode: "markers",
+          text: ["State 1"],
+        }),
+      );
     });
 
     it("uses the diagram's axis scales", async () => {

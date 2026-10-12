@@ -6,10 +6,11 @@ import type { RefObject } from "react";
 import type {
   DiagramData,
   DiagramInfo,
+  DiagramRequest,
   InputName,
 } from "@luisbedoia/coolprop-rs-wasm";
 import "./Plot.css";
-import { coolprop, coolpropSync, fluidData } from "./coolprop";
+import { coolprop, fluidData } from "./coolprop";
 import {
   buildDomeTraces,
   buildIsolineTraces,
@@ -108,45 +109,69 @@ export function ThermoPlot({
   // The diagram itself: dome and isolines. It depends on the fluid, the
   // diagram, the isoline family, the resolution and the units, not on the
   // tracked states, so adding or removing a state does not recompute it.
-  const computed = useMemo(():
-    { data: DiagramData } | { error: unknown } | null => {
-    if (!fluid) return null;
-    try {
-      return {
-        data: coolpropSync()
-          .fluid(fluid)
-          .diagram({
-            diagram: diagram.id,
-            isolines: [
-              {
-                kind: isolineKind,
-                count: isolineCount,
-                unit: displayUnit(isolineKind, unitSystem),
-              },
-            ],
-            points: isolinePoints,
-            dome_points: domePoints,
-          }),
-      };
-    } catch (error) {
-      return { error };
-    }
-  }, [
-    fluid,
-    diagram.id,
-    isolineKind,
-    isolineCount,
-    isolinePoints,
-    domePoints,
-    unitSystem,
-  ]);
+  const request = useMemo(
+    (): DiagramRequest => ({
+      diagram: diagram.id,
+      isolines: [
+        {
+          kind: isolineKind,
+          count: isolineCount,
+          unit: displayUnit(isolineKind, unitSystem),
+        },
+      ],
+      points: isolinePoints,
+      dome_points: domePoints,
+    }),
+    [
+      diagram.id,
+      isolineKind,
+      isolineCount,
+      isolinePoints,
+      domePoints,
+      unitSystem,
+    ],
+  );
+  const requestKey = JSON.stringify([fluid, request]);
+  // The worker's answer, with the request it answers.
+  const [answer, setAnswer] = useState<{
+    key: string;
+    result: { data: DiagramData } | { error: unknown };
+  } | null>(null);
+  useEffect(() => {
+    if (!fluid) return;
+    let current = true;
+    coolprop()
+      .fluid(fluid)
+      .then((f) => f.diagram(request))
+      .then(
+        (data) => ({ data }),
+        (error: unknown) => ({ error }),
+      )
+      .then((result) => {
+        // A newer request supersedes this one.
+        if (current) setAnswer({ key: requestKey, result });
+      });
+    return () => {
+      current = false;
+    };
+    // `request` is part of `requestKey`; listing it would rerun on identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestKey]);
+  // Undefined while the worker solves the current request.
+  const computed = answer?.key === requestKey ? answer.result : undefined;
 
   const setupError = !fluid
     ? "Select a fluid in settings to render a chart."
-    : !computed || "error" in computed
+    : computed && "error" in computed
       ? PLOT_FAILED
       : null;
-  const shownStatus = setupError ? "error" : status;
+  // The first chart waits with a message; later ones keep the previous chart
+  // on screen until theirs is solved.
+  const shownStatus = setupError
+    ? "error"
+    : !computed && status !== "ready"
+      ? "loading"
+      : status;
   const shownError = setupError ?? error;
 
   // Resize with the container, and release Plotly when the chart goes away.
@@ -168,9 +193,9 @@ export function ThermoPlot({
   useEffect(() => {
     let isMounted = true;
 
-    if (!fluid) return;
-    if (!computed || "error" in computed) {
-      console.error("Error generating plot", computed && computed.error);
+    if (!fluid || !computed) return;
+    if ("error" in computed) {
+      console.error("Error generating plot", computed.error);
       onPlotError?.(true);
       return;
     }

@@ -6,7 +6,7 @@ import type { StateInputs } from "@luisbedoia/coolprop-rs-wasm";
 import { resolveUnitSystem, toSI } from "./lib/units";
 import { validityError } from "./lib/validity";
 import { normalizeNumericInput } from "./lib/normalizeNumericInput";
-import { coolprop, coolpropSync, fluidData } from "./coolprop";
+import { coolprop, fluidData } from "./coolprop";
 import { ThermoPlot } from "./Plot";
 import type { PlotPoint } from "./Plot";
 import { Button } from "./components/Button";
@@ -169,21 +169,30 @@ export function WorkspaceView() {
   // The input the form last changed on its own, to explain it.
   const [replacement, setReplacement] = useState<Replacement | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // The worker is checking the new state; the form waits for its answer.
+  const [solving, setSolving] = useState(false);
+  // Counts submissions and closings: an answer for an older one is dropped.
+  const submission = useRef(0);
   const firstValueRef = useRef<HTMLInputElement | null>(null);
 
   const handleOpenModal = useCallback(() => {
+    submission.current++;
+    setSolving(false);
     setFormError(null);
     setReplacement(null);
     setIsModalOpen(true);
   }, []);
 
   const handleCloseModal = useCallback(() => {
+    submission.current++;
+    setSolving(false);
     setFormError(null);
     setIsModalOpen(false);
   }, []);
 
   const handleStateSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (solving) return;
     setFormError(null);
 
     if (!fluid) {
@@ -211,40 +220,49 @@ export function WorkspaceView() {
     const value1 = toSI(formState.property1, displayValue1, system);
     const value2 = toSI(formState.property2, displayValue2, system);
 
-    try {
-      // The pair comes from the form, so TypeScript cannot check it;
-      // CoolProp rejects unsupported pairs.
-      const solved = coolpropSync()
-        .fluid(fluid)
-        .state({
-          [formState.property1]: value1,
-          [formState.property2]: value2,
+    const { property1, property2 } = formState;
+    const token = ++submission.current;
+    setSolving(true);
+    void (async () => {
+      let problem: string | null;
+      try {
+        // The pair comes from the form, so TypeScript cannot check it;
+        // CoolProp rejects unsupported pairs.
+        const solved = await (
+          await coolprop().fluid(fluid)
+        ).state({
+          [property1]: value1,
+          [property2]: value2,
         } as unknown as StateInputs);
-      const outside = validityError(solved, fluidData(fluid), system);
-      if (outside) {
-        setFormError(outside);
+        problem = validityError(solved, fluidData(fluid), system);
+      } catch (error) {
+        console.error("State validation failed", error);
+        problem =
+          "CoolProp rejected these inputs. Try different properties or values.";
+      }
+      // Closed, reopened or submitted again while the worker was solving.
+      if (token !== submission.current) return;
+      setSolving(false);
+      if (problem) {
+        setFormError(problem);
         return;
       }
-    } catch (error) {
-      console.error("State validation failed", error);
-      setFormError(
-        "CoolProp rejected these inputs. Try different properties or values.",
-      );
-      return;
-    }
 
-    const nextState = normalizeStateDefinition({
-      id: generateId(),
-      label: createStateLabel(states.length + 1),
-      property1: formState.property1,
-      property2: formState.property2,
-      value1: String(value1),
-      value2: String(value2),
-    });
-
-    setStates((prev) => [...prev, nextState]);
-    setFormState((prev) => ({ ...prev, value1: "", value2: "" }));
-    setIsModalOpen(false);
+      const id = generateId();
+      setStates((prev) => [
+        ...prev,
+        normalizeStateDefinition({
+          id,
+          label: createStateLabel(prev.length + 1),
+          property1,
+          property2,
+          value1: String(value1),
+          value2: String(value2),
+        }),
+      ]);
+      setFormState((prev) => ({ ...prev, value1: "", value2: "" }));
+      setIsModalOpen(false);
+    })();
   };
 
   // ── State list handlers ────────────────────────────────────────────────────
@@ -391,6 +409,7 @@ export function WorkspaceView() {
         onSwap={handleSwap}
         replacement={replacement}
         formError={formError}
+        solving={solving}
         firstValueRef={firstValueRef}
         units={units}
         existingStates={computedStates}

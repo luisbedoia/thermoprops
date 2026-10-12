@@ -5,7 +5,6 @@
  */
 import { vi } from "vitest";
 import type {
-  CoolProp,
   CoolPropWorker,
   CriticalPoint,
   DiagramData,
@@ -91,10 +90,8 @@ export function fakeDiagram(request: DiagramRequest): DiagramData {
 }
 
 /**
- * Fake CoolProp modules sharing one set of mocked fluids: `fluid(name)` gives
- * the mocks (replace `state` or `diagram` on them to change what is solved),
- * `cp` answers through promises like the worker, and `sync` answers on the
- * spot like the main-thread module.
+ * A fake of the CoolProp worker. `fluid(name)` gives its mocked fluids:
+ * replace `state` or `diagram` on them to change what `cp` solves.
  */
 export function fakeCoolProp() {
   const fluids = new Map<string, ReturnType<typeof makeFluid>>();
@@ -134,7 +131,6 @@ export function fakeCoolProp() {
     plotProperties: () => fixture.schema.plot_properties,
     diagrams: () => fixture.schema.diagrams,
   };
-  const sync = { ...catalogs, fluid } as unknown as CoolProp;
   // Each call reads the mocks when it runs, so replacing them takes effect.
   const workerFluid = vi.fn(async (name: string): Promise<WorkerFluid> => {
     const f = fluid(name);
@@ -161,5 +157,5 @@ export function fakeCoolProp() {
     fluid: workerFluid,
     terminate: vi.fn(),
   } as unknown as CoolPropWorker;
-  return { cp, sync, fluid, workerFluid };
+  return { cp, fluid, workerFluid };
 }

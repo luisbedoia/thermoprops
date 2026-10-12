@@ -8,7 +8,7 @@ let water: FluidData;
 
 beforeEach(() => {
   const fake = fakeCoolProp();
-  setCoolProp(fake.cp, fake.sync);
+  setCoolProp(fake.cp);
   water = fake.fluid("Water").data;
 });
 

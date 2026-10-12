@@ -40,6 +40,8 @@ type StateModalProps = {
   /** The property the form last changed on its own, if any. */
   replacement: Replacement | null;
   formError: string | null;
+  /** The worker is checking the state: the submit button waits. */
+  solving: boolean;
   firstValueRef: RefObject<HTMLInputElement | null>;
   units: string;
   existingStates: ComputedState[];
@@ -54,6 +56,7 @@ export function StateModal({
   onSwap,
   replacement,
   formError,
+  solving,
   firstValueRef,
   units,
   existingStates,
@@ -241,7 +244,9 @@ export function StateModal({
           <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit">Add to workspace</Button>
+          <Button type="submit" disabled={solving}>
+            {solving ? "Solving…" : "Add to workspace"}
+          </Button>
         </div>
       </form>
     </Modal>

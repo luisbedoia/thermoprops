@@ -91,6 +91,22 @@ function valueFields() {
   return { a, b };
 }
 
+/**
+ * Holds the worker's next single-state answer (the form's check) until
+ * `release` gives the callback that lets it through.
+ */
+function holdStateAnswers(release: (resolve: () => void) => void) {
+  const original = fake.workerFluid.getMockImplementation()!;
+  fake.workerFluid.mockImplementationOnce(async (name: string) => {
+    const f = await original(name);
+    return {
+      ...f,
+      state: (inputs) =>
+        new Promise((resolve) => release(() => resolve(f.state(inputs)))),
+    };
+  });
+}
+
 const selected = (label: string) =>
   (screen.getByLabelText(label) as HTMLSelectElement).value;
 
@@ -99,7 +115,7 @@ const selected = (label: string) =>
 describe("WorkspaceView", () => {
   beforeEach(() => {
     fake = fakeCoolProp();
-    setCoolProp(fake.cp, fake.sync);
+    setCoolProp(fake.cp);
     vi.stubGlobal(
       "ResizeObserver",
       vi.fn(function ResizeObserverMock(this: object) {
@@ -359,6 +375,47 @@ describe("WorkspaceView", () => {
       await waitFor(() => {
         expect(screen.getAllByText("State 1").length).toBeGreaterThan(0);
       });
+    });
+
+    it("waits for the worker before adding, showing that it is solving", async () => {
+      let answer: () => void = () => {};
+      holdStateAnswers((resolve) => (answer = resolve));
+      renderWorkspace();
+      await openModal();
+      fireEvent.change(valueFields().a, { target: { value: "300" } });
+      fireEvent.change(valueFields().b, { target: { value: "101325" } });
+      fireEvent.click(
+        screen.getByRole("button", { name: /add to workspace/i }),
+      );
+
+      const solving = await screen.findByRole("button", { name: "Solving…" });
+      expect(solving).toBeDisabled();
+
+      await act(async () => answer());
+      await waitFor(() =>
+        expect(screen.getAllByText("State 1").length).toBeGreaterThan(0),
+      );
+    });
+
+    it("drops the answer when the form is closed while solving", async () => {
+      let answer: () => void = () => {};
+      holdStateAnswers((resolve) => (answer = resolve));
+      renderWorkspace();
+      await openModal();
+      fireEvent.change(valueFields().a, { target: { value: "300" } });
+      fireEvent.change(valueFields().b, { target: { value: "101325" } });
+      fireEvent.click(
+        screen.getByRole("button", { name: /add to workspace/i }),
+      );
+      await screen.findByRole("button", { name: "Solving…" });
+      fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
+
+      await act(async () => answer());
+
+      expect(screen.queryByText("State 1")).not.toBeInTheDocument();
+      expect(
+        screen.getAllByText(/No states tracked yet/).length,
+      ).toBeGreaterThan(0);
     });
 
     it("closes the modal after a successful add", async () => {
