@@ -24,7 +24,7 @@ export type PlotlyLike = {
 /** Loads Plotly on demand (it is large and only the chart view needs it). */
 export async function loadPlotly(): Promise<PlotlyLike> {
   const plotlyModule =
-    (await import("plotly.js-dist-min")) as unknown as PlotlyLike & {
+    (await import("plotly.js-basic-dist-min")) as unknown as PlotlyLike & {
       default?: PlotlyLike;
     };
   return plotlyModule.default ?? plotlyModule;
