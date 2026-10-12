@@ -400,19 +400,29 @@
   margin-top: 0.75rem;
 }
 
-.state-error {
+.state-error,
+.state-note {
   margin: 0;
-  color: #b91c1c;
   font-size: 0.9rem;
 }
 
-.state-error--card {
+.state-error {
+  color: #b91c1c;
+}
+
+.state-note {
+  color: var(--text-muted);
+}
+
+.state-error--card,
+.state-note--card {
   border-top: 1px solid var(--border-soft);
   padding-top: 0.75rem;
   margin-top: 0.75rem;
 }
 
-.state-error--table {
+.state-error--table,
+.state-note--table {
   margin-top: 0.65rem;
 }
 

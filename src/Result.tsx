@@ -6,7 +6,7 @@ import type { StateInputs } from "@luisbedoia/coolprop-rs-wasm";
 import { resolveUnitSystem, toSI } from "./lib/units";
 import { validityError } from "./lib/validity";
 import { normalizeNumericInput } from "./lib/normalizeNumericInput";
-import { coolprop } from "./coolprop";
+import { coolprop, coolpropSync, fluidData } from "./coolprop";
 import { ThermoPlot } from "./Plot";
 import type { PlotPoint } from "./Plot";
 import { Button } from "./components/Button";
@@ -214,17 +214,13 @@ export function WorkspaceView() {
     try {
       // The pair comes from the form, so TypeScript cannot check it;
       // CoolProp rejects unsupported pairs.
-      const solved = coolprop()
+      const solved = coolpropSync()
         .fluid(fluid)
         .state({
           [formState.property1]: value1,
           [formState.property2]: value2,
         } as unknown as StateInputs);
-      const outside = validityError(
-        solved,
-        coolprop().fluid(fluid).data,
-        system,
-      );
+      const outside = validityError(solved, fluidData(fluid), system);
       if (outside) {
         setFormError(outside);
         return;

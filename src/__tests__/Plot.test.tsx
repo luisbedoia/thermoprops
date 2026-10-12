@@ -64,7 +64,7 @@ function lastTraces(): Record<string, unknown>[] {
 describe("ThermoPlot", () => {
   beforeEach(() => {
     fake = fakeCoolProp();
-    setCoolProp(fake.cp);
+    setCoolProp(fake.cp, fake.sync);
 
     vi.stubGlobal(
       "ResizeObserver",
@@ -138,7 +138,7 @@ describe("ThermoPlot", () => {
         domePoints: 90,
       });
       await waitForSuccess(onPlotError);
-      expect(fake.cp.fluid("Water").diagram).toHaveBeenCalledWith({
+      expect(fake.fluid("Water").diagram).toHaveBeenCalledWith({
         diagram: "pressure_enthalpy",
         isolines: [
           {
@@ -200,7 +200,7 @@ describe("ThermoPlot", () => {
       const onPlotError = vi.fn();
       const { rerender } = renderPlot({ onPlotError });
       await waitForSuccess(onPlotError);
-      const diagramCalls = vi.mocked(fake.cp.fluid("Water").diagram).mock.calls
+      const diagramCalls = vi.mocked(fake.fluid("Water").diagram).mock.calls
         .length;
 
       const points: PlotPoint[] = [
@@ -216,9 +216,7 @@ describe("ThermoPlot", () => {
         />,
       );
       await waitFor(() => expect(plotlyMocks.react).toHaveBeenCalledTimes(2));
-      expect(fake.cp.fluid("Water").diagram).toHaveBeenCalledTimes(
-        diagramCalls,
-      );
+      expect(fake.fluid("Water").diagram).toHaveBeenCalledTimes(diagramCalls);
       expect(lastTraces()[lastTraces().length - 1]).toMatchObject({
         mode: "markers",
       });
@@ -234,7 +232,7 @@ describe("ThermoPlot", () => {
       const onPlotError = vi.fn();
       const { rerender } = renderPlot({ onPlotError });
       await waitForSuccess(onPlotError);
-      const diagramCalls = vi.mocked(fake.cp.fluid("Water").diagram).mock.calls
+      const diagramCalls = vi.mocked(fake.fluid("Water").diagram).mock.calls
         .length;
       rerender(
         <ThermoPlot
@@ -246,7 +244,7 @@ describe("ThermoPlot", () => {
         />,
       );
       await waitFor(() => expect(plotlyMocks.react).toHaveBeenCalledTimes(2));
-      expect(fake.cp.fluid("Water").diagram).toHaveBeenCalledTimes(
+      expect(fake.fluid("Water").diagram).toHaveBeenCalledTimes(
         diagramCalls + 1,
       );
       const revision = (call: number) =>
@@ -276,7 +274,7 @@ describe("ThermoPlot", () => {
 
     it("reports a diagram CoolProp cannot build", async () => {
       const onPlotError = vi.fn();
-      vi.mocked(fake.cp.fluid("Water").diagram).mockImplementation(() => {
+      vi.mocked(fake.fluid("Water").diagram).mockImplementation(() => {
         throw new Error("boom");
       });
       renderPlot({ onPlotError });

@@ -99,7 +99,7 @@ const selected = (label: string) =>
 describe("WorkspaceView", () => {
   beforeEach(() => {
     fake = fakeCoolProp();
-    setCoolProp(fake.cp);
+    setCoolProp(fake.cp, fake.sync);
     vi.stubGlobal(
       "ResizeObserver",
       vi.fn(function ResizeObserverMock(this: object) {
@@ -236,6 +236,86 @@ describe("WorkspaceView", () => {
         screen.getByRole("heading", { name: "Tracked states" }),
       ).toBeInTheDocument();
       expect(screen.queryByTestId("thermo-plot")).not.toBeInTheDocument();
+    });
+  });
+
+  // ── Solving in the worker ──────────────────────────────────────────────────
+
+  describe("solving in the worker", () => {
+    it("shows the states as computing until the worker answers", async () => {
+      renderWorkspace(
+        `fluid=Water&units=kelvin&view=table&states=${encodeStates([makeState()])}`,
+      );
+      expect(screen.getAllByText("Computing…").length).toBeGreaterThan(0);
+      await waitFor(() =>
+        expect(screen.queryByText("Computing…")).not.toBeInTheDocument(),
+      );
+      expect(screen.getAllByText("Mass density").length).toBeGreaterThan(0);
+    });
+
+    it("solves only the states it has not solved yet", async () => {
+      const first = encodeURIComponent(encodeStates([makeState()]));
+      const both = encodeURIComponent(
+        encodeStates([
+          makeState(),
+          makeState({ id: "s2", label: "State 2", value1: "310" }),
+        ]),
+      );
+      renderWorkspace(`fluid=Water&units=kelvin&view=table&states=${first}`);
+      await waitFor(() =>
+        expect(screen.queryByText("Computing…")).not.toBeInTheDocument(),
+      );
+
+      act(() =>
+        navigateTo(
+          `/workspace?fluid=Water&units=kelvin&view=table&states=${both}`,
+        ),
+      );
+      await waitFor(() =>
+        expect(screen.queryByText("Computing…")).not.toBeInTheDocument(),
+      );
+
+      // State 1 once, then State 2 alone.
+      expect(fake.fluid("Water").state).toHaveBeenCalledTimes(2);
+    });
+
+    it("never shows a late answer on a state it was not asked for", async () => {
+      const tooHot = { ...LIQUID_WATER, temperature: 5273.15 };
+      let answerLate: () => void = () => {};
+      // The first request is held back and answers with a state past the
+      // equation of state's limits.
+      fake.workerFluid.mockImplementationOnce(async (name: string) => {
+        const f = await (
+          fake.cp.fluid as typeof fake.workerFluid
+        ).getMockImplementation()!(name);
+        return {
+          ...f,
+          states: (inputs) =>
+            new Promise((resolve) => {
+              answerLate = () => resolve(inputs.map(() => tooHot));
+            }),
+        };
+      });
+      const first = encodeURIComponent(encodeStates([makeState()]));
+      const second = encodeURIComponent(
+        encodeStates([makeState({ value1: "310" })]),
+      );
+      renderWorkspace(`fluid=Water&units=kelvin&view=table&states=${first}`);
+      act(() =>
+        navigateTo(
+          `/workspace?fluid=Water&units=kelvin&view=table&states=${second}`,
+        ),
+      );
+      await waitFor(() =>
+        expect(screen.getAllByText("Mass density").length).toBeGreaterThan(0),
+      );
+
+      await act(async () => answerLate());
+
+      expect(
+        screen.queryByText(/Outside the range of Water's equation of state/),
+      ).not.toBeInTheDocument();
+      expect(screen.getAllByText("Mass density").length).toBeGreaterThan(0);
     });
   });
 
@@ -386,7 +466,7 @@ describe("WorkspaceView", () => {
     });
 
     it("shows CoolProp error when the state cannot be solved", async () => {
-      fake.cp.fluid("Water").state = vi.fn().mockImplementation(() => {
+      fake.fluid("Water").state = vi.fn().mockImplementation(() => {
         throw new Error("CoolProp failure");
       });
 
@@ -414,7 +494,7 @@ describe("WorkspaceView", () => {
     const tooHot = { ...LIQUID_WATER, temperature: 5273.15 };
 
     it("does not add a state past the equation of state's limits", async () => {
-      fake.cp.fluid("Water").state = vi.fn(() => tooHot);
+      fake.fluid("Water").state = vi.fn(() => tooHot);
       renderWorkspace();
       await openModal();
       fireEvent.change(valueFields().a, { target: { value: "100" } });
@@ -433,14 +513,17 @@ describe("WorkspaceView", () => {
       ).toBeGreaterThan(0);
     });
 
-    it("shows why a linked state past the limits has no values", () => {
-      fake.cp.fluid("Water").state = vi.fn(() => tooHot);
+    it("shows why a linked state past the limits has no values", async () => {
+      fake.fluid("Water").state = vi.fn(() => tooHot);
       renderWorkspace(
         `fluid=Water&units=kelvin&view=table&states=${encodeStates([makeState()])}`,
       );
       expect(
-        screen.getAllByText(/Outside the range of Water's equation of state/)
-          .length,
+        (
+          await screen.findAllByText(
+            /Outside the range of Water's equation of state/,
+          )
+        ).length,
       ).toBeGreaterThan(0);
       expect(screen.queryByText("Mass density")).not.toBeInTheDocument();
     });
@@ -473,7 +556,7 @@ describe("WorkspaceView", () => {
       renderWorkspace(
         `fluid=Water&units=kelvin&view=table&states=${encodeStates([makeState()])}`,
       );
-      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+      expect(screen.queryByText(/earlier version/)).not.toBeInTheDocument();
     });
   });
 
@@ -501,7 +584,11 @@ describe("WorkspaceView", () => {
       renderWorkspace(
         `fluid=Water&units=kelvin&view=table&states=${encodeStates(states)}`,
       );
-      fireEvent.click(screen.getByRole("button", { name: /export csv/i }));
+      const exportButton = screen.getByRole("button", { name: /export csv/i });
+      // Disabled until the worker has solved every state.
+      expect(exportButton).toBeDisabled();
+      await waitFor(() => expect(exportButton).toBeEnabled());
+      fireEvent.click(exportButton);
       expect(click).toHaveBeenCalledTimes(1);
       const csv = await blobs[0].text();
       const lines = csv

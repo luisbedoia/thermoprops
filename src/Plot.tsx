@@ -9,7 +9,7 @@ import type {
   InputName,
 } from "@luisbedoia/coolprop-rs-wasm";
 import "./Plot.css";
-import { coolprop } from "./coolprop";
+import { coolprop, coolpropSync, fluidData } from "./coolprop";
 import {
   buildDomeTraces,
   buildIsolineTraces,
@@ -113,7 +113,7 @@ export function ThermoPlot({
     if (!fluid) return null;
     try {
       return {
-        data: coolprop()
+        data: coolpropSync()
           .fluid(fluid)
           .diagram({
             diagram: diagram.id,
@@ -195,7 +195,7 @@ export function ThermoPlot({
     const { liquid, vapor } = data.dome;
     const layout = {
       ...buildPlotLayout(
-        `${coolprop().fluid(fluid).name} - ${diagramLabel(diagram)}`,
+        `${fluidData(fluid).name} - ${diagramLabel(diagram)}`,
         x,
         y,
         legendPlacement,

@@ -15,4 +15,6 @@ export type ComputedState = {
   /** The solved state; absent when it could not be evaluated. */
   state?: State;
   error?: string;
+  /** Still being solved in the worker: neither `state` nor `error` yet. */
+  pending?: boolean;
 };

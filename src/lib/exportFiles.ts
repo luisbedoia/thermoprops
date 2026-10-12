@@ -36,7 +36,7 @@ export function statesToCsv(
     }),
     "Phase",
   ];
-  const rows = states.map(({ definition, state, error }) => {
+  const rows = states.map(({ definition, state, error, pending }) => {
     const definedBy = [definition.property1, definition.property2]
       .map((q) => quantityInfo(q).symbol)
       .join(", ");
@@ -45,7 +45,7 @@ export function statesToCsv(
         definition.label,
         definedBy,
         ...quantities.map(() => ""),
-        error ?? "error",
+        pending ? "not computed yet" : (error ?? "error"),
       ];
     }
     return [

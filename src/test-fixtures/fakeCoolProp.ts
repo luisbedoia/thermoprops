@@ -6,11 +6,14 @@
 import { vi } from "vitest";
 import type {
   CoolProp,
+  CoolPropWorker,
   CriticalPoint,
   DiagramData,
   DiagramRequest,
   FluidData,
   State,
+  StateInputs,
+  WorkerFluid,
 } from "@luisbedoia/coolprop-rs-wasm";
 import { CoolPropError } from "@luisbedoia/coolprop-rs-wasm";
 import fixture from "./coolprop-schema.json";
@@ -87,6 +90,12 @@ export function fakeDiagram(request: DiagramRequest): DiagramData {
   } as DiagramData;
 }
 
+/**
+ * Fake CoolProp modules sharing one set of mocked fluids: `fluid(name)` gives
+ * the mocks (replace `state` or `diagram` on them to change what is solved),
+ * `cp` answers through promises like the worker, and `sync` answers on the
+ * spot like the main-thread module.
+ */
 export function fakeCoolProp() {
   const fluids = new Map<string, ReturnType<typeof makeFluid>>();
   function makeFluid(data: FluidData) {
@@ -94,7 +103,10 @@ export function fakeCoolProp() {
       name: data.name,
       data,
       critical: CRITICAL,
-      state: vi.fn((): State => LIQUID_WATER),
+      state: vi.fn((inputs: StateInputs): State => {
+        void inputs;
+        return LIQUID_WATER;
+      }),
       states: vi.fn(),
       diagram: vi.fn(fakeDiagram),
     };
@@ -112,7 +124,7 @@ export function fakeCoolProp() {
     if (!fluids.has(data.name)) fluids.set(data.name, makeFluid(data));
     return fluids.get(data.name)!;
   });
-  const cp = {
+  const catalogs = {
     version: () => fixture.version,
     catalog: () => fixture.catalog,
     inputs: () => fixture.schema.inputs,
@@ -121,7 +133,33 @@ export function fakeCoolProp() {
     phases: () => fixture.schema.phases,
     plotProperties: () => fixture.schema.plot_properties,
     diagrams: () => fixture.schema.diagrams,
-    fluid,
-  } as unknown as CoolProp;
-  return { cp, fluid };
+  };
+  const sync = { ...catalogs, fluid } as unknown as CoolProp;
+  // Each call reads the mocks when it runs, so replacing them takes effect.
+  const workerFluid = vi.fn(async (name: string): Promise<WorkerFluid> => {
+    const f = fluid(name);
+    return {
+      name: f.name,
+      data: f.data,
+      critical: f.critical,
+      state: async (inputs) => fluid(name).state(inputs),
+      states: async (inputs) =>
+        inputs.map((i) => {
+          try {
+            return fluid(name).state(i);
+          } catch (error) {
+            return error instanceof CoolPropError
+              ? error
+              : new CoolPropError({ kind: "coolprop", message: String(error) });
+          }
+        }),
+      diagram: async (request) => fluid(name).diagram(request),
+    };
+  });
+  const cp = {
+    ...catalogs,
+    fluid: workerFluid,
+    terminate: vi.fn(),
+  } as unknown as CoolPropWorker;
+  return { cp, sync, fluid, workerFluid };
 }

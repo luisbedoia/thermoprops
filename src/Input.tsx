@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { coolprop } from "./coolprop";
+import { coolprop, fluidData } from "./coolprop";
 import { resolveUnitSystem } from "./lib/units";
 import "./Input.css";
 import { MathText } from "./components/MathText";
@@ -74,7 +74,7 @@ export function SettingsView() {
   ]);
 
   const details = useMemo(
-    () => (formState.fluid ? coolprop().fluid(formState.fluid).data : null),
+    () => (formState.fluid ? fluidData(formState.fluid) : null),
     [formState.fluid],
   );
 

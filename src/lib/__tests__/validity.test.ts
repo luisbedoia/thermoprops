@@ -1,14 +1,15 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import type { FluidData } from "@luisbedoia/coolprop-rs-wasm";
 import { setCoolProp } from "../../coolprop";
 import { fakeCoolProp, LIQUID_WATER } from "../../test-fixtures/fakeCoolProp";
 import { validityError } from "../validity";
 
-let water: ReturnType<ReturnType<typeof fakeCoolProp>["cp"]["fluid"]>["data"];
+let water: FluidData;
 
 beforeEach(() => {
   const fake = fakeCoolProp();
-  setCoolProp(fake.cp);
-  water = fake.cp.fluid("Water").data;
+  setCoolProp(fake.cp, fake.sync);
+  water = fake.fluid("Water").data;
 });
 
 describe("validityError", () => {

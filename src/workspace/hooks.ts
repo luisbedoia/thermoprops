@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import type {
-  DiagramInfo,
-  InputName,
-  StateInputs,
+import {
+  CoolPropError,
+  type DiagramInfo,
+  type InputName,
+  type State,
+  type StateInputs,
 } from "@luisbedoia/coolprop-rs-wasm";
-import { coolprop } from "../coolprop";
+import { coolprop, fluidData } from "../coolprop";
 import { resolveUnitSystem } from "../lib/units";
 import type { UnitSystem } from "../lib/units";
 import { validityError } from "../lib/validity";
@@ -168,41 +170,99 @@ export function useWorkspaceUrlParams({
   };
 }
 
-/** Solves each tracked state once. */
+/** A state's inputs as a cache key: the fluid and both inputs, in SI. */
+function solveKey(fluid: string, definition: StateDefinition): string {
+  const { property1, value1, property2, value2 } = definition;
+  return JSON.stringify([fluid, property1, value1, property2, value2]);
+}
+
+/** What the worker answered for one state. */
+type Solved = { state: State } | { error: unknown };
+
+/**
+ * Solves each tracked state once, in the worker. A state shows as pending
+ * until its answer arrives; states already solved keep their values while
+ * others are added. Answers are cached by fluid and inputs, so a late one
+ * can only ever land on the state it was asked for.
+ */
 export function useComputedStates(
   states: StateDefinition[],
   fluid: string,
   units: UnitSystem,
 ): ComputedState[] {
-  return useMemo(() => {
-    return states.map((definition) => {
-      const value1 = Number(definition.value1);
-      const value2 = Number(definition.value2);
-      if (!Number.isFinite(value1) || !Number.isFinite(value2)) {
-        return { definition, error: "Values must be numeric." };
-      }
-      try {
-        // The pair comes from the URL, so TypeScript cannot check it;
-        // CoolProp rejects unsupported pairs.
-        const state = coolprop()
-          .fluid(fluid)
-          .state({
-            [definition.property1]: value1,
-            [definition.property2]: value2,
-          } as unknown as StateInputs);
+  const [solved, setSolved] = useState<ReadonlyMap<string, Solved>>(
+    () => new Map(),
+  );
+
+  // Numeric definitions without an answer yet, deduplicated by key.
+  const missing = useMemo(() => {
+    const byKey = new Map<string, StateDefinition>();
+    for (const definition of states) {
+      if (!isNumeric(definition)) continue;
+      const key = solveKey(fluid, definition);
+      if (!solved.has(key)) byKey.set(key, definition);
+    }
+    return byKey;
+  }, [states, fluid, solved]);
+
+  // Joined keys: the effect reruns when the set of missing states changes,
+  // not on every render.
+  const missingKeys = [...missing.keys()].join("\n");
+  useEffect(() => {
+    if (!fluid || missing.size === 0) return;
+    const keys = [...missing.keys()];
+    // The pair comes from the URL, so TypeScript cannot check it;
+    // CoolProp rejects unsupported pairs.
+    const inputs = [...missing.values()].map(
+      ({ property1, value1, property2, value2 }) =>
+        ({
+          [property1]: Number(value1),
+          [property2]: Number(value2),
+        }) as unknown as StateInputs,
+    );
+    coolprop()
+      .fluid(fluid)
+      .then((f) => f.states(inputs))
+      .then(
+        (results) =>
+          results.map((r): Solved =>
+            r instanceof CoolPropError ? { error: r } : { state: r },
+          ),
+        (error: unknown) => keys.map((): Solved => ({ error })),
+      )
+      .then((answers) =>
+        setSolved((prev) => {
+          const next = new Map(prev);
+          keys.forEach((key, i) => next.set(key, answers[i]));
+          return next;
+        }),
+      );
+    // `missing` is derived from these; listing it would rerun on identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fluid, missingKeys]);
+
+  return useMemo(
+    () =>
+      states.map((definition): ComputedState => {
+        if (!isNumeric(definition)) {
+          return { definition, error: "Values must be numeric." };
+        }
+        const answer = solved.get(solveKey(fluid, definition));
+        if (!answer) return { definition, pending: true };
+        if ("error" in answer) {
+          console.error("Unable to calculate state", definition, answer.error);
+          return { definition, error: "Unable to evaluate this state." };
+        }
         // A link may hold a state past the equation of state's limits,
         // where CoolProp's values are extrapolations.
-        const outside = validityError(
-          state,
-          coolprop().fluid(fluid).data,
-          units,
-        );
+        const outside = validityError(answer.state, fluidData(fluid), units);
         if (outside) return { definition, error: outside };
-        return { definition, state };
-      } catch (error) {
-        console.error("Unable to calculate state", definition, error);
-        return { definition, error: "Unable to evaluate this state." };
-      }
-    });
-  }, [states, fluid, units]);
+        return { definition, state: answer.state };
+      }),
+    [states, fluid, units, solved],
+  );
+}
+
+function isNumeric({ value1, value2 }: StateDefinition): boolean {
+  return Number.isFinite(Number(value1)) && Number.isFinite(Number(value2));
 }

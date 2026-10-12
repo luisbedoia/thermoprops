@@ -72,6 +72,8 @@ function ExportCsvButton({
     <Button
       variant="ghost"
       size="sm"
+      // Exports once every state is solved, so no row lacks its values.
+      disabled={states.some((s) => s.pending)}
       onClick={() =>
         downloadText(
           `${fileName(fluid, "states")}.csv`,
@@ -318,6 +320,13 @@ type StateMetricsProps = {
 };
 
 function StateMetrics({ state, variant, units, filter }: StateMetricsProps) {
+  if (state.pending) {
+    return (
+      <p className={`state-note state-note--${variant}`} role="status">
+        Computing…
+      </p>
+    );
+  }
   if (state.error || !state.state) {
     return (
       <p className={`state-error state-error--${variant}`}>
