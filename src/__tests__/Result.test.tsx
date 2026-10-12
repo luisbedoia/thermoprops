@@ -539,6 +539,57 @@ describe("WorkspaceView", () => {
 
   // ── Clear all ──────────────────────────────────────────────────────────────
 
+  describe("back to settings", () => {
+    it("asks before discarding the tracked states, and stays when cancelled", () => {
+      const confirm = vi.fn().mockReturnValue(false);
+      vi.stubGlobal("confirm", confirm);
+      const states = [makeState(), makeState({ id: "s2", label: "State 2" })];
+      renderWorkspace(
+        `fluid=Water&units=kelvin&view=table&states=${encodeStates(states)}`,
+      );
+
+      fireEvent.click(
+        screen.getByRole("button", { name: /back to settings/i }),
+      );
+
+      expect(confirm).toHaveBeenCalledWith(
+        expect.stringMatching(/discards the 2 tracked states/),
+      );
+      expect(screen.queryByTestId("settings-page")).not.toBeInTheDocument();
+      expect(screen.getAllByText("State 2").length).toBeGreaterThan(0);
+    });
+
+    it("goes to the settings once confirmed", async () => {
+      vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
+      renderWorkspace(
+        `fluid=Water&units=kelvin&view=table&states=${encodeStates([makeState()])}`,
+      );
+
+      fireEvent.click(
+        screen.getByRole("button", { name: /back to settings/i }),
+      );
+
+      await waitFor(() =>
+        expect(screen.getByTestId("settings-page")).toBeInTheDocument(),
+      );
+    });
+
+    it("does not ask when no states are tracked", async () => {
+      const confirm = vi.fn();
+      vi.stubGlobal("confirm", confirm);
+      renderWorkspace("fluid=Water&units=kelvin&view=table");
+
+      fireEvent.click(
+        screen.getByRole("button", { name: /back to settings/i }),
+      );
+
+      await waitFor(() =>
+        expect(screen.getByTestId("settings-page")).toBeInTheDocument(),
+      );
+      expect(confirm).not.toHaveBeenCalled();
+    });
+  });
+
   describe("clear all", () => {
     it("clears all states when window.confirm returns true", async () => {
       vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));

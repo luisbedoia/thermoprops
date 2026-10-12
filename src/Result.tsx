@@ -270,11 +270,24 @@ export function WorkspaceView() {
   );
 
   const handleNavigateBack = useCallback(() => {
+    // The settings page starts a new session: the tracked states stay behind.
+    if (
+      states.length > 0 &&
+      !window.confirm(
+        `Going back to settings discards the ${
+          states.length === 1
+            ? "tracked state"
+            : `${states.length} tracked states`
+        }. Continue?`,
+      )
+    ) {
+      return;
+    }
     const params = new URLSearchParams();
     params.set("fluid", fluid);
     params.set("units", units);
     navigate({ pathname: "/", search: `?${params.toString()}` });
-  }, [navigate, fluid, units]);
+  }, [navigate, fluid, units, states.length]);
 
   // ── Form property handlers ─────────────────────────────────────────────────
 
