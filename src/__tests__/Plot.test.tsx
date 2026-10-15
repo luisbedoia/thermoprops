@@ -176,10 +176,7 @@ describe("ThermoPlot", () => {
       renderPlot({ onPlotError });
       await waitForSuccess(onPlotError);
       const names = lastTraces().map((t) => t.name);
-      expect(names.slice(0, 2)).toEqual([
-        "Saturated liquid",
-        "Saturated vapor",
-      ]);
+      expect(names.slice(0, 2)).toEqual(["Saturation dome", "Saturation dome"]);
       expect(names).toHaveLength(3);
     });
 

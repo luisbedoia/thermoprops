@@ -59,6 +59,16 @@ export function diagramLabel(diagram: DiagramInfo): string {
   return `${y.description} – ${x.description} (${y.symbol}–${x.symbol})`;
 }
 
+/**
+ * The diagram as a select option, symbols first like the property selects
+ * ("p · kPa — Pressure"), so a narrow select cuts the description, not them.
+ */
+export function diagramOptionLabel(diagram: DiagramInfo): string {
+  const y = quantityInfo(diagram.y.property);
+  const x = quantityInfo(diagram.x.property);
+  return `${y.symbol}–${x.symbol} · ${y.description} – ${x.description}`;
+}
+
 const ISOLINE_PALETTE = [
   "#1d4ed8",
   "#0f766e",
@@ -111,14 +121,17 @@ export function buildDomeTraces(
         ["Saturated liquid", dome.liquid],
         ["Saturated vapor", dome.vapor],
       ];
-  return branches.map(([name, curve]) => ({
+  // Both branches share one red line, so they share one legend entry (which
+  // toggles them together); hovering still names the branch.
+  return branches.map(([name, curve], index) => ({
     type: "scatter",
     mode: "lines",
     x: convertArray(curve.x, xProperty, unitSystem),
     y: convertArray(curve.y, yProperty, unitSystem),
-    name,
+    name: branches.length > 1 ? "Saturation dome" : name,
+    legendgroup: "dome",
     line: { width: 2, color: DOME_COLOR },
-    showlegend: true,
+    showlegend: index === 0,
     hoverlabel: { bgcolor: "#0f172a", font: { color: "#f8fafc" } },
     hovertemplate: hoverTemplate(xProperty, yProperty, unitSystem, name),
   }));
@@ -242,6 +255,8 @@ export function buildPlotLayout(
     };
   };
   const legendRight = {
+    // The dome's legend group must not switch the legend to grouped order.
+    traceorder: "normal",
     orientation: "v",
     x: 1.05,
     xanchor: "left",
@@ -253,15 +268,19 @@ export function buildPlotLayout(
     font: { size: 12 },
   };
   const legendBottom = {
+    traceorder: "normal",
     orientation: "h",
-    x: 0.5,
-    xanchor: "center",
+    // Two columns: otherwise a narrow screen gives each entry its own row.
+    entrywidth: 0.5,
+    entrywidthmode: "fraction",
+    x: 0,
+    xanchor: "left",
     y: -0.35,
     yanchor: "top",
     bgcolor: "rgba(255,255,255,0.95)",
     bordercolor: "#dbe4f3",
     borderwidth: 1,
-    font: { size: 12 },
+    font: { size: 11 },
   };
 
   return {

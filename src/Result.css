@@ -506,15 +506,15 @@
   display: none;
 }
 
-.state-quick__summary::before {
-  content: "▸";
-  font-size: 0.7rem;
+.state-quick__chevron {
+  width: 1.1rem;
+  height: 1.1rem;
   color: var(--text-muted);
   transition: transform 0.15s ease;
   flex-shrink: 0;
 }
 
-.state-quick__details[open] > .state-quick__summary::before {
+.state-quick__details[open] > .state-quick__summary .state-quick__chevron {
   transform: rotate(90deg);
 }
 
@@ -558,8 +558,16 @@
 .state-modal__header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
+}
+
+/* Narrow screens: the close button keeps its icon (and aria-label) and
+   leaves the width to the title; Cancel still closes below. */
+@media (max-width: 480px) {
+  .state-modal__close-text {
+    display: none;
+  }
 }
 
 .state-modal__title {

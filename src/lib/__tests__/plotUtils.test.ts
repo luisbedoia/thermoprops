@@ -12,6 +12,7 @@ import {
   buildPlotLayout,
   buildPointTrace,
   diagramLabel,
+  diagramOptionLabel,
   viewRange,
 } from "../plotUtils";
 import { setCoolProp } from "../../coolprop";
@@ -55,6 +56,10 @@ describe("labels", () => {
   it("name diagrams by their axes", () => {
     expect(diagramLabel(PH)).toBe("Pressure – Specific enthalpy (p–h)");
   });
+
+  it("puts the axis symbols first in the diagram select", () => {
+    expect(diagramOptionLabel(PH)).toBe("p–h · Pressure – Specific enthalpy");
+  });
 });
 
 describe("buildDomeTraces", () => {
@@ -65,14 +70,20 @@ describe("buildDomeTraces", () => {
 
   it("draws both branches as solid red lines", () => {
     const traces = buildDomeTraces(dome, "enthalpy", "pressure", "celsius");
-    expect(traces.map((t) => t.name)).toEqual([
-      "Saturated liquid",
-      "Saturated vapor",
-    ]);
+    expect(traces).toHaveLength(2);
     for (const t of traces) {
       expect(t.line).toMatchObject({ color: "#dc2626", width: 2 });
       expect((t.line as { dash?: string }).dash).toBeUndefined();
     }
+  });
+
+  it("lists the dome once in the legend, naming each branch on hover", () => {
+    const traces = buildDomeTraces(dome, "enthalpy", "pressure", "celsius");
+    expect(traces.map((t) => t.showlegend)).toEqual([true, false]);
+    expect(traces[0].name).toBe("Saturation dome");
+    expect(new Set(traces.map((t) => t.legendgroup)).size).toBe(1);
+    expect(String(traces[0].hovertemplate)).toContain("Saturated liquid");
+    expect(String(traces[1].hovertemplate)).toContain("Saturated vapor");
   });
 
   it("draws one saturation curve where the branches coincide (P–T)", () => {

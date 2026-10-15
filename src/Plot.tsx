@@ -17,6 +17,7 @@ import {
   buildPlotLayout,
   buildPointTrace,
   diagramLabel,
+  diagramOptionLabel,
   viewRange,
 } from "./lib/plotUtils";
 import { loadPlotly, type PlotlyLike } from "./lib/plotly";
@@ -292,7 +293,7 @@ export function ThermoPlot({
               .diagrams()
               .map((d) => (
                 <option key={d.id} value={d.id}>
-                  {diagramLabel(d)}
+                  {diagramOptionLabel(d)}
                 </option>
               ))}
           </select>

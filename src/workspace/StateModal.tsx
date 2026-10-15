@@ -111,7 +111,7 @@ export function StateModal({
           aria-label="Close add state dialog"
         >
           <X />
-          Close
+          <span className="state-modal__close-text">Close</span>
         </Button>
       </header>
 

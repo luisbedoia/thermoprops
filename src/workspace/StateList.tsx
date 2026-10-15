@@ -1,5 +1,5 @@
 import { Button } from "../components/Button";
-import { Eraser, FileDown, Plus, Trash2 } from "lucide-react";
+import { ChevronRight, Eraser, FileDown, Plus, Trash2 } from "lucide-react";
 import { downloadText, fileName, statesToCsv } from "../lib/exportFiles";
 import { MathText } from "../components/MathText";
 import {
@@ -457,6 +457,10 @@ export function StateQuickActions({
               <li key={state.definition.id} className="state-quick__item">
                 <details className="state-quick__details">
                   <summary className="state-quick__summary">
+                    <ChevronRight
+                      className="state-quick__chevron"
+                      aria-hidden="true"
+                    />
                     <div className="state-quick__info">
                       <span className="state-quick__label">
                         {state.definition.label}
