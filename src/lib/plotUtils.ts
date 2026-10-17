@@ -163,6 +163,45 @@ export function buildIsolineTraces(
   });
 }
 
+/** A line through states, in SI on the diagram's axes. */
+export type PlotPath = {
+  label: string;
+  /** "line": a straight segment, for a leg whose real path is unknown. */
+  kind: "process" | "line";
+  x: number[];
+  y: number[];
+};
+
+/** Process legs drawn between tracked states, one legend entry for all. */
+export function buildPathTraces(
+  paths: PlotPath[],
+  xProperty: PlotProperty,
+  yProperty: PlotProperty,
+  unitSystem: UnitSystem = DEFAULT_UNIT_SYSTEM,
+): Record<string, unknown>[] {
+  // The legend shows a solid leg when there is one.
+  const shown = Math.max(
+    paths.findIndex((p) => p.kind === "process"),
+    0,
+  );
+  return paths.map((path, index) => ({
+    type: "scatter",
+    mode: "lines",
+    x: path.x.map((v) => fromSI(xProperty, v, unitSystem)),
+    y: path.y.map((v) => fromSI(yProperty, v, unitSystem)),
+    name: "Processes",
+    legendgroup: "paths",
+    showlegend: index === shown,
+    line: {
+      width: 2.5,
+      color: "#111827",
+      dash: path.kind === "line" ? "dot" : "solid",
+    },
+    hoverinfo: "text",
+    text: path.label,
+  }));
+}
+
 export function buildPointTrace(
   points: PlotPoint[],
   xProperty: PlotProperty,

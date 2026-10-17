@@ -14,6 +14,7 @@ import { coolprop, fluidData } from "./coolprop";
 import {
   buildDomeTraces,
   buildIsolineTraces,
+  buildPathTraces,
   buildPlotLayout,
   buildPointTrace,
   diagramLabel,
@@ -25,7 +26,7 @@ import { displayUnit, resolveUnitSystem } from "./lib/units";
 import type { UnitSystem } from "./lib/units";
 
 export type { PlotPoint } from "./lib/plotUtils";
-import type { PlotPoint } from "./lib/plotUtils";
+import type { PlotPath, PlotPoint } from "./lib/plotUtils";
 
 type ThermoPlotProps = {
   fluid: string;
@@ -35,6 +36,8 @@ type ThermoPlotProps = {
   onIsolineChange?: (kind: InputName) => void;
   onPlotError?: (hasError: boolean) => void;
   points: PlotPoint[];
+  /** Lines drawn under the points, e.g. the legs of a cycle. */
+  paths?: PlotPath[];
   isolineCount?: number;
   /** States per isoline. */
   isolinePoints?: number;
@@ -86,6 +89,7 @@ export function ThermoPlot({
   onIsolineChange,
   onPlotError,
   points,
+  paths,
   isolineCount = 7,
   // Kept low for low-end devices: computed on the main thread. In desktop
   // Chromium, over every fluid, diagram and family, 120 points per isoline
@@ -210,6 +214,11 @@ export function ThermoPlot({
       ...buildDomeTraces(data.dome, x.property, y.property, unitSystem),
       ...buildIsolineTraces(data.isolines, x.property, y.property, unitSystem),
     ];
+    if (paths) {
+      traces.push(
+        ...buildPathTraces(paths, x.property, y.property, unitSystem),
+      );
+    }
     const pointTrace = buildPointTrace(
       points,
       x.property,
@@ -273,6 +282,7 @@ export function ThermoPlot({
     fluid,
     diagram,
     points,
+    paths,
     legendPlacement,
     onPlotError,
     unitSystem,

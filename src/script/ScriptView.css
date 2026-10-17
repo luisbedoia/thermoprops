@@ -1,0 +1,947 @@
+.sv {
+  /* Height of the app's sticky header. */
+  --header: 4.1rem;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --ok: #15803d;
+  --error: #b91c1c;
+  --error-soft: rgba(220, 38, 38, 0.08);
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.sv .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.sv code,
+.sv kbd {
+  font-family: var(--mono);
+  font-size: 0.85em;
+}
+
+.sv .muted {
+  color: var(--text-muted);
+}
+
+.sv .link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline dotted var(--text-muted);
+  text-underline-offset: 3px;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────────── */
+
+.sv__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.sv__title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.sv__title h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 1.5vw + 1.1rem, 2rem);
+  font-weight: 600;
+}
+
+.sv__badge {
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.sv__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sv__examples {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.sv__examples svg {
+  position: absolute;
+  left: 0.65rem;
+  width: 1rem;
+  height: 1rem;
+  pointer-events: none;
+  color: var(--text-secondary);
+}
+
+.sv__examples select {
+  appearance: none;
+  min-height: 2.25rem;
+  padding: 0 0.85rem 0 2.1rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+  background: var(--surface-elevated);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.sv__examples select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .sv__action-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+}
+
+/* ── Layout ──────────────────────────────────────────────────────────── */
+
+.sv__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.sv__body.is-wide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "code tabs"
+    "code panel";
+  gap: 0.75rem 1.5rem;
+  align-items: start;
+}
+
+.is-wide .sv__code {
+  grid-area: code;
+  position: sticky;
+  top: calc(var(--header) + 0.75rem);
+  height: calc(100dvh - var(--header) - 1.5rem);
+  max-height: 56rem;
+}
+
+.is-wide .sv__tabs {
+  grid-area: tabs;
+}
+
+.is-wide .sv__panel,
+.is-wide .sv__chart {
+  grid-area: panel;
+}
+
+.sv__chart {
+  min-width: 0;
+}
+
+/* Drawn ahead and kept out of sight: laid out (so Plotly sizes it) but
+   taking no room. */
+.sv__chart.is-parked {
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.sv__body:not(.is-wide) > .sv__chart.is-parked {
+  margin-top: -0.75rem;
+}
+
+/* ── Tabs ────────────────────────────────────────────────────────────── */
+
+.sv__tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+  background: var(--surface-soft);
+  /* Always reachable on a phone while scrolling results. */
+  position: sticky;
+  top: calc(var(--header) + 0.5rem);
+  z-index: 5;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+.is-wide .sv__tabs {
+  position: static;
+  box-shadow: none;
+  justify-self: start;
+}
+
+.sv__tabs button {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.5rem;
+  padding: 0 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sv__tabs button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.sv__tabs button.is-active {
+  background: var(--surface-elevated);
+  border-color: var(--border-soft);
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+.sv__tabs button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.sv__tab-badge {
+  min-width: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.25rem;
+}
+
+@media (max-width: 420px) {
+  .sv__tabs button {
+    flex-direction: column;
+    gap: 0.1rem;
+    padding: 0.3rem 0.25rem;
+    border-radius: 1rem;
+    font-size: 0.72rem;
+  }
+
+  .sv__tabs {
+    border-radius: 1.25rem;
+  }
+
+  .sv__tabs button {
+    position: relative;
+  }
+
+  .sv__tab-badge {
+    position: absolute;
+    top: 0.15rem;
+    right: calc(50% - 1.5rem);
+  }
+}
+
+/* ── Code ────────────────────────────────────────────────────────────── */
+
+.sv__code {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: 0.9rem;
+  background: var(--surface-elevated);
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.sv__code:focus-within {
+  border-color: rgba(37, 99, 235, 0.45);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.sv__code[hidden],
+.sv__statusbar[hidden] {
+  display: none;
+}
+
+/* Editing on a phone: the code takes the visible area (set inline from the
+   visual viewport), over the page and its header. */
+.sv__code.is-editing {
+  position: fixed;
+  /* Until the visual viewport is measured (then set inline). */
+  top: 0;
+  height: 100dvh;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.sv__code.is-editing .sv__editor {
+  height: auto;
+}
+
+.sv__code.is-editing .cm-scroller {
+  overscroll-behavior: contain;
+}
+
+/* On a phone, outside editing, the code is part of the page: no scroller of
+   its own to catch the finger, the page scrolls over it. */
+.sv__code.is-flow .sv__editor {
+  height: auto;
+  min-height: 16rem;
+}
+
+.sv__code.is-flow .script-editor,
+.sv__code.is-flow .cm-editor {
+  height: auto !important;
+}
+
+.sv__editor {
+  flex: 1;
+  min-height: 0;
+  height: max(22rem, calc(100dvh - 15rem));
+}
+
+.is-wide .sv__editor {
+  height: auto;
+}
+
+.script-editor {
+  height: 100%;
+}
+
+.script-editor .cm-editor {
+  font-size: 14px;
+}
+
+@media (pointer: coarse) {
+  /* 16px keeps iOS from zooming into the editor. */
+  .script-editor .cm-editor {
+    font-size: 16px;
+  }
+}
+
+.sv__statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2.6rem;
+  padding: 0.35rem 0.5rem 0.35rem 0.85rem;
+  border-top: 1px solid var(--border-soft);
+  background: var(--surface-soft);
+  font-size: 0.85rem;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.status svg {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+}
+
+.status--ok svg {
+  color: var(--ok);
+}
+
+.status--error {
+  color: var(--error);
+  font-weight: 500;
+}
+
+.status--button {
+  min-height: 2rem;
+  margin-left: -0.5rem;
+  padding: 0 0.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: none;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.status--button:hover,
+.status--button:active {
+  background: var(--error-soft);
+}
+
+.status__where {
+  font-weight: 400;
+}
+
+.status__ms {
+  color: var(--text-muted);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.spin {
+  animation: sv-spin 0.9s linear infinite;
+}
+
+@keyframes sv-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}
+
+/* ── Panels ──────────────────────────────────────────────────────────── */
+
+.sv__panel {
+  min-width: 0;
+}
+
+.sv__panel[hidden],
+.sv__chart[hidden] {
+  display: none;
+}
+
+.results,
+.reference {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.results__section {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.results__heading {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.results__heading svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.results__heading--error {
+  color: var(--error);
+}
+
+.results__empty {
+  margin: 0;
+  padding: 1.25rem;
+  border: 1px dashed var(--border-strong);
+  border-radius: 0.9rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.problems {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-radius: 0.8rem;
+  background: var(--error-soft);
+  overflow: hidden;
+}
+
+.problems li + li {
+  border-top: 1px solid rgba(220, 38, 38, 0.15);
+}
+
+.problems button {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.9rem;
+  border: none;
+  background: none;
+  color: #7f1d1d;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.problems button:hover {
+  background: rgba(220, 38, 38, 0.06);
+}
+
+.problems__where {
+  flex: none;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.outputs {
+  margin: 0;
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+}
+
+.outputs > div {
+  min-width: 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.8rem;
+  border: 1px solid var(--border-soft);
+  background: var(--surface-elevated);
+}
+
+.outputs dt {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.outputs dd {
+  margin: 0.2rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.outputs .is-error dd {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--error);
+}
+
+.states-table {
+  overflow-x: auto;
+  border-radius: 0.8rem;
+  border: 1px solid var(--border-soft);
+  background: var(--surface-elevated);
+}
+
+.states-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.states-table th,
+.states-table td {
+  padding: 0.55rem 0.6rem;
+  border-bottom: 1px solid var(--border-soft);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.states-table thead th {
+  background: var(--surface-soft);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.states-table tbody tr:last-child > * {
+  border-bottom: none;
+}
+
+.states-table tbody th {
+  font-weight: 600;
+  white-space: normal;
+}
+
+.states-table__how {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.4rem;
+  margin-top: 0.15rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 400;
+}
+
+.states-table .is-error {
+  color: var(--error);
+  white-space: normal;
+}
+
+.unit {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.phase {
+  display: inline-block;
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  background: var(--surface-subtle);
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.phase--two_phase {
+  background: rgba(124, 58, 237, 0.1);
+  color: #5b21b6;
+}
+
+.phase--liquid {
+  background: rgba(37, 99, 235, 0.1);
+  color: #1e40af;
+}
+
+.phase--gas,
+.phase--supercritical_gas {
+  background: rgba(234, 88, 12, 0.1);
+  color: #9a3412;
+}
+
+.state-cards {
+  display: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  gap: 0.6rem;
+}
+
+.state-cards li {
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.8rem;
+  border: 1px solid var(--border-soft);
+  background: var(--surface-elevated);
+}
+
+.state-cards header {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+.state-cards .phase {
+  margin-left: auto;
+}
+
+.state-cards__name {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.state-cards dl {
+  margin: 0.55rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+  gap: 0.35rem 0.75rem;
+}
+
+.state-cards dl div {
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.state-cards dt {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: #be185d;
+}
+
+.state-cards dd {
+  margin: 0;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.state-cards .is-error p {
+  margin: 0.4rem 0 0;
+  color: var(--error);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 640px) {
+  .states-table {
+    display: none;
+  }
+
+  .state-cards {
+    display: grid;
+  }
+}
+
+.variables {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  border-radius: 0.8rem;
+  border: 1px solid var(--border-soft);
+  background: var(--surface-elevated);
+  overflow: hidden;
+}
+
+.variables > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.9rem;
+  border-bottom: 1px solid var(--border-soft);
+  min-width: 0;
+}
+
+.variables dt {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: #9a3412;
+  overflow-wrap: anywhere;
+}
+
+.variables dd {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.variables .is-error dd {
+  color: var(--error);
+  font-weight: 400;
+}
+
+/* ── Reference ───────────────────────────────────────────────────────── */
+
+.reference section {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.reference p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.reference__code {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 0.8rem;
+  border: 1px solid var(--border-soft);
+  background: var(--surface-elevated);
+  font: 0.85rem/1.6 var(--mono);
+  overflow-x: auto;
+}
+
+.reference__list,
+.reference__grid {
+  margin: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.reference__grid {
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+}
+
+.reference__list > div,
+.reference__grid > div {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  font-size: 0.9rem;
+}
+
+.reference__list dt {
+  flex: none;
+  min-width: 12rem;
+}
+
+.reference__list dd,
+.reference__grid dd {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 640px) {
+  .reference__list > div {
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  .reference__list dt {
+    min-width: 0;
+  }
+}
+
+.reference__units {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.reference__units code,
+.reference kbd {
+  padding: 0.1rem 0.45rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--border-soft);
+  background: var(--surface-elevated);
+}
+
+@media (pointer: coarse) {
+  .reference__shortcuts {
+    display: none !important;
+  }
+}
+
+/* ── Hover cards (inside the editor's tooltip) ───────────────────────── */
+
+.script-hover {
+  min-width: 11rem;
+  max-width: 19rem;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.85rem;
+}
+
+.script-hover__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--surface-soft);
+}
+
+.script-hover__sub {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.script-hover__body {
+  padding: 0.5rem 0.75rem;
+}
+
+.script-hover__body p {
+  margin: 0;
+}
+
+.script-hover__value {
+  font-size: 1rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.script-hover__error {
+  color: var(--error);
+}
+
+.script-hover__grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.15rem 0.75rem;
+  margin: 0 0 0.35rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.script-hover__grid dt {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: #be185d;
+}
+
+.script-hover__grid dd {
+  margin: 0;
+}
+
+/* ── Symbol bar (above the on-screen keyboard) ───────────────────────── */
+
+.symbol-bar {
+  flex: none;
+  display: flex;
+  align-items: stretch;
+  border-top: 1px solid var(--border-soft);
+  background: #e9eef5;
+}
+
+.symbol-bar__keys {
+  flex: 1;
+  display: flex;
+  gap: 0.3rem;
+  padding: 0.35rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.symbol-bar button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.6rem;
+  height: 2.6rem;
+  padding: 0 0.6rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: var(--surface-elevated);
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.18);
+  color: var(--text-primary);
+  font: 500 1rem var(--mono);
+  touch-action: manipulation;
+}
+
+.symbol-bar button:active {
+  background: var(--accent-soft);
+}
+
+.symbol-bar button svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.symbol-bar__done {
+  margin: 0.35rem 0.35rem 0.35rem 0;
+  background: transparent !important;
+  box-shadow: none !important;
+}
