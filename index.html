@@ -3,6 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="theme-color" content="#ffffff" />
+    <script>
+      // The installed app opens on its home, not on the website's landing:
+      // before the first paint, so the landing is never seen there. Keep in
+      // step with src/lib/installed.ts. (Apps installed before /home existed
+      // still start at the landing's address.)
+      if (
+        /^\/thermoprops\/?$/.test(location.pathname) &&
+        (matchMedia(
+          "(display-mode: standalone), (display-mode: minimal-ui), (display-mode: fullscreen), (display-mode: window-controls-overlay)",
+        ).matches ||
+          navigator.standalone === true)
+      ) {
+        location.replace("/thermoprops/home/" + location.search);
+      }
+    </script>
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual"

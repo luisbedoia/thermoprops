@@ -1,26 +1,10 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { useEffect, useState } from "react";
-import { TEMPLATES } from "../dsl/templates";
-import {
-  explorerSummary,
-  isOwnWork,
-  savedExplorer,
-  savedWorksheet,
-  worksheetSummary,
-} from "../lib/sessions";
+import { exampleLink } from "../lib/examples";
+import { useSavedWork } from "../lib/useSavedWork";
 import { LiveCycle } from "./LiveCycle";
 import { DemoVideo } from "./DemoVideo";
 import "./Landing.css";
-
-/** A worksheet link that opens with an example's script. */
-function exampleLink(id: string) {
-  const t = TEMPLATES.find((x) => x.id === id)!;
-  return {
-    pathname: "/worksheet",
-    search: `?${new URLSearchParams({ s: t.source }).toString()}`,
-  };
-}
 
 const EXAMPLES = [
   { id: "refrigeration", label: "Refrigeration" },
@@ -44,19 +28,9 @@ const CHARTS = [
  * in use, what it covers, and the blue footer.
  */
 export function Landing() {
-  // This browser's last work in each mode, to continue it. Read once the
-  // page is up: the built page (the same for everyone) comes first.
-  const [worksheet, setWorksheet] = useState<string | null>(null);
-  const [explorer, setExplorer] = useState<string | null>(null);
-  useEffect(() => {
-    const source = savedWorksheet();
-    const search = savedExplorer();
-    /* eslint-disable react-hooks/set-state-in-effect -- storage is read
-       after hydration, so the first render matches the built page. */
-    setWorksheet(source && isOwnWork(source) ? worksheetSummary(source) : null);
-    setExplorer(search ? explorerSummary(search) : null);
-    /* eslint-enable react-hooks/set-state-in-effect */
-  }, []);
+  // This browser's last work in each mode, to continue it.
+  const { worksheet, explorer: saved } = useSavedWork();
+  const explorer = saved?.summary ?? null;
   const worksheetAction = worksheet
     ? "Continue your worksheet"
     : "Open the Worksheet";

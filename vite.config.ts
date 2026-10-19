@@ -32,7 +32,10 @@ export default defineConfig({
         theme_color: "#ffffff",
         background_color: "#ffffff",
         display: "standalone",
-        start_url: "/thermoprops/",
+        // The app's identity: what it was installed as, kept though it now
+        // opens on its home.
+        id: "/thermoprops/",
+        start_url: "/thermoprops/home/",
         scope: "/thermoprops/",
       },
 

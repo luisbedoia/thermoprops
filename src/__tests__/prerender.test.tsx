@@ -28,6 +28,7 @@ describe("pageTitle", () => {
   it("names each listed page, and the others as the landing", () => {
     expect(pageTitle("/explorer")).toBe("State Explorer – Thermoprops");
     expect(pageTitle("/worksheet/")).toBe("Worksheet – Thermoprops");
-    expect(pageTitle("/")).toBe(pageTitle("/workspace"));
+    expect(pageTitle("/workspace")).toBe("State Explorer – Thermoprops");
+    expect(pageTitle("/")).toBe(pageTitle("/nowhere"));
   });
 });

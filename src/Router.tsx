@@ -8,6 +8,8 @@ import {
 } from "react-router-dom";
 import { AppLayout } from "./layout/AppLayout";
 import { Landing } from "./landing/Landing";
+import { Home } from "./home/Home";
+import { useInstalled } from "./lib/installed";
 import { CoolPropGate } from "./layout/CoolPropGate";
 
 // Each mode's code loads only when one of its pages is opened, so the
@@ -28,12 +30,23 @@ export function ScriptRedirect() {
   return <Navigate to={{ pathname: "/worksheet", search }} replace />;
 }
 
+/**
+ * "/": the website's landing in a browser; the installed app's home in the
+ * app (which index.html sends to /home before its first paint).
+ */
+function Root() {
+  // Also when the page turns into the app while on it (installed from here).
+  const installed = useInstalled();
+  return installed ? <Navigate to="/home" replace /> : <Landing />;
+}
+
 /** The pages, under whichever router renders them (the browser's or the build's). */
 export function AppRoutes() {
   return (
     <Routes>
       <Route element={<AppLayout />}>
-        <Route path="/" element={<Landing />} />
+        <Route path="/" element={<Root />} />
+        <Route path="/home" element={<Home />} />
         <Route element={<CoolPropGate />}>
           {/* The State Explorer: a fluid and units, then its states. */}
           <Route path="/explorer" element={<SettingsView />} />

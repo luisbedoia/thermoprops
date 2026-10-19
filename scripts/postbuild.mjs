@@ -16,6 +16,7 @@ const SITE_URL = "https://luisbedoia.github.io/thermoprops/";
 // Keep in sync with the routes in src/Router.tsx. "" is the landing.
 const APP_ROUTES = [
   "",
+  "home",
   "explorer",
   "settings",
   "workspace",
@@ -80,6 +81,12 @@ function page(route) {
       )
       .replace(/(<link rel="canonical" href=")[^"]*"/, `$1${url}"`)
       .replace(/(<meta\s+property="og:url"\s+content=")[^"]*"/, `$1${url}"`);
+    // The app's own pages: not for search results.
+    if (meta.noindex)
+      html = html.replace(
+        "</title>",
+        '</title>\n    <meta name="robots" content="noindex" />',
+      );
   }
   return html;
 }
@@ -98,7 +105,10 @@ try {
 }
 
 // Only canonical, indexable URLs belong here.
-const SITEMAP_PATHS = ["", ...Object.keys(PAGES)];
+const SITEMAP_PATHS = [
+  "",
+  ...Object.keys(PAGES).filter((route) => !PAGES[route].noindex),
+];
 const lastmod = new Date().toISOString().slice(0, 10);
 const urls = SITEMAP_PATHS.map(
   (path) => `  <url>

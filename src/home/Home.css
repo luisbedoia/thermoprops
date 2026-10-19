@@ -1,0 +1,152 @@
+/*
+ * The installed app's home, in the PlayStation design system as the modes
+ * are: a white canvas (one with the app's white title bar), light display
+ * type, the two modes as 8px cards on the soft card tone, PlayStation Blue
+ * on each card's one action.
+ */
+.home {
+  --ps-blue: #0070d1;
+  --ps-blue-pressed: #0064b7;
+  --ps-blue-active: #004d8d;
+  --ink: #000000;
+  --mute: #6b6b6b;
+  --card: #f5f7fa;
+
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  padding-block: clamp(0.5rem, 2vw, 1.5rem) 1.5rem;
+  color: var(--ink);
+}
+
+body:has(.home),
+body:has(.home) .app-shell {
+  background: #ffffff;
+}
+
+body:has(.home) .app-header {
+  box-shadow: none;
+}
+
+.home h1 {
+  margin: 0;
+  font-size: clamp(1.9rem, 2.4vw + 1rem, 2.75rem);
+  font-weight: 300;
+  letter-spacing: 0.1px;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.home__modes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+@media (max-width: 760px) {
+  .home__modes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.home__mode {
+  display: grid;
+  align-content: start;
+  gap: 1.25rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border-radius: 8px;
+  background: var(--card);
+}
+
+.home__mode h2 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 300;
+  line-height: 1.25;
+}
+
+.home__mode > p {
+  margin: 0;
+  font-size: 1.0625rem;
+  line-height: 1.5;
+}
+
+.home__actions {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: start;
+}
+
+/* Pills: the card's one action in PlayStation Blue, the other a plain link. */
+.home__primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  max-width: 100%;
+  padding: 0 1.5rem;
+  border-radius: 999px;
+  box-sizing: border-box;
+  background: var(--ps-blue);
+  color: #ffffff;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-decoration: none;
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.home__primary svg {
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.home__primary:hover {
+  background: var(--ps-blue-pressed);
+}
+
+.home__primary:active {
+  background: var(--ps-blue-active);
+  transform: scale(0.97);
+}
+
+.home__secondary,
+.home__examples a {
+  color: var(--ps-blue-pressed);
+  font-size: 1rem;
+  text-decoration: none;
+}
+
+.home__secondary:hover,
+.home__examples a:hover {
+  text-decoration: underline;
+}
+
+.home__primary:focus-visible,
+.home__secondary:focus-visible,
+.home__examples a:focus-visible {
+  outline: 2px solid var(--ps-blue);
+  outline-offset: 3px;
+}
+
+.home__saved {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--mute);
+}
+
+.home__examples h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.home__examples ul {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

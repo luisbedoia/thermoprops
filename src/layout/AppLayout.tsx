@@ -3,15 +3,22 @@ import { Info, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "../components/Button";
 import { Modal } from "../components/Modal";
-import { pageTitle } from "../pages";
+import { appTitle, pageTitle } from "../pages";
+import { useInstalled } from "../lib/installed";
 import "./AppLayout.css";
 
 export function AppLayout() {
   const [showAbout, setShowAbout] = useState(false);
   const { pathname } = useLocation();
+  const installed = useInstalled();
   useEffect(() => {
-    document.title = pageTitle(pathname);
-  }, [pathname]);
+    document.title = installed ? appTitle(pathname) : pageTitle(pathname);
+    // The browser's (or the installed app's) bar takes the page's ground:
+    // black on the landing, white everywhere else.
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", pathname === "/" ? "#000000" : "#ffffff");
+  }, [pathname, installed]);
 
   return (
     <div className="app-shell">
