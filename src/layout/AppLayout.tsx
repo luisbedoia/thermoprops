@@ -1,17 +1,27 @@
-import { Outlet } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { Info, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../components/Button";
 import { Modal } from "../components/Modal";
+import { pageTitle } from "../pages";
 import "./AppLayout.css";
 
 export function AppLayout() {
   const [showAbout, setShowAbout] = useState(false);
+  const { pathname } = useLocation();
+  useEffect(() => {
+    document.title = pageTitle(pathname);
+  }, [pathname]);
 
   return (
     <div className="app-shell">
+      <a className="skip-link" href="#main">
+        Skip to content
+      </a>
       <header className="app-header">
-        <span className="brand-title">Thermoprops</span>
+        <Link to="/" className="brand-title">
+          Thermoprops
+        </Link>
         <Button
           variant="subtle"
           size="sm"
@@ -22,7 +32,7 @@ export function AppLayout() {
           About
         </Button>
       </header>
-      <main className="app-main">
+      <main className="app-main" id="main" tabIndex={-1}>
         <Outlet />
       </main>
       <footer className="app-footer">

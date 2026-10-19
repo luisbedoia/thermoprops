@@ -8,6 +8,17 @@ export type PlotlyLike = {
     config?: unknown,
   ) => Promise<unknown> | void;
   purge?: (element: HTMLElement) => void;
+  /** Changes the layout, e.g. `{ annotations: [...] }`. */
+  relayout?: (
+    element: HTMLElement,
+    update: Record<string, unknown>,
+  ) => Promise<unknown> | void;
+  /** Changes some traces' attributes, e.g. `{ x: [[...], [...]] }` for two. */
+  restyle?: (
+    element: HTMLElement,
+    update: Record<string, unknown>,
+    traces: number[],
+  ) => Promise<unknown> | void;
   Plots?: { resize?: (element: HTMLElement) => Promise<unknown> | void };
   downloadImage?: (
     element: HTMLElement,

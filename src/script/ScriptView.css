@@ -1,0 +1,1469 @@
+/*
+ * The Script screen in the PlayStation design system (DESIGN.md): a light
+ * canvas for results, a dark one for the code and its keypad, PlayStation
+ * Blue only on the data (the cycle on the chart, the answer) and the one
+ * active state; pills for controls, 8px cards, 4px fields, no shadows at
+ * rest. The app's own tokens are remapped here, so the shared button and
+ * chart components take this look on this screen only.
+ */
+.sv {
+  /* Height of the app's sticky header. */
+  --header: 4.1rem;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+  --ps-blue: #0070d1;
+  --ps-blue-pressed: #0064b7;
+  --ps-blue-active: #004d8d;
+  --ink: #000000;
+  /* Text tiers on white, each over 4.5:1: ink, body, mute. */
+  --body: #5c5c5c;
+  --mute: #6b6b6b;
+  --canvas: #ffffff;
+  --soft: #f3f3f3;
+  --card: #f5f7fa;
+  --hairline: #e6e6e6;
+  --control: #cccccc;
+  --warning: #c81b3a;
+  --ok: #247b50;
+  --error: var(--warning);
+  --error-soft: rgba(200, 27, 58, 0.06);
+
+  /* The dark canvas: editor and keypad. */
+  --d-canvas: #121314;
+  --d-card: #181818;
+  --d-key: #26272b;
+  --d-fn: #34353a;
+  --d-text: #ffffff;
+  --d-body: rgba(255, 255, 255, 0.78);
+  --d-mute: rgba(229, 229, 229, 0.6);
+  --d-hair: rgba(229, 229, 229, 0.16);
+  --d-link: #53b1ff;
+
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink);
+  --text-muted: var(--mute);
+  --border-soft: var(--hairline);
+  --border-strong: var(--control);
+  --surface-elevated: var(--canvas);
+  --surface-soft: var(--soft);
+  --surface-subtle: var(--card);
+  --accent: var(--ps-blue);
+  --accent-soft: rgba(0, 112, 209, 0.12);
+  --accent-subtle: rgba(0, 112, 209, 0.16);
+  --accent-text: var(--ps-blue-pressed);
+
+  display: grid;
+  gap: 1.5rem;
+  align-content: start;
+  color: var(--ink);
+}
+
+/* The screen's ground is the light canvas, and the bar above sits on it. */
+body:has(.sv),
+body:has(.sv) .app-shell {
+  background: #ffffff;
+}
+
+body:has(.sv) .app-header {
+  box-shadow: none;
+  border-bottom-color: #e6e6e6;
+}
+
+.sv .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.sv code,
+.sv kbd {
+  font-family: var(--mono);
+  font-size: 0.85em;
+}
+
+.sv .muted {
+  color: var(--text-muted);
+}
+
+.sv .link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-underline-offset: 3px;
+}
+
+.sv .link:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--control);
+}
+
+.sv .link:focus-visible {
+  outline: 2px solid var(--ps-blue);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────────── */
+
+.sv__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.sv__title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.sv__title h1 {
+  margin: 0;
+  /* PlayStation's display voice: light weight, slight tracking. */
+  font-size: 1.75rem;
+  font-weight: 300;
+  letter-spacing: 0.1px;
+  line-height: 1.25;
+}
+
+.sv__badge {
+  color: var(--mute);
+  font-size: 0.875rem;
+}
+
+.sv__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+/* Secondary pills: transparent, a 1px ash edge (button-secondary-light). */
+.sv__actions .app-button {
+  min-height: 2.25rem;
+  padding: 0 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--control);
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  transition: background-color 0.15s ease;
+}
+
+.sv__actions .app-button:hover {
+  background: var(--soft);
+}
+
+.sv__actions .app-button:active {
+  background: #e6e6e6;
+}
+
+.sv__actions .app-button:focus-visible {
+  outline: 2px solid var(--ps-blue);
+  outline-offset: 2px;
+}
+
+.sv__examples {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.sv__examples svg {
+  position: absolute;
+  left: 0.85rem;
+  width: 1rem;
+  height: 1rem;
+  pointer-events: none;
+  color: var(--ink);
+}
+
+.sv__examples select {
+  appearance: none;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 2.25rem;
+  padding: 0 2rem 0 2.35rem;
+  border-radius: 999px;
+  border: 1px solid var(--control);
+  /* An explicit fill and ink, for dark-mode system selects. */
+  background: transparent
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+    no-repeat right 0.85rem center;
+  color: var(--ink);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.sv__examples select:hover {
+  background-color: var(--soft);
+}
+
+.sv__examples select:focus-visible {
+  outline: 2px solid var(--ps-blue);
+  outline-offset: 2px;
+}
+
+/* A phone: the title on its line, then every action on one row, the
+   examples taking the room the icon buttons leave. */
+@media (max-width: 480px) {
+  .sv__actions {
+    width: 100%;
+  }
+
+  .sv__examples {
+    flex: 1;
+  }
+
+  .sv__examples select {
+    width: 100%;
+  }
+
+  .sv__actions .app-button {
+    flex: none;
+    width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0;
+  }
+
+  .sv__action-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+}
+
+/* ── Layout ──────────────────────────────────────────────────────────── */
+
+.sv__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.sv__body.is-wide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "code tabs"
+    "code panel";
+  gap: 0.75rem 1.5rem;
+  align-items: start;
+}
+
+.is-wide .sv__code {
+  grid-area: code;
+  position: sticky;
+  top: calc(var(--header) + 0.75rem);
+  height: calc(100dvh - var(--header) - 1.5rem);
+  max-height: 56rem;
+}
+
+.is-wide .sv__tabs {
+  grid-area: tabs;
+}
+
+.is-wide .sv__panel,
+.is-wide .sv__chart {
+  grid-area: panel;
+}
+
+.sv__chart {
+  min-width: 0;
+}
+
+/* Drawn ahead and kept out of sight: laid out (so Plotly sizes it) but
+   taking no room. */
+.sv__chart.is-parked {
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.sv__body:not(.is-wide) > .sv__chart.is-parked {
+  margin-top: -0.75rem;
+}
+
+/* ── Tabs ────────────────────────────────────────────────────────────── */
+
+.sv__tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem 0;
+  background: var(--canvas);
+  /* Always reachable on a phone while scrolling results. */
+  position: sticky;
+  top: var(--header);
+  z-index: 5;
+}
+
+.sv.is-phone-editing .sv__tabs {
+  position: static;
+}
+
+/* …nor does the app's header: every line of screen counts while typing. */
+body:has(.sv.is-phone-editing) .app-header {
+  position: static;
+}
+
+.is-wide .sv__tabs {
+  position: static;
+  justify-self: start;
+}
+
+.sv__tabs button {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--body);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.sv__tabs button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.sv__tabs button:hover {
+  background: var(--soft);
+  color: var(--ink);
+}
+
+.sv__tabs button.is-active {
+  background: var(--ink);
+  color: #ffffff;
+}
+
+.sv__tabs button:focus-visible {
+  outline: 2px solid var(--ps-blue);
+  outline-offset: 2px;
+}
+
+.sv__tab-badge {
+  min-width: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--warning);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.25rem;
+}
+
+@media (max-width: 480px) {
+  .sv__tabs {
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .sv__tabs button {
+    position: relative;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-height: 3rem;
+    padding: 0.3rem 0.25rem;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .sv__tab-badge {
+    position: absolute;
+    top: 0.15rem;
+    right: calc(50% - 1.6rem);
+  }
+}
+
+/* ── Code ────────────────────────────────────────────────────────────── */
+
+.sv__code {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-radius: 8px;
+  background: var(--d-canvas);
+  color: var(--d-text);
+  overflow: hidden;
+}
+
+.sv__code:focus-within {
+  outline: 2px solid var(--ps-blue);
+  outline-offset: 2px;
+}
+
+.sv__code[hidden],
+.sv__statusbar[hidden] {
+  display: none;
+}
+
+/* On a phone, outside editing, the code is part of the page: no scroller of
+   its own to catch the finger, the page scrolls over it. */
+/* On a phone the code runs edge to edge: out of the page's side padding
+   (the same clamp() as .app-main's), no side borders or rounded corners,
+   and a slimmer gutter. Every column counts on a narrow screen. */
+.sv__body:not(.is-wide) > .sv__code.is-flow {
+  margin-inline: calc(-1 * clamp(1.25rem, 2vw + 1rem, 2.25rem));
+  border-radius: 0;
+}
+
+.sv__body:not(.is-wide) > .sv__code.is-flow:focus-within {
+  outline: none;
+}
+
+.sv__code.is-flow .script-editor .cm-gutters {
+  font-size: 13px;
+}
+
+.sv__code.is-flow .script-editor .cm-lineNumbers .cm-gutterElement {
+  min-width: 1.4rem;
+  padding: 0 0.2rem 0 0.35rem;
+}
+
+.sv__code.is-flow .script-editor .cm-gutter-lint {
+  width: 0.55rem;
+}
+
+.sv__code.is-flow .script-editor .cm-line {
+  padding: 0 0.6rem 0 0.4rem;
+}
+
+.sv__code.is-flow .sv__editor {
+  height: auto;
+  min-height: 16rem;
+}
+
+.sv__code.is-flow .script-editor,
+.sv__code.is-flow .cm-editor {
+  height: auto !important;
+}
+
+.sv__editor {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  height: max(22rem, calc(100dvh - 15rem));
+}
+
+.is-wide .sv__editor {
+  height: auto;
+}
+
+.script-editor {
+  height: 100%;
+}
+
+.script-editor .cm-editor {
+  font-size: 14px;
+}
+
+@media (pointer: coarse) {
+  /* 16px keeps iOS from zooming into the editor. */
+  .script-editor .cm-editor {
+    font-size: 16px;
+  }
+}
+
+.sv__statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2.6rem;
+  padding: 0.35rem 0.5rem 0.35rem 0.85rem;
+  border-top: 1px solid var(--d-hair);
+  background: var(--d-canvas);
+  font-size: 0.8125rem;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  color: var(--d-body);
+  white-space: nowrap;
+}
+
+.status svg {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+}
+
+.status--ok svg {
+  color: #4fc28a;
+}
+
+.status--error {
+  color: #ff7a8f;
+  font-weight: 500;
+}
+
+.status--button {
+  min-height: 2rem;
+  margin-left: -0.5rem;
+  padding: 0 0.5rem;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.status--button:hover,
+.status--button:active {
+  background: rgba(255, 122, 143, 0.12);
+}
+
+.status--button:focus-visible {
+  outline: 2px solid var(--d-link);
+  outline-offset: 1px;
+}
+
+.status__where {
+  font-weight: 400;
+}
+
+.status__ms {
+  color: var(--d-mute);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.spin {
+  animation: sv-spin 0.9s linear infinite;
+}
+
+@keyframes sv-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}
+
+/* ── Panels ──────────────────────────────────────────────────────────── */
+
+.sv__panel {
+  min-width: 0;
+}
+
+.sv__panel[hidden],
+.sv__chart[hidden] {
+  display: none;
+}
+
+.results,
+.reference {
+  display: grid;
+  gap: 2rem;
+}
+
+.results__section {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+/* Section headings in sentence case (heading-md). */
+.results__heading {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.results__heading svg {
+  width: 1rem;
+  height: 1rem;
+  color: var(--warning);
+}
+
+.results__empty {
+  margin: 0;
+  padding: 1.25rem;
+  border: 1px dashed var(--control);
+  border-radius: 8px;
+  color: var(--body);
+}
+
+/* Problems: one line each, the line number in the warning colour. */
+.problems {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.problems li + li {
+  border-top: 1px solid var(--hairline);
+}
+
+.problems button {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  /* The hover fill reaches past the text, which stays on the panel's edge. */
+  width: calc(100% + 1rem);
+  margin-inline: -0.5rem;
+  padding: 0.6rem 0.5rem;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--ink);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.problems button:hover {
+  background: var(--soft);
+}
+
+.problems button:focus-visible {
+  outline: 2px solid var(--ps-blue);
+  outline-offset: -2px;
+}
+
+.problems__where {
+  flex: none;
+  min-width: 3.5rem;
+  color: var(--warning);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Outputs: the first print is the answer, the rest beside it. */
+.outputs {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem 2.5rem;
+}
+
+.outputs > div {
+  min-width: 0;
+}
+
+.outputs dt {
+  font-size: 0.875rem;
+  color: var(--mute);
+  overflow-wrap: anywhere;
+}
+
+.outputs dd {
+  margin: 0.15rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 400;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.outputs__lead {
+  flex-basis: 100%;
+}
+
+.outputs__lead dd {
+  font-size: 2.25rem;
+  font-weight: 300;
+  letter-spacing: -0.1px;
+  color: var(--ps-blue);
+}
+
+.outputs .is-error dd {
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--warning);
+}
+
+/* States: rules and alignment, figures right-aligned and tabular. */
+.states-table {
+  overflow-x: auto;
+}
+
+.states-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.states-table th,
+.states-table td {
+  padding: 0.6rem 0.4rem;
+  border-bottom: 1px solid var(--hairline);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.states-table th:first-child,
+.states-table td:first-child {
+  padding-left: 0;
+  text-align: left;
+}
+
+.states-table th:last-child,
+.states-table td:last-child {
+  padding-right: 0;
+}
+
+.states-table thead th {
+  padding-top: 0;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--mute);
+  border-bottom-color: #d4d4d4;
+}
+
+.states-table tbody tr:last-child > * {
+  border-bottom: none;
+}
+
+.states-table tbody th {
+  font-weight: 400;
+}
+
+.states-table__name {
+  font-weight: 600;
+}
+
+/* How it was fixed gives way (to an ellipsis, in full on hover), never
+   the figures. */
+.states-table__how {
+  display: inline-block;
+  max-width: 9.5rem;
+  margin-left: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  color: var(--mute);
+  font-size: 0.75rem;
+}
+
+.states-table .is-error {
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--warning);
+  text-align: left;
+}
+
+.unit {
+  color: var(--mute);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.state-cards {
+  display: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.state-cards li {
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.state-cards li:first-child {
+  padding-top: 0;
+}
+
+.state-cards li:last-child {
+  border-bottom: none;
+}
+
+.state-cards header {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.6rem;
+  font-size: 0.8125rem;
+  color: var(--mute);
+}
+
+.state-cards__name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.state-cards dl {
+  margin: 0.5rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.3rem 1.25rem;
+}
+
+.state-cards dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.state-cards dt {
+  color: var(--mute);
+}
+
+.state-cards dd {
+  margin: 0;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.state-cards .is-error p {
+  margin: 0.4rem 0 0;
+  color: var(--warning);
+  font-size: 0.875rem;
+}
+
+@media (max-width: 640px) {
+  .states-table {
+    display: none;
+  }
+
+  .state-cards {
+    display: grid;
+  }
+}
+
+/* Values: one list, the name left and the value right. */
+.variables {
+  margin: 0;
+  display: grid;
+}
+
+.variables > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--hairline);
+  min-width: 0;
+}
+
+.variables > div:last-child {
+  border-bottom: none;
+}
+
+.variables dt {
+  min-width: 0;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.variables dd {
+  margin: 0;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.variables .is-error dd {
+  max-width: 70%;
+  color: var(--warning);
+  text-align: right;
+}
+
+/* ── Chart (the shared ThermoPlot, in this screen's look) ─────────────── */
+
+/* Flat on the canvas, the controls and the download on one row, the plot
+   taking the rest. */
+.sv .plot-card {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem 1rem;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.sv .plot-controls {
+  grid-column: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.sv .plot-controls .control {
+  flex: 1 1 7.5rem;
+  min-width: 0;
+}
+
+.sv .plot-controls .control:has(#plot-type) {
+  flex: 2 1 11rem;
+}
+
+.sv .plot-actions {
+  grid-column: 2;
+  align-self: end;
+  margin: 0;
+}
+
+.sv .plot-card > :not(.plot-controls, .plot-actions) {
+  grid-column: 1 / -1;
+}
+
+.sv .plot-controls .control {
+  gap: 0.3rem;
+}
+
+.sv .plot-controls label {
+  font-size: 0.75rem;
+  color: var(--mute);
+}
+
+/* Fields: 4px, a 1px ash edge, a 2px blue one when focused (text-input). */
+.sv .plot-controls select {
+  appearance: none;
+  width: 100%;
+  min-height: 2.25rem;
+  padding: 0 1.9rem 0 0.6rem;
+  border-radius: 4px;
+  border: 1px solid var(--control);
+  /* Its own chevron, with room kept for it: the text never runs under. */
+  background: #ffffff
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+    no-repeat right 0.65rem center;
+  color: var(--ink);
+  font-size: 0.875rem;
+  text-overflow: ellipsis;
+}
+
+.sv .plot-controls select:hover {
+  border-color: #9a9a9a;
+}
+
+.sv .plot-controls select:focus-visible {
+  border-color: var(--ps-blue);
+  outline: 1px solid var(--ps-blue);
+  outline-offset: 0;
+}
+
+.sv .plot-actions .app-button {
+  min-height: 2.25rem;
+  padding: 0 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--control);
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.sv .plot-actions .app-button:hover {
+  background: var(--soft);
+}
+
+.sv .plot-wrapper,
+.sv .plot-wrapper.is-ready {
+  border: none;
+  border-radius: 0;
+  background: #ffffff;
+  min-height: clamp(320px, 62vh, 640px);
+}
+
+@media (max-width: 480px) {
+  .sv .plot-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sv .plot-actions {
+    grid-column: 1;
+    justify-self: start;
+  }
+}
+
+/* ── Reference ───────────────────────────────────────────────────────── */
+
+.reference section {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.reference p {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--body);
+}
+
+.reference__code {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  background: var(--d-canvas);
+  color: var(--d-text);
+  font: 0.8125rem/1.7 var(--mono);
+  overflow-x: auto;
+}
+
+.reference__list,
+.reference__grid {
+  margin: 0;
+  display: grid;
+}
+
+.reference__list {
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0.5rem 1.5rem;
+}
+
+.reference__grid {
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: 0.5rem 1.5rem;
+}
+
+/* The pairs take the list's two columns: one edge for every description. */
+.reference__list > div {
+  display: contents;
+}
+
+.reference__grid > div {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.reference__list dt,
+.reference__list dd,
+.reference__grid > div {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.reference__list dd,
+.reference__grid dd {
+  margin: 0;
+  color: var(--body);
+}
+
+@media (max-width: 640px) {
+  .reference__list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.1rem;
+  }
+
+  .reference__list dd {
+    margin-bottom: 0.6rem;
+  }
+}
+
+.reference__units {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.reference__units code,
+.reference kbd {
+  padding: 0.1rem 0.5rem;
+  border-radius: 4px;
+  background: var(--soft);
+  color: var(--ink);
+}
+
+@media (pointer: coarse) {
+  .reference__shortcuts {
+    display: none !important;
+  }
+}
+
+/* ── Hover cards (inside the editor's tooltip) ───────────────────────── */
+
+.script-hover {
+  min-width: 11rem;
+  max-width: 19rem;
+  font-family: "Inter Variable", Inter, system-ui, sans-serif;
+  font-size: 0.8125rem;
+  color: var(--d-text);
+}
+
+.script-hover__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid var(--d-hair);
+}
+
+.script-hover__sub {
+  color: var(--d-mute);
+  font-size: 0.75rem;
+}
+
+.script-hover__body {
+  padding: 0.55rem 0.8rem;
+}
+
+.script-hover__body p {
+  margin: 0;
+}
+
+.script-hover__value {
+  font-size: 1rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.script-hover__error {
+  color: #ff7a8f;
+}
+
+.script-hover__grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.15rem 0.75rem;
+  margin: 0 0 0.35rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.script-hover__grid dt {
+  color: var(--d-mute);
+}
+
+.script-hover__grid dd {
+  margin: 0;
+  text-align: right;
+}
+
+/* ── Keypad (touch screens, while editing) ─────────────────────────── */
+
+/* Phones: the keypad is fixed at the bottom of the screen, over the page,
+   which stays where it is (the system keyboard never opens, so a fixed bar
+   stays put). */
+.sv__code.is-flow .keypad {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+}
+
+.keypad {
+  flex: none;
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.35rem 0.3rem calc(0.35rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--d-hair);
+  background: var(--d-canvas);
+  color: var(--d-text);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Suggestions, then undo and close, always in reach. */
+.keypad__top {
+  display: flex;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.keypad__top .keypad__suggestions {
+  flex: 1;
+  min-width: 0;
+}
+
+.keypad__side {
+  flex: none;
+  width: 2.75rem;
+  height: 2.5rem;
+}
+
+.keypad__suggestions {
+  display: flex;
+  gap: 0.3rem;
+  min-height: 2.5rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+
+.keypad__suggestions::-webkit-scrollbar {
+  display: none;
+}
+
+.keypad__hint {
+  align-self: center;
+  padding: 0 0.5rem;
+  color: var(--d-mute);
+  font-size: 0.8125rem;
+}
+
+.keypad__chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--d-key);
+  color: var(--d-text);
+  touch-action: pan-x;
+}
+
+.keypad__chip-label {
+  font: 600 1rem var(--mono);
+}
+
+.keypad__chip-detail {
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--d-mute);
+  font-size: 0.75rem;
+}
+
+.keypad__grid {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.keypad--123 .keypad__grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.keypad--abc .keypad__grid {
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 0.3rem 0.22rem;
+}
+
+.keypad__key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  height: 2.75rem;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: var(--d-key);
+  color: var(--d-text);
+  font: 500 1.15rem var(--mono);
+  touch-action: manipulation;
+}
+
+.keypad--abc .keypad__key {
+  font-size: 1.05rem;
+}
+
+.keypad__key svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.keypad__key--fn {
+  background: var(--d-fn);
+  font:
+    700 0.8125rem "Inter Variable",
+    Inter,
+    system-ui,
+    sans-serif;
+  letter-spacing: 0.3px;
+}
+
+/* Close: the keypad's way out, inverted rather than coloured. */
+.keypad__key--accent {
+  background: var(--d-text);
+  color: var(--ink);
+}
+
+.keypad__key.is-on {
+  background: var(--d-text);
+  color: var(--ink);
+}
+
+.keypad__chip:active,
+.keypad__key:active {
+  background: #45464c;
+}
+
+.keypad__key--accent:active,
+.keypad__key.is-on:active {
+  background: #cccccc;
+}
+
+/* The space bar as a trackpad: the finger slides over it (no page scroll),
+   and the other keys step back while it does. */
+.keypad__space {
+  touch-action: none;
+}
+
+.keypad {
+  position: relative;
+  /* Comes up from below, as a phone's keyboard does. */
+  /* Same duration and curve as the page lifting the line (motion.ts). */
+  animation: keypad-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes keypad-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .keypad {
+    animation: none;
+  }
+}
+
+.keypad.is-trackpad .keypad__grid .keypad__key:not(.keypad__space),
+.keypad.is-trackpad .keypad__top {
+  opacity: 0.25;
+}
+
+.keypad.is-trackpad .keypad__space {
+  background: var(--ps-blue);
+  color: #fff;
+}
+
+.keypad__trackpad-hint {
+  position: absolute;
+  left: 50%;
+  top: 3.2rem;
+  transform: translateX(-50%);
+  z-index: 1;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  background: var(--d-text);
+  color: var(--ink);
+  font-size: 0.8125rem;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Tablets (touch, two columns): the code's column is part of the page too
+   (not a sticky box with a scroller of its own), so the page scrolls it, as
+   on a phone; the keypad spans that column (left and width set inline).
+   Keys need not stretch across a wide screen. */
+.is-wide .sv__code.is-flow {
+  position: static;
+  height: auto;
+  max-height: none;
+}
+
+.is-wide .sv__code.is-flow .keypad {
+  right: auto;
+}
+.is-wide .keypad__grid {
+  max-width: 44rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ── Diagnostics (?debug=1) ──────────────────────────────────────────── */
+
+.debug-hud {
+  position: fixed;
+  top: env(safe-area-inset-top);
+  right: 0;
+  z-index: 2147483647;
+  max-width: 62vw;
+  padding: 0.3rem 0.45rem;
+  border-bottom-left-radius: 0.5rem;
+  background: rgba(0, 0, 0, 0.82);
+  color: #4ade80;
+  font:
+    10px/1.35 ui-monospace,
+    Menlo,
+    monospace;
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.debug-hud__events {
+  margin-top: 0.2rem;
+  padding-top: 0.2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  color: #e5e7eb;
+}
+
+/* Short screens (a phone on its side, an iPhone SE): a compact keypad, so
+   lines of code still show above it. */
+@media (max-height: 500px), (max-height: 700px) and (max-width: 400px) {
+  .keypad {
+    gap: 0.22rem;
+    padding-top: 0.25rem;
+  }
+
+  .keypad__suggestions,
+  .keypad__chip,
+  .keypad__side {
+    min-height: 0;
+    height: 2.1rem;
+  }
+
+  .keypad__grid {
+    gap: 0.22rem;
+  }
+
+  .keypad__key {
+    height: 2.25rem;
+  }
+}
+
+@media (max-height: 500px) {
+  .keypad__key {
+    height: 1.95rem;
+    font-size: 1rem;
+  }
+}

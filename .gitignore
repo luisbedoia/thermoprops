@@ -47,3 +47,5 @@ yarn-error.log*
 Dockerfile
 Comportamiento:.md
 dist/
+
+.taste-skill/

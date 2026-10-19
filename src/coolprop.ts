@@ -5,18 +5,30 @@ import {
 } from "@luisbedoia/coolprop-rs-wasm";
 
 let instance: CoolPropWorker | null = null;
+let loading: Promise<CoolPropWorker> | null = null;
 
 /**
  * Starts CoolProp in a Web Worker, so solving never blocks the page. Later
  * calls return the same instance.
  */
-export async function initCoolProp(): Promise<CoolPropWorker> {
-  instance ??= await loadCoolPropWorker();
-  return instance;
+export function initCoolProp(): Promise<CoolPropWorker> {
+  if (instance) return Promise.resolve(instance);
+  loading ??= loadCoolPropWorker().then(
+    (cp) => (instance = cp),
+    (error: unknown) => {
+      loading = null;
+      throw error;
+    },
+  );
+  return loading;
 }
 
+/** Whether the module is loaded, so `coolprop()` answers. */
+export const isCoolPropLoaded = () => instance !== null;
+
 /**
- * The loaded module. The app renders only after `initCoolProp` resolves.
+ * The loaded module. The pages that use it render only once `initCoolProp`
+ * resolves (see `CoolPropGate`).
  * Catalogs and schema answer synchronously; solving returns promises.
  */
 export function coolprop(): CoolPropWorker {

@@ -249,10 +249,12 @@ describe("ThermoPlot", () => {
         (plotlyMocks.react.mock.calls[call][2] as { uirevision: string })
           .uirevision;
       expect(revision(1)).not.toBe(revision(0));
+      // A new chart, so "Reset axes" returns to these axes' ranges.
+      expect(plotlyMocks.purge).toHaveBeenCalledTimes(1);
     });
 
     it("ignores the answer to a request it no longer needs", async () => {
-      let answerLate: () => void = () => {};
+      let answerLate: (() => void) | undefined;
       const original = fake.workerFluid.getMockImplementation()!;
       // The first diagram (p–h) is held back until after the second (T–s).
       fake.workerFluid.mockImplementationOnce(async (name: string) => {
@@ -274,8 +276,15 @@ describe("ThermoPlot", () => {
         onPlotError,
       };
       rerender(<ThermoPlot {...props} points={[]} />);
+      // One diagram at a time: T–s waits for the held p–h, which is not shown.
+      await waitFor(() => expect(answerLate).toBeDefined());
+      await act(async () => answerLate!());
       await waitForSuccess(onPlotError);
-      await act(async () => answerLate());
+      const calls = plotlyMocks.react.mock.calls;
+      const layout = calls[calls.length - 1][2] as {
+        title: { text: string };
+      };
+      expect(layout.title.text).toContain("T–s");
 
       // The chart keeps following the current diagram: new states still
       // reach it.
@@ -289,6 +298,48 @@ describe("ThermoPlot", () => {
           text: ["State 1"],
         }),
       );
+    });
+
+    it("solves only the newest of the changes made while it is busy", async () => {
+      let release: () => void = () => {};
+      const original = fake.workerFluid.getMockImplementation()!;
+      const solved: string[] = [];
+      fake.workerFluid.mockImplementation(async (name: string) => {
+        const f = await original(name);
+        return {
+          ...f,
+          diagram: (request) => {
+            solved.push(request.diagram);
+            // The first is held back, the others answer at once.
+            return solved.length === 1
+              ? new Promise((resolve) => {
+                  release = () => resolve(fakeDiagram(request));
+                })
+              : Promise.resolve(fakeDiagram(request));
+          },
+        };
+      });
+      const onPlotError = vi.fn();
+      const { rerender } = renderPlot({ onPlotError });
+      await waitFor(() => expect(solved).toHaveLength(1));
+      for (const id of [
+        "temperature_entropy",
+        "enthalpy_entropy",
+        "pressure_temperature",
+      ])
+        rerender(
+          <ThermoPlot
+            fluid="Water"
+            diagram={diagram(id)}
+            isolineKind={diagram(id).isolines[0]}
+            onPlotError={onPlotError}
+            points={[]}
+          />,
+        );
+      await act(async () => release());
+      await waitForSuccess(onPlotError);
+      expect(solved).toEqual(["pressure_enthalpy", "pressure_temperature"]);
+      fake.workerFluid.mockImplementation(original);
     });
 
     it("uses the diagram's axis scales", async () => {

@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { ArrowRight } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { clearExplorer, explorerSummary, savedExplorer } from "./lib/sessions";
 import { coolprop, fluidData } from "./coolprop";
 import { resolveUnitSystem } from "./lib/units";
 import "./Input.css";
@@ -78,8 +79,28 @@ export function SettingsView() {
     [formState.fluid],
   );
 
+  // The last session in this browser, to pick up where it was left.
+  const [resume] = useState(() => {
+    const search = savedExplorer();
+    const summary = search && explorerSummary(search);
+    return search && summary ? { search, summary } : null;
+  });
+  // Opening the workspace without states starts again: the saved session
+  // goes, once the user agrees.
+  const startsAgain = resume !== null && !statesParam;
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (startsAgain) {
+      if (
+        !window.confirm(
+          `Start a new workspace? Your saved states (${resume.summary}) will be removed. This cannot be undone.`,
+        )
+      ) {
+        return;
+      }
+      clearExplorer();
+    }
     const next = new URLSearchParams();
     next.set("fluid", formState.fluid);
     next.set("units", formState.units);
@@ -127,8 +148,22 @@ export function SettingsView() {
     <section className="settings">
       <form className="settings__form" onSubmit={handleSubmit}>
         <header className="settings__header">
-          <h1>Settings</h1>
+          <h1>State Explorer</h1>
         </header>
+        {startsAgain && (
+          <div className="settings__resume">
+            <p>You have a workspace saved in this browser.</p>
+            <Link
+              className="settings__resume-link"
+              to={{ pathname: "/workspace", search: resume.search }}
+            >
+              Continue with {resume.summary} <ArrowRight aria-hidden="true" />
+            </Link>
+            <p className="settings__resume-or">
+              Or choose a fluid and units below to start a new one.
+            </p>
+          </div>
+        )}
         <div className="settings__fields">
           <div className="field">
             <label htmlFor="fluid">Working fluid</label>
@@ -204,7 +239,7 @@ export function SettingsView() {
 
         <div className="settings__actions">
           <Button type="submit">
-            Continue to workspace
+            {startsAgain ? "Start a new workspace" : "Continue to workspace"}
             <ArrowRight />
           </Button>
         </div>

@@ -24,6 +24,39 @@
   font-size: 1.15rem;
   font-weight: 600;
   letter-spacing: 0.01em;
+  color: inherit;
+  text-decoration: none;
+}
+
+.brand-title:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Hidden until focused: the keyboard's way past the header. */
+.skip-link {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 20;
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  background: #0070d1;
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus-visible {
+  transform: none;
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.app-main:focus {
+  outline: none;
 }
 
 .app-main {
@@ -142,31 +175,4 @@
 .app-footer a:hover,
 .about-modal__body a:hover {
   color: var(--text-primary);
-}
-
-.static-intro {
-  display: grid;
-  gap: 0.75rem;
-  max-width: 720px;
-}
-
-.static-intro h1 {
-  margin: 0;
-  font-size: clamp(1.4rem, 1.2vw + 1.1rem, 1.9rem);
-  line-height: 1.25;
-}
-
-.static-intro p,
-.static-intro ul {
-  margin: 0;
-  color: var(--text-muted);
-}
-
-.static-intro ul {
-  padding-left: 1.2rem;
-}
-
-.static-loader {
-  color: var(--text-secondary);
-  font-weight: 500;
 }

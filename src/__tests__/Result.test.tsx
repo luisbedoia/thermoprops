@@ -59,7 +59,7 @@ function renderWorkspace(params = "fluid=Water&units=kelvin&view=table") {
       <CaptureNavigate />
       <Routes>
         <Route path="/workspace" element={<WorkspaceView />} />
-        <Route path="/" element={<div data-testid="settings-page" />} />
+        <Route path="/explorer" element={<div data-testid="settings-page" />} />
       </Routes>
     </MemoryRouter>,
   );
@@ -684,9 +684,10 @@ describe("WorkspaceView", () => {
   // ── Clear all ──────────────────────────────────────────────────────────────
 
   describe("back to settings", () => {
-    it("asks before discarding the tracked states, and stays when cancelled", () => {
-      const confirm = vi.fn().mockReturnValue(false);
+    it("keeps the tracked states to continue, without asking", async () => {
+      const confirm = vi.fn();
       vi.stubGlobal("confirm", confirm);
+      localStorage.clear();
       const states = [makeState(), makeState({ id: "s2", label: "State 2" })];
       renderWorkspace(
         `fluid=Water&units=kelvin&view=table&states=${encodeStates(states)}`,
@@ -696,14 +697,18 @@ describe("WorkspaceView", () => {
         screen.getByRole("button", { name: /back to settings/i }),
       );
 
-      expect(confirm).toHaveBeenCalledWith(
-        expect.stringMatching(/discards the 2 tracked states/),
+      await waitFor(() =>
+        expect(screen.getByTestId("settings-page")).toBeInTheDocument(),
       );
-      expect(screen.queryByTestId("settings-page")).not.toBeInTheDocument();
-      expect(screen.getAllByText("State 2").length).toBeGreaterThan(0);
+      expect(confirm).not.toHaveBeenCalled();
+      const saved = new URLSearchParams(
+        localStorage.getItem("thermoprops.explorer") ?? "",
+      );
+      expect(saved.get("fluid")).toBe("Water");
+      expect(saved.get("states")).toBe(encodeStates(states));
     });
 
-    it("goes to the settings once confirmed", async () => {
+    it("goes to the settings", async () => {
       vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
       renderWorkspace(
         `fluid=Water&units=kelvin&view=table&states=${encodeStates([makeState()])}`,

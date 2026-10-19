@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="theme-color" content="#ffffff" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual"
@@ -45,7 +46,7 @@
     <meta property="og:image:height" content="630" />
     <meta
       property="og:image:alt"
-      content="Thermoprops – thermodynamic properties of fluids and refrigerants"
+      content="Thermoprops: thermodynamic states, worked out. An R134a refrigeration cycle on a T–s chart, with its COP of 2.72."
     />
     <meta property="og:locale" content="en_US" />
 
@@ -62,6 +63,10 @@
     <meta
       name="twitter:image"
       content="https://luisbedoia.github.io/thermoprops/og-image.png"
+    />
+    <meta
+      name="twitter:image:alt"
+      content="Thermoprops: thermodynamic states, worked out. An R134a refrigeration cycle on a T–s chart, with its COP of 2.72."
     />
 
     <!-- JSON-LD Structured Data -->
@@ -107,54 +112,11 @@
     </script>
   </head>
   <body>
-    <div id="root">
-      <!-- Static shell: shown while CoolProp WASM loads and readable without JS. React replaces it. -->
-      <div class="app-shell">
-        <header class="app-header">
-          <span class="brand-title">Thermoprops</span>
-        </header>
-        <main class="app-main">
-          <section class="static-intro">
-            <h1>
-              Thermodynamic properties calculator for fluids and refrigerants
-            </h1>
-            <p>
-              Thermoprops is a free online calculator powered by CoolProp. Pick
-              a fluid, fix two independent properties and get the full
-              thermodynamic state: temperature, pressure, density, enthalpy,
-              entropy, internal energy, quality and more.
-            </p>
-            <ul>
-              <li>
-                30 common fluids and refrigerants: water, air, ammonia, CO₂,
-                nitrogen, R134a, R410A, R32, R1234yf, propane…
-              </li>
-              <li>SI and imperial units, with temperature in °C, K or °F.</li>
-              <li>
-                p–h, T–s, h–s, p–v, T–v and p–T diagrams with saturation curves,
-                isolines and all your states plotted together.
-              </li>
-              <li>Shareable links that keep your fluid, units and states.</li>
-            </ul>
-            <p class="static-loader" role="status">Loading calculator…</p>
-            <noscript
-              ><p>
-                Thermoprops needs JavaScript and WebAssembly to run.
-              </p></noscript
-            >
-          </section>
-        </main>
-        <footer class="app-footer">
-          <span
-            >Properties by <a href="https://coolprop.org">CoolProp</a> ·
-            WebAssembly via
-            <a href="https://github.com/luisbedoia/coolprop-rs"
-              >coolprop-rs</a
-            ></span
-          >
-        </footer>
-      </div>
-    </div>
+    <!-- Each page's HTML is rendered into #root at build time (scripts/postbuild.mjs). -->
+    <div id="root"></div>
+    <noscript>
+      <p>Thermoprops needs JavaScript and WebAssembly to run.</p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -1,25 +1,22 @@
 import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, hydrateRoot } from "react-dom/client";
+import "@fontsource-variable/inter";
 import "./index.css";
 import "./layout/AppLayout.css";
 import App from "./App.tsx";
 import { initCoolProp } from "./coolprop";
 
-// The static shell in index.html stays on screen (and visible to crawlers)
-// until CoolProp is ready; only then does React take over #root.
-const root = createRoot(document.getElementById("root")!);
+// CoolProp starts loading at once; the pages that compute wait for it.
+void initCoolProp().catch(() => {});
 
-initCoolProp()
-  .then(() => {
-    root.render(
-      <StrictMode>
-        <App />
-      </StrictMode>,
-    );
-  })
-  .catch((error) => {
-    console.error("Error loading library", error);
-    root.render(
-      <div className="app-loader error">Unable to load CoolProp module.</div>,
-    );
-  });
+const root = document.getElementById("root")!;
+const app = (
+  <StrictMode>
+    <App />
+  </StrictMode>
+);
+
+// A built page (src/prerender.tsx) is taken over as it is, so nothing on
+// screen changes or starts again; the dev server's page is empty.
+if (root.firstElementChild) hydrateRoot(root, app);
+else createRoot(root).render(app);

@@ -15,6 +15,7 @@
   --accent-subtle: rgba(37, 99, 235, 0.16);
   --accent-text: #1d4ed8;
   font-family:
+    "Inter Variable",
     "Inter",
     system-ui,
     -apple-system,
@@ -72,15 +73,24 @@ select:not([multiple]):not([size]) {
   padding-right: 2.4em;
 }
 
+/* In the page's main area, while CoolProp loads. */
 .app-loader {
-  min-height: 100dvh;
+  min-height: 50vh;
+  margin: 0;
   display: grid;
   place-items: center;
   font-size: 1.1rem;
-  background: var(--surface-soft);
   color: var(--text-secondary);
 }
 
 .app-loader.error {
   color: #b91c1c;
+}
+
+/* Without JavaScript the built page still reads; this says why it cannot compute. */
+body > noscript p {
+  margin: 0;
+  padding: 1rem;
+  text-align: center;
+  color: var(--text-muted);
 }

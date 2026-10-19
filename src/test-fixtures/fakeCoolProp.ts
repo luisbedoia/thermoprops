@@ -138,6 +138,7 @@ export function fakeCoolProp() {
       name: f.name,
       data: f.data,
       critical: f.critical,
+      reference: "DEF",
       state: async (inputs) => fluid(name).state(inputs),
       states: async (inputs) =>
         inputs.map((i) => {

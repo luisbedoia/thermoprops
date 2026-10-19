@@ -14,6 +14,8 @@ import {
   diagramLabel,
   diagramOptionLabel,
   viewRange,
+  buildPathArrows,
+  buildPathTraces,
 } from "../plotUtils";
 import { setCoolProp } from "../../coolprop";
 import { fakeCoolProp } from "../../test-fixtures/fakeCoolProp";
@@ -138,6 +140,139 @@ describe("buildIsolineTraces", () => {
       "kelvin",
     );
     expect(trace.name).toBe("T 373.2 K");
+  });
+});
+
+describe("buildPathTraces", () => {
+  const arrows = (traces: Record<string, unknown>[]) =>
+    traces.filter(
+      (t) => t.mode === "markers" && (t.x as number[]).length > 0,
+    ) as {
+      x: number[];
+      y: number[];
+      marker: { symbol: string; angleref: string };
+    }[];
+
+  it("puts an arrow halfway along each leg, aimed the way it goes", () => {
+    const traces = buildPathTraces(
+      [
+        { label: "1 → 2", kind: "process", x: [0, 1, 2, 4], y: [0, 0, 0, 0] },
+        { label: "2 → 1", kind: "line", x: [4, 0], y: [5, 5] },
+      ],
+      "enthalpy",
+      "temperature",
+      "kelvin",
+    );
+    expect(traces.filter((t) => t.mode === "lines")).toHaveLength(2);
+    const [a, b] = arrows(traces);
+    expect(a.marker).toMatchObject({ symbol: "arrow", angleref: "previous" });
+    // h is shown in kJ/kg: halfway along 0 → 4 J/kg is 2 J/kg.
+    expect(a.x[1]).toBeCloseTo(0.002, 9);
+    expect(a.x[0]).toBeLessThan(a.x[1]);
+    // Backwards: the arrow's previous point is to its right.
+    expect(b.x[1]).toBeCloseTo(0.002, 9);
+    expect(b.x[0]).toBeGreaterThan(b.x[1]);
+  });
+
+  it("gives no arrow to a leg too short to see", () => {
+    // A pump on T–s: 0.04 K next to a 300 K boiler leg.
+    const traces = buildPathTraces(
+      [
+        { label: "1 → 2", kind: "process", x: [649, 649], y: [319, 319.04] },
+        { label: "2 → 3", kind: "process", x: [649, 7000], y: [319.04, 619] },
+      ],
+      "entropy",
+      "temperature",
+      "kelvin",
+    );
+    expect(traces.filter((t) => t.mode === "lines")).toHaveLength(2);
+    expect(arrows(traces)).toHaveLength(1);
+  });
+
+  it("gives a short leg its arrow when zoomed in on", () => {
+    const pump = {
+      label: "1 → 2",
+      kind: "process" as const,
+      x: [649, 649.0000001, 649],
+      y: [319, 319.02, 319.04],
+    };
+    const legs = [
+      pump,
+      {
+        label: "2 → 3",
+        kind: "process" as const,
+        x: [649, 7000],
+        y: [319.04, 619],
+      },
+    ];
+    expect(
+      buildPathArrows(legs, "entropy", "temperature", "kelvin")[0].x,
+    ).toEqual([]);
+    // Zoomed on the pump: 0.649 kJ/(kg·K) ± a bit, 319–319.04 K.
+    const [arrow] = buildPathArrows(
+      legs,
+      "entropy",
+      "temperature",
+      "kelvin",
+      undefined,
+      {
+        x: [0.6489, 0.6491],
+        y: [318.99, 319.05],
+      },
+    );
+    expect(arrow.y[1]).toBeCloseTo(319.02, 6);
+    // Up, whatever the noise across: the tail is below the tip.
+    expect(arrow.y[0]).toBeLessThan(arrow.y[1]);
+    expect(Math.abs(arrow.x[0] - arrow.x[1])).toBeLessThan(1e-6);
+  });
+
+  it("puts the arrow on the visible part of a leg", () => {
+    const leg = {
+      label: "",
+      kind: "line" as const,
+      x: [0, 10000],
+      y: [300, 300],
+    };
+    // Only h in 0–2 kJ/kg is in view: halfway of that is 1 kJ/kg.
+    const [arrow] = buildPathArrows(
+      [leg],
+      "enthalpy",
+      "temperature",
+      "kelvin",
+      undefined,
+      {
+        x: [0, 2],
+        y: [200, 400],
+      },
+    );
+    expect(arrow.x[1]).toBeCloseTo(1, 6);
+    // Out of view, none.
+    const [none] = buildPathArrows(
+      [leg],
+      "enthalpy",
+      "temperature",
+      "kelvin",
+      undefined,
+      {
+        x: [20, 30],
+        y: [200, 400],
+      },
+    );
+    expect(none.x).toEqual([]);
+  });
+
+  it("measures halfway as a log axis shows it", () => {
+    const [a] = arrows(
+      buildPathTraces(
+        [{ label: "", kind: "line", x: [1e3, 1e3], y: [1e3, 1e5] }],
+        "enthalpy",
+        "pressure",
+        "kelvin",
+        { x: "linear", y: "log" },
+      ),
+    );
+    // 1 → 100 kPa on a log axis: halfway is 10 kPa, not 50.5.
+    expect(a.y[1]).toBeCloseTo(10, 6);
   });
 });
 

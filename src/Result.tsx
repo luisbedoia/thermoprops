@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ChartLine, Table2, X } from "lucide-react";
 import type { FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { clearExplorer, saveExplorer } from "./lib/sessions";
 import type { StateInputs } from "@luisbedoia/coolprop-rs-wasm";
 import { resolveUnitSystem, toSI } from "./lib/units";
 import { validityError } from "./lib/validity";
@@ -142,9 +143,24 @@ export function WorkspaceView() {
 
   useEffect(() => {
     if (!fluid) {
-      navigate("/", { replace: true });
+      navigate("/explorer", { replace: true });
     }
   }, [fluid, navigate]);
+
+  // Kept in this browser while it has states, so leaving never loses them
+  // (the settings and the landing page offer to continue).
+  // A session emptied here (state by state, or all at once) is cleared; one
+  // opened empty (a new session from the settings) leaves the last alone.
+  const { search } = useLocation();
+  const hadStates = useRef(false);
+  useEffect(() => {
+    if (fluid && states.length > 0) {
+      saveExplorer(search);
+      hadStates.current = true;
+    } else if (hadStates.current) {
+      clearExplorer();
+    }
+  }, [fluid, states.length, search]);
 
   const handlePlotError = useCallback(
     (failed: boolean) => setPlotFailedFor(failed ? fluid : null),
@@ -272,7 +288,11 @@ export function WorkspaceView() {
     [setStates],
   );
 
-  const handleClearAll = useCallback(() => setStates([]), [setStates]);
+  // Clearing is meant: nothing is left to continue.
+  const handleClearAll = useCallback(() => {
+    setStates([]);
+    clearExplorer();
+  }, [setStates]);
 
   // ── View / plot handlers ───────────────────────────────────────────────────
 
@@ -284,24 +304,13 @@ export function WorkspaceView() {
   );
 
   const handleNavigateBack = useCallback(() => {
-    // The settings page starts a new session: the tracked states stay behind.
-    if (
-      states.length > 0 &&
-      !window.confirm(
-        `Going back to settings discards the ${
-          states.length === 1
-            ? "tracked state"
-            : `${states.length} tracked states`
-        }. Continue?`,
-      )
-    ) {
-      return;
-    }
+    // The tracked states are kept (see above): the settings page offers to
+    // continue with them.
     const params = new URLSearchParams();
     params.set("fluid", fluid);
     params.set("units", units);
-    navigate({ pathname: "/", search: `?${params.toString()}` });
-  }, [navigate, fluid, units, states.length]);
+    navigate({ pathname: "/explorer", search: `?${params.toString()}` });
+  }, [navigate, fluid, units]);
 
   // ── Form property handlers ─────────────────────────────────────────────────
 
