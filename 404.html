@@ -3,6 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="theme-color" content="#ffffff" />
+    <script>
+      // The installed app opens on its home, not on the website's landing:
+      // before the first paint, so the landing is never seen there. Keep in
+      // step with src/lib/installed.ts. (Apps installed before /home existed
+      // still start at the landing's address.)
+      if (
+        /^\/thermoprops\/?$/.test(location.pathname) &&
+        (matchMedia(
+          "(display-mode: standalone), (display-mode: minimal-ui), (display-mode: fullscreen), (display-mode: window-controls-overlay)",
+        ).matches ||
+          navigator.standalone === true)
+      ) {
+        location.replace("/thermoprops/home/" + location.search);
+      }
+    </script>
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual"
@@ -111,9 +126,9 @@
       gtag("js", new Date());
       gtag("config", "G-R76PJHB69S");
     </script>
-    <script type="module" crossorigin src="/thermoprops/assets/index-BUWMVTuq.js"></script>
+    <script type="module" crossorigin src="/thermoprops/assets/index-QTJwvVTl.js"></script>
     <link rel="modulepreload" crossorigin href="/thermoprops/assets/rolldown-runtime-CbXtAM7H.js">
-    <link rel="stylesheet" crossorigin href="/thermoprops/assets/index-BbDiQED5.css">
+    <link rel="stylesheet" crossorigin href="/thermoprops/assets/index-b4-7hkww.css">
   <link rel="manifest" href="/thermoprops/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/thermoprops/registerSW.js" defer></script>
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="/thermoprops/favicon.ico" sizes="48x48">
