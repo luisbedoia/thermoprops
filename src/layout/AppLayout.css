@@ -85,6 +85,14 @@
   font-size: 0.75rem;
 }
 
+.app-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* The language switcher looks like About, its neighbour. */
+.locale-button,
 .about-button {
   border: 1px solid var(--border-soft);
   background: var(--surface-soft);
@@ -98,6 +106,8 @@
     border-color 0.2s ease;
 }
 
+.locale-button:hover,
+.locale-button:focus-visible,
 .about-button:hover,
 .about-button:focus-visible {
   background: var(--accent-subtle);

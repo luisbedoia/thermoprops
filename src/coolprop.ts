@@ -3,6 +3,7 @@ import {
   type CoolPropWorker,
   type FluidData,
 } from "@luisbedoia/coolprop-rs-wasm";
+import { locale, tr } from "./i18n";
 
 let instance: CoolPropWorker | null = null;
 let loading: Promise<CoolPropWorker> | null = null;
@@ -13,7 +14,8 @@ let loading: Promise<CoolPropWorker> | null = null;
  */
 export function initCoolProp(): Promise<CoolPropWorker> {
   if (instance) return Promise.resolve(instance);
-  loading ??= loadCoolPropWorker().then(
+  // Its fluid names, descriptions and errors in the page's language.
+  loading ??= loadCoolPropWorker({ locale }).then(
     (cp) => (instance = cp),
     (error: unknown) => {
       loading = null;
@@ -47,7 +49,12 @@ export function fluidData(name: string): FluidData {
     .catalog()
     .find((f) => f.name === name || f.aliases.includes(name));
   if (!data) {
-    throw new Error(`"${name}" is not in the CoolProp catalog.`);
+    throw new Error(
+      tr(
+        `"${name}" is not in the CoolProp catalog.`,
+        `"${name}" no está en el catálogo de CoolProp.`,
+      ),
+    );
   }
   return data;
 }
@@ -55,4 +62,12 @@ export function fluidData(name: string): FluidData {
 /** Replaces the module, e.g. with a test double. */
 export function setCoolProp(cp: CoolPropWorker | null): void {
   instance = cp;
+}
+
+/** A fluid's name for display in the page's language; any other as given. */
+export function displayName(name: string): string {
+  const data = instance
+    ?.catalog()
+    .find((f) => f.name === name || f.aliases.includes(name));
+  return data?.display_name ?? name;
 }

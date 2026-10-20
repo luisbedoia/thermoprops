@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from "react";
 import { useScript } from "../dsl/useScript";
 import { formatNumber } from "../dsl/format";
+import { tr } from "../i18n";
 import {
   SNAPSHOT,
   T1,
@@ -30,11 +31,17 @@ export function LiveCycle() {
   const cop = current && shown.cop !== null ? formatNumber(shown.cop) : "…";
 
   return (
-    <figure className="live" data-ui aria-label="A live worksheet">
+    <figure
+      className="live"
+      data-ui
+      aria-label={tr("A live worksheet", "Una hoja de trabajo en vivo")}
+    >
       <CycleChart cycle={shown} busy={!current} />
       <div className="live__result">
         <label className="live__control" htmlFor={sliderId}>
-          <span>Evaporator temperature</span>
+          <span>
+            {tr("Evaporator temperature", "Temperatura del evaporador")}
+          </span>
           <input
             id={sliderId}
             type="range"
@@ -53,7 +60,7 @@ export function LiveCycle() {
           <span>COP</span> <strong>{failed ? "–" : cop}</strong>
         </p>
       </div>
-      <pre className="live__code" aria-label="Its script">
+      <pre className="live__code" aria-label={tr("Its script", "Su código")}>
         <code>
           <span className="k">fluid</span> R134a{"\n"}
           <span className="n">1</span>: <span className="p">T</span> ={" "}
@@ -159,9 +166,14 @@ function CycleChart({ cycle, busy }: { cycle: Cycle; busy: boolean }) {
       className={`live__chart${busy ? " is-busy" : ""}`}
       viewBox={`0 0 ${w} ${h}`}
       role="img"
-      aria-label={`T–s chart of the cycle: ${cycle.states
-        .map((s) => `state ${s.name} at ${formatNumber(s.at[1])} °C`)
-        .join(", ")}`}
+      aria-label={tr(
+        `T–s chart of the cycle: ${cycle.states
+          .map((s) => `state ${s.name} at ${formatNumber(s.at[1])} °C`)
+          .join(", ")}`,
+        `Diagrama T–s del ciclo: ${cycle.states
+          .map((s) => `estado ${s.name} a ${formatNumber(s.at[1])} °C`)
+          .join(", ")}`,
+      )}
     >
       <path
         className="axis"

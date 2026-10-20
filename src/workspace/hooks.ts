@@ -18,6 +18,7 @@ import {
   normalizeStateDefinition,
   statesEqual,
 } from "./utils";
+import { tr } from "../i18n";
 
 export type WorkspaceViewMode = "graph" | "table";
 
@@ -245,13 +246,25 @@ export function useComputedStates(
     () =>
       states.map((definition): ComputedState => {
         if (!isNumeric(definition)) {
-          return { definition, error: "Values must be numeric." };
+          return {
+            definition,
+            error: tr(
+              "Values must be numeric.",
+              "Los valores deben ser numéricos.",
+            ),
+          };
         }
         const answer = solved.get(solveKey(fluid, definition));
         if (!answer) return { definition, pending: true };
         if ("error" in answer) {
           console.error("Unable to calculate state", definition, answer.error);
-          return { definition, error: "Unable to evaluate this state." };
+          return {
+            definition,
+            error: tr(
+              "Unable to evaluate this state.",
+              "No se pudo evaluar este estado.",
+            ),
+          };
         }
         // A link may hold a state past the equation of state's limits,
         // where CoolProp's values are extrapolations.

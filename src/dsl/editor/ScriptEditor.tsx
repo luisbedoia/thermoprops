@@ -59,6 +59,7 @@ import {
   inlineErrorTheme,
   setInlineErrors,
 } from "./inlineErrors";
+import { tr } from "../../i18n";
 
 /** Typing pause before error messages appear under their lines. */
 const INLINE_PAUSE_MS = 700;
@@ -421,7 +422,10 @@ export const ScriptEditor = forwardRef<ScriptEditorHandle, Props>(
               autocapitalize: "off",
               autocorrect: "off",
               spellcheck: "false",
-              "aria-label": "Worksheet code",
+              "aria-label": tr(
+                "Worksheet code",
+                "Código de la hoja de trabajo",
+              ),
             }),
             inlineErrors,
             inlineErrorTheme,

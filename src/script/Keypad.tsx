@@ -13,6 +13,7 @@ import {
 import type { Suggestions } from "../dsl/editor/completions";
 import type { KeypadKey } from "../dsl/editor/ScriptEditor";
 import { useTap } from "./useTap";
+import { tr } from "../i18n";
 
 export type KeypadAction =
   | { kind: "insert"; text: string }
@@ -63,20 +64,23 @@ const move = (key: KeypadKey, label: React.ReactNode, aria: string): Key => ({
 
 const BACKSPACE: Key = {
   label: <Delete />,
-  aria: "Delete",
+  aria: tr("Delete", "Borrar"),
   action: { kind: "key", key: "backspace" },
   repeat: true,
   tone: "fn",
 };
 const ENTER: Key = {
   label: <CornerDownLeft />,
-  aria: "New line",
+  aria: tr("New line", "Nueva línea"),
   action: { kind: "key", key: "enter" },
   tone: "fn",
 };
 const SPACE = (span: number): Key => ({
-  label: "space",
-  aria: "Space (hold or slide to move the cursor)",
+  label: tr("space", "espacio"),
+  aria: tr(
+    "Space (hold or slide to move the cursor)",
+    "Espacio (mantén o desliza para mover el cursor)",
+  ),
   action: { kind: "space" },
   tone: "fn",
   span,
@@ -93,37 +97,37 @@ const NUMBERS: Key[] = [
   ins("4"),
   ins("5"),
   ins("6"),
-  ins(" + ", "+", "plus"),
-  ins(" - ", "-", "minus"),
-  ins(" -> ", "->", "arrow"),
+  ins(" + ", "+", tr("plus", "más")),
+  ins(" - ", "-", tr("minus", "menos")),
+  ins(" -> ", "->", tr("arrow", "flecha")),
   ins("1"),
   ins("2"),
   ins("3"),
-  ins(" * ", "*", "times"),
-  ins(" / ", "/", "divided by"),
-  ins(" = ", "=", "equals"),
+  ins(" * ", "*", tr("times", "por")),
+  ins(" / ", "/", tr("divided by", "entre")),
+  ins(" = ", "=", tr("equals", "igual")),
   ins("0"),
   ins("."),
-  ins(", ", ",", "comma"),
-  ins(": ", ":", "colon"),
+  ins(", ", ",", tr("comma", "coma")),
+  ins(": ", ":", tr("colon", "dos puntos")),
   {
     label: "⇥",
-    aria: "Next field",
+    aria: tr("Next field", "Campo siguiente"),
     action: { kind: "key", key: "next" },
     tone: "fn",
   },
   ENTER,
   {
     label: "ABC",
-    aria: "Letters",
+    aria: tr("Letters", "Letras"),
     action: { kind: "layer", to: "abc" },
     tone: "fn",
   },
   SPACE(1),
-  move("left", <ArrowLeft />, "Left"),
-  move("up", <ArrowUp />, "Up"),
-  move("down", <ArrowDown />, "Down"),
-  move("right", <ArrowRight />, "Right"),
+  move("left", <ArrowLeft />, tr("Left", "Izquierda")),
+  move("up", <ArrowUp />, tr("Up", "Arriba")),
+  move("down", <ArrowDown />, tr("Down", "Abajo")),
+  move("right", <ArrowRight />, tr("Right", "Derecha")),
 ];
 
 const letters = (row: string) => [...row].map((c) => ins(c));
@@ -132,24 +136,24 @@ const letters = (row: string) => [...row].map((c) => ins(c));
 const LETTERS: Key[] = [
   ...letters("qwertyuiop"),
   ...letters("asdfghjkl"),
-  ins("_", "_", "underscore"),
+  ins("_", "_", tr("underscore", "guion bajo")),
   {
     label: <ArrowBigUp />,
-    aria: "Shift",
+    aria: tr("Shift", "Mayúsculas"),
     action: { kind: "shift" },
     tone: "fn",
   },
   ...letters("zxcvbnm"),
-  ins("#", "#", "comment"),
+  ins("#", "#", tr("comment", "comentario")),
   { ...BACKSPACE },
   {
     label: "123",
-    aria: "Numbers",
+    aria: tr("Numbers", "Números"),
     action: { kind: "layer", to: "123" },
     tone: "fn",
     span: 2,
   },
-  ins("^", "^", "power"),
+  ins("^", "^", tr("power", "potencia")),
   SPACE(5),
   { ...ENTER, span: 2 },
 ];
@@ -275,13 +279,19 @@ export function Keypad({ suggestions, onAction, ref, style }: Props) {
       style={style}
       className={`keypad keypad--${layer}${trackpad ? " is-trackpad" : ""}`}
       role="toolbar"
-      aria-label="Worksheet keypad"
+      aria-label={tr("Worksheet keypad", "Teclado de la hoja de trabajo")}
     >
       <div className="keypad__top">
-        <div className="keypad__suggestions" aria-label="Suggestions">
+        <div
+          className="keypad__suggestions"
+          aria-label={tr("Suggestions", "Sugerencias")}
+        >
           {chips.length === 0 ? (
             <span className="keypad__hint">
-              Suggestions appear here as you type
+              {tr(
+                "Suggestions appear here as you type",
+                "Las sugerencias aparecen aquí mientras escribes",
+              )}
             </span>
           ) : (
             chips.map((c, i) => (
@@ -302,7 +312,7 @@ export function Keypad({ suggestions, onAction, ref, style }: Props) {
         <button
           type="button"
           className="keypad__key keypad__key--fn keypad__side"
-          aria-label="Undo"
+          aria-label={tr("Undo", "Deshacer")}
           {...tap(() => onAction({ kind: "undo" }))}
         >
           <Undo2 />
@@ -310,7 +320,7 @@ export function Keypad({ suggestions, onAction, ref, style }: Props) {
         <button
           type="button"
           className="keypad__key keypad__key--accent keypad__side"
-          aria-label="Close keypad"
+          aria-label={tr("Close keypad", "Cerrar el teclado")}
           {...tap(() => onAction({ kind: "done" }))}
         >
           <ChevronDown />
@@ -318,7 +328,7 @@ export function Keypad({ suggestions, onAction, ref, style }: Props) {
       </div>
       {trackpad && (
         <div className="keypad__trackpad-hint" aria-live="polite">
-          Slide to move the cursor
+          {tr("Slide to move the cursor", "Desliza para mover el cursor")}
         </div>
       )}
       <div className="keypad__grid">

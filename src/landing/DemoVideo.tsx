@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Pause, Play } from "lucide-react";
+import { tr } from "../i18n";
 
 /** The recordings of each mode (scripts/record-demos.mjs), by screen. */
 const DEVICES = {
@@ -100,7 +101,11 @@ export function DemoVideo({ name, label }: { name: string; label: string }) {
         type="button"
         className="demo__toggle"
         onClick={toggle}
-        aria-label={playing ? "Pause the video" : "Play the video"}
+        aria-label={
+          playing
+            ? tr("Pause the video", "Pausar el video")
+            : tr("Play the video", "Reproducir el video")
+        }
       >
         {playing ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
       </button>

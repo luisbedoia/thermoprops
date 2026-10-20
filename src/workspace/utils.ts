@@ -4,6 +4,7 @@ import type { PlotPoint } from "../lib/plotUtils";
 import { quantityValue } from "../lib/quantities";
 import { normalizeNumericInput } from "../lib/normalizeNumericInput";
 import type { ComputedState, StateDefinition } from "./types";
+import { tr } from "../i18n";
 
 export type DecodedStates = {
   states: StateDefinition[];
@@ -62,7 +63,7 @@ export function encodeStates(states: StateDefinition[]): string {
 }
 
 export function createStateLabel(count: number) {
-  return `State ${count}`;
+  return `${tr("State", "Estado")} ${count}`;
 }
 
 export function generateId() {

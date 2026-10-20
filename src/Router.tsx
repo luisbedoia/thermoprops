@@ -11,6 +11,7 @@ import { Landing } from "./landing/Landing";
 import { Home } from "./home/Home";
 import { useInstalled } from "./lib/installed";
 import { CoolPropGate } from "./layout/CoolPropGate";
+import { landingPath } from "./i18n";
 
 // Each mode's code loads only when one of its pages is opened, so the
 // landing carries neither (the worksheet's editor is CodeMirror).
@@ -46,6 +47,8 @@ export function AppRoutes() {
     <Routes>
       <Route element={<AppLayout />}>
         <Route path="/" element={<Root />} />
+        {/* The landing in Spanish, with its own address for search engines. */}
+        <Route path="/es" element={<Root />} />
         <Route path="/home" element={<Home />} />
         <Route element={<CoolPropGate />}>
           {/* The State Explorer: a fluid and units, then its states. */}
@@ -56,7 +59,7 @@ export function AppRoutes() {
           <Route path="/worksheet" element={<ScriptView />} />
         </Route>
         <Route path="/script" element={<ScriptRedirect />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to={landingPath()} replace />} />
       </Route>
     </Routes>
   );

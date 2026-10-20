@@ -43,6 +43,7 @@ import { Keypad, type KeypadAction } from "./Keypad";
 import { KEYPAD_IN_MS, scrollWithKeypad } from "./motion";
 import { DebugHud } from "./DebugHud";
 import type { Suggestions } from "../dsl/editor/completions";
+import { count, tr } from "../i18n";
 import "./ScriptView.css";
 
 type Tab = "code" | "results" | "chart" | "reference";
@@ -161,6 +162,9 @@ function distinct(values: number[]): number[] {
   return sorted.filter((v, i) => i === 0 || v - sorted[i - 1] > scale * 1e-3);
 }
 
+const problemsCount = (n: number) =>
+  count(n, tr("problem", "problema"), tr("problems", "problemas"));
+
 function Status({
   pending,
   slow,
@@ -179,7 +183,8 @@ function Status({
   if (pending && !result) {
     return (
       <span className="status">
-        <LoaderCircle className="spin" /> Loading the solver…
+        <LoaderCircle className="spin" />{" "}
+        {tr("Loading the solver…", "Cargando el solucionador…")}
       </span>
     );
   }
@@ -212,8 +217,10 @@ function Status({
         onClick={() => onGoTo(first.line, first.col)}
       >
         {icon}
-        {n} problem{n === 1 ? "" : "s"}
-        <span className="status__where">· line {first.line}</span>
+        {problemsCount(n)}
+        <span className="status__where">
+          · {tr("line", "línea")} {first.line}
+        </span>
         {timing}
       </button>
     );
@@ -222,7 +229,10 @@ function Status({
   return (
     <span className="status status--ok">
       {icon}
-      {states} state{states === 1 ? "" : "s"} solved
+      {tr(
+        `${count(states, "state", "states")} solved`,
+        count(states, "estado resuelto", "estados resueltos"),
+      )}
       {timing}
     </span>
   );
@@ -572,7 +582,10 @@ export function ScriptView() {
     const url = `${window.location.origin}${window.location.pathname}?s=${encodeURIComponent(source)}`;
     try {
       if (touch && navigator.share) {
-        await navigator.share({ title: "Thermoprops script", url });
+        await navigator.share({
+          title: tr("Thermoprops script", "Código de Thermoprops"),
+          url,
+        });
         return;
       }
       await navigator.clipboard.writeText(url);
@@ -589,7 +602,10 @@ export function ScriptView() {
     if (
       isOwnWork(source) &&
       !window.confirm(
-        `Replace your worksheet with the ${t.name} example? You can undo it with ${UNDO_KEYS}.`,
+        tr(
+          `Replace your worksheet with the ${t.name} example? You can undo it with ${UNDO_KEYS}.`,
+          `¿Reemplazar tu hoja de trabajo con el ejemplo ${t.name}? Puedes deshacerlo con ${UNDO_KEYS}.`,
+        ),
       )
     )
       return;
@@ -637,15 +653,21 @@ export function ScriptView() {
     icon: React.ReactNode;
     badge?: number;
   }[] = [
-    ...(wide ? [] : [{ id: "code" as const, label: "Code", icon: <Code /> }]),
+    ...(wide
+      ? []
+      : [{ id: "code" as const, label: tr("Code", "Código"), icon: <Code /> }]),
     {
       id: "results",
-      label: "Results",
+      label: tr("Results", "Resultados"),
       icon: <ListChecks />,
       badge: problems || undefined,
     },
-    { id: "chart", label: "Chart", icon: <ChartLine /> },
-    { id: "reference", label: "Reference", icon: <BookOpen /> },
+    { id: "chart", label: tr("Chart", "Diagrama"), icon: <ChartLine /> },
+    {
+      id: "reference",
+      label: tr("Reference", "Referencia"),
+      icon: <BookOpen />,
+    },
   ];
 
   return (
@@ -658,16 +680,18 @@ export function ScriptView() {
     >
       <header className="sv__top">
         <div className="sv__title">
-          <h1>Worksheet</h1>
-          <span className="sv__badge">Preview</span>
+          <h1>{tr("Worksheet", "Hoja de trabajo")}</h1>
+          <span className="sv__badge">{tr("Preview", "Vista previa")}</span>
         </div>
         <div className="sv__actions">
           <label className="sv__examples">
             <LayoutTemplate aria-hidden="true" />
-            <span className="sr-only">Load an example</span>
+            <span className="sr-only">
+              {tr("Load an example", "Cargar un ejemplo")}
+            </span>
             <select value="" onChange={(e) => loadTemplate(e.target.value)}>
               <option value="" disabled>
-                Examples
+                {tr("Examples", "Ejemplos")}
               </option>
               {TEMPLATES.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -680,10 +704,12 @@ export function ScriptView() {
             variant="ghost"
             size="sm"
             onClick={() => editor.current?.format()}
-            title={`Format (${FORMAT_KEYS})`}
+            title={`${tr("Format", "Formatear")} (${FORMAT_KEYS})`}
           >
             <WandSparkles />
-            <span className="sv__action-label">Format</span>
+            <span className="sv__action-label">
+              {tr("Format", "Formatear")}
+            </span>
           </Button>
           {touch && (
             <Button
@@ -693,27 +719,41 @@ export function ScriptView() {
               aria-pressed={keypadWanted}
               title={
                 keypadWanted
-                  ? "Using the page's keypad: tap to use the system keyboard"
-                  : "Using the system keyboard: tap to use the page's keypad"
+                  ? tr(
+                      "Using the page's keypad: tap to use the system keyboard",
+                      "Usando el teclado de la página: toca para usar el del sistema",
+                    )
+                  : tr(
+                      "Using the system keyboard: tap to use the page's keypad",
+                      "Usando el teclado del sistema: toca para usar el de la página",
+                    )
               }
             >
               <Keyboard />
               <span className="sv__action-label">
-                {keypadWanted ? "Keypad" : "Keyboard"}
+                {keypadWanted
+                  ? tr("Keypad", "Teclado de la página")
+                  : tr("Keyboard", "Teclado del sistema")}
               </span>
             </Button>
           )}
           <Button variant="ghost" size="sm" onClick={() => void share()}>
             {shared ? <Check /> : <Share2 />}
             <span className="sv__action-label">
-              {shared ? "Link copied" : "Share"}
+              {shared
+                ? tr("Link copied", "Enlace copiado")
+                : tr("Share", "Compartir")}
             </span>
           </Button>
         </div>
       </header>
 
       <div className={`sv__body${wide ? " is-wide" : ""}`}>
-        <nav className="sv__tabs" role="tablist" aria-label="Worksheet views">
+        <nav
+          className="sv__tabs"
+          role="tablist"
+          aria-label={tr("Worksheet views", "Vistas de la hoja de trabajo")}
+        >
           {tabs.map((t) => (
             <button
               key={t.id}
@@ -730,7 +770,7 @@ export function ScriptView() {
               {t.badge ? (
                 <span
                   className="sv__tab-badge"
-                  aria-label={`${t.badge} problems`}
+                  aria-label={problemsCount(t.badge)}
                 >
                   {t.badge}
                 </span>
@@ -822,7 +862,7 @@ export function ScriptView() {
             (result ? (
               <ResultsPanel result={result} onGoTo={goTo} />
             ) : (
-              <p className="results__empty">Solving…</p>
+              <p className="results__empty">{tr("Solving…", "Resolviendo…")}</p>
             ))}
           {sideTab === "reference" && <ReferencePanel />}
         </section>
@@ -858,9 +898,18 @@ export function ScriptView() {
               />
             ) : (
               <p className="results__empty">
-                Solved states appear here. Add{" "}
-                <code>draw 1 -&gt; 2 -&gt; 1</code> to draw the processes
-                between them.
+                {tr(
+                  <>
+                    Solved states appear here. Add{" "}
+                    <code>draw 1 -&gt; 2 -&gt; 1</code> to draw the processes
+                    between them.
+                  </>,
+                  <>
+                    Los estados resueltos aparecen aquí. Agrega{" "}
+                    <code>draw 1 -&gt; 2 -&gt; 1</code> para dibujar los
+                    procesos entre ellos.
+                  </>,
+                )}
               </p>
             )}
           </section>

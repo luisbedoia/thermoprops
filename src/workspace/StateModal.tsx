@@ -10,6 +10,16 @@ import type { UnitSystem } from "../lib/units";
 import { unitToPlain } from "../lib/unitsFormat";
 import type { ComputedState } from "./types";
 import type { Replacement } from "./pairs";
+import { tr } from "../i18n";
+
+const PROPERTY_A = tr("Property A", "Propiedad A");
+const PROPERTY_B = tr("Property B", "Propiedad B");
+const VALUE = tr("Value", "Valor");
+const TOGGLE_SIGN = tr("Toggle sign", "Cambiar el signo");
+const SWAP = tr(
+  "Swap properties A and B",
+  "Intercambiar las propiedades A y B",
+);
 
 const PICKER_NUMBER_FORMAT = new Intl.NumberFormat(undefined, {
   maximumSignificantDigits: 6,
@@ -96,11 +106,13 @@ export function StateModal({
       <header className="state-modal__header">
         <div>
           <h2 id="state-modal-title" className="state-modal__title">
-            Add thermodynamic state
+            {tr("Add thermodynamic state", "Agregar estado termodinámico")}
           </h2>
           <p className="state-modal__subtitle">
-            Choose two independent properties to evaluate a new point on the
-            diagram.
+            {tr(
+              "Choose two independent properties to evaluate a new point on the diagram.",
+              "Elige dos propiedades independientes para evaluar un nuevo punto en el diagrama.",
+            )}
           </p>
         </div>
         <Button
@@ -108,17 +120,22 @@ export function StateModal({
           size="sm"
           className="state-modal__close"
           onClick={onClose}
-          aria-label="Close add state dialog"
+          aria-label={tr(
+            "Close add state dialog",
+            "Cerrar el cuadro para agregar estado",
+          )}
         >
           <X />
-          <span className="state-modal__close-text">Close</span>
+          <span className="state-modal__close-text">
+            {tr("Close", "Cerrar")}
+          </span>
         </Button>
       </header>
 
       <form className="state-modal__form" onSubmit={onSubmit}>
         <div className="state-modal__row">
           <div className="field">
-            <label htmlFor="property1">Property A</label>
+            <label htmlFor="property1">{PROPERTY_A}</label>
             <select
               id="property1"
               value={formState.property1}
@@ -136,12 +153,12 @@ export function StateModal({
             </select>
           </div>
           <div className="field">
-            <label htmlFor="value1">Value</label>
+            <label htmlFor="value1">{VALUE}</label>
             <div className="field__input-wrap">
               <button
                 type="button"
                 className="field__sign"
-                aria-label="Toggle sign"
+                aria-label={TOGGLE_SIGN}
                 onClick={() =>
                   onFormChange("value1", toggleSign(formState.value1))
                 }
@@ -173,17 +190,17 @@ export function StateModal({
             variant="ghost"
             size="sm"
             onClick={onSwap}
-            aria-label="Swap properties A and B"
-            title="Swap properties A and B"
+            aria-label={SWAP}
+            title={SWAP}
           >
             <ArrowUpDown />
-            Swap
+            {tr("Swap", "Intercambiar")}
           </Button>
         </div>
 
         <div className="state-modal__row">
           <div className="field">
-            <label htmlFor="property2">Property B</label>
+            <label htmlFor="property2">{PROPERTY_B}</label>
             <select
               id="property2"
               value={formState.property2}
@@ -201,12 +218,12 @@ export function StateModal({
             </select>
           </div>
           <div className="field">
-            <label htmlFor="value2">Value</label>
+            <label htmlFor="value2">{VALUE}</label>
             <div className="field__input-wrap">
               <button
                 type="button"
                 className="field__sign"
-                aria-label="Toggle sign"
+                aria-label={TOGGLE_SIGN}
                 onClick={() =>
                   onFormChange("value2", toggleSign(formState.value2))
                 }
@@ -242,10 +259,12 @@ export function StateModal({
 
         <div className="state-modal__actions">
           <Button variant="ghost" size="sm" onClick={onClose}>
-            Cancel
+            {tr("Cancel", "Cancelar")}
           </Button>
           <Button type="submit" disabled={solving}>
-            {solving ? "Solving…" : "Add to workspace"}
+            {solving
+              ? tr("Solving…", "Resolviendo…")
+              : tr("Add to workspace", "Agregar al espacio de trabajo")}
           </Button>
         </div>
       </form>
@@ -258,7 +277,7 @@ function valueHint(input: InputInfo, units: UnitSystem): string {
   if (input.min !== null && input.max !== null)
     return `${input.min} – ${input.max}`;
   const unit = unitToPlain(getDisplayUnit(input.name, units));
-  return unit ? `in ${unit}` : "";
+  return unit ? tr(`in ${unit}`, `en ${unit}`) : "";
 }
 
 /** "Property B changed from h to p: T and h do not fix a state together." */
@@ -268,10 +287,11 @@ function replacementNotice(
   info: (name: InputName) => InputInfo,
 ): string {
   const picked = slot === "property1" ? form.property2 : form.property1;
-  const label = slot === "property1" ? "Property A" : "Property B";
-  return (
-    `${label} changed from ${info(from).symbol} to ${info(to).symbol}: ` +
-    `${info(picked).symbol} and ${info(from).symbol} do not fix a state together.`
+  const label = slot === "property1" ? PROPERTY_A : PROPERTY_B;
+  const [p, f, n] = [info(picked).symbol, info(from).symbol, info(to).symbol];
+  return tr(
+    `${label} changed from ${f} to ${n}: ${p} and ${f} do not fix a state together.`,
+    `${label} cambió de ${f} a ${n}: ${p} y ${f} no fijan juntos un estado.`,
   );
 }
 
@@ -318,7 +338,10 @@ function FromStatePicker({
     <select
       className="field__from-state"
       value=""
-      aria-label={`Use ${symbol} from existing state`}
+      aria-label={tr(
+        `Use ${symbol} from existing state`,
+        `Usar ${symbol} de un estado existente`,
+      )}
       onChange={(event) => {
         const id = event.target.value;
         if (!id) return;
@@ -329,7 +352,10 @@ function FromStatePicker({
       }}
     >
       <option value="" disabled>
-        Use {symbol} from existing state…
+        {tr(
+          `Use ${symbol} from existing state…`,
+          `Usar ${symbol} de un estado existente…`,
+        )}
       </option>
       {candidates.map(({ state, si }) => {
         const display = PICKER_NUMBER_FORMAT.format(

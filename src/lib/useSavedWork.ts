@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { initCoolProp } from "../coolprop";
 import {
   explorerSummary,
   isOwnWork,
@@ -25,14 +26,27 @@ export function useSavedWork(): SavedWork {
     explorer: null,
   });
   useEffect(() => {
-    const source = savedWorksheet();
-    const search = savedExplorer();
-    const summary = search ? explorerSummary(search) : null;
+    const read = (): SavedWork => {
+      const source = savedWorksheet();
+      const search = savedExplorer();
+      const summary = search ? explorerSummary(search) : null;
+      return {
+        worksheet:
+          source && isOwnWork(source) ? worksheetSummary(source) : null,
+        explorer: search && summary ? { search, summary } : null,
+      };
+    };
     // eslint-disable-next-line react-hooks/set-state-in-effect -- storage is read after hydration, so the first render matches the built page.
-    setSaved({
-      worksheet: source && isOwnWork(source) ? worksheetSummary(source) : null,
-      explorer: search && summary ? { search, summary } : null,
-    });
+    setSaved(read());
+    // Again once CoolProp is up: the fluids by their display names.
+    let live = true;
+    initCoolProp().then(
+      () => live && setSaved(read()),
+      () => {},
+    );
+    return () => {
+      live = false;
+    };
   }, []);
   return saved;
 }

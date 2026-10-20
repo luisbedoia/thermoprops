@@ -7,6 +7,8 @@
  * then nothing is kept and every page works as before.
  */
 import { TEMPLATES } from "../dsl/templates";
+import { count, tr } from "../i18n";
+import { displayName } from "../coolprop";
 
 const WORKSHEET = "thermoprops.worksheet";
 const EXPLORER = "thermoprops.explorer";
@@ -46,7 +48,7 @@ export function worksheetSummary(source: string): string {
   const states = source
     .split("\n")
     .filter((l) => /^\s*\w+\s*(\[[^\]]*\]\s*)?:/.test(l)).length;
-  return [fluid, `${states} state${states === 1 ? "" : "s"}`]
+  return [fluid && displayName(fluid), statesCount(states)]
     .filter(Boolean)
     .join(" · ");
 }
@@ -61,15 +63,19 @@ export const clearExplorer = () => write(EXPLORER, null);
 /**
  * "Water · 3 states", or null for nothing worth continuing. It only counts
  * the states (the workspace saves itself only with valid ones), so the
- * landing can say it before CoolProp has loaded.
+ * landing can say it before CoolProp has loaded (with the fluid's canonical
+ * name until then, its display name after).
  */
 export function explorerSummary(search: string): string | null {
   const params = new URLSearchParams(search);
   const fluid = params.get("fluid");
-  const count = countStates(params.get("states"));
-  if (!fluid || count === 0) return null;
-  return `${fluid} · ${count} state${count === 1 ? "" : "s"}`;
+  const n = countStates(params.get("states"));
+  if (!fluid || n === 0) return null;
+  return `${displayName(fluid)} · ${statesCount(n)}`;
 }
+
+const statesCount = (n: number) =>
+  count(n, tr("state", "estado"), tr("states", "estados"));
 
 function countStates(encoded: string | null): number {
   if (!encoded) return 0;

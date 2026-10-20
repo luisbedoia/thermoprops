@@ -4,11 +4,15 @@ import { exampleLink } from "../lib/examples";
 import { useSavedWork } from "../lib/useSavedWork";
 import { LiveCycle } from "./LiveCycle";
 import { DemoVideo } from "./DemoVideo";
+import { tr } from "../i18n";
 import "./Landing.css";
 
 const EXAMPLES = [
-  { id: "refrigeration", label: "Refrigeration" },
-  { id: "regenerative", label: "Regenerative Rankine" },
+  { id: "refrigeration", label: tr("Refrigeration", "Refrigeración") },
+  {
+    id: "regenerative",
+    label: tr("Regenerative Rankine", "Rankine regenerativo"),
+  },
   { id: "brayton", label: "Brayton" },
 ];
 
@@ -32,26 +36,37 @@ export function Landing() {
   const { worksheet, explorer: saved } = useSavedWork();
   const explorer = saved?.summary ?? null;
   const worksheetAction = worksheet
-    ? "Continue your worksheet"
-    : "Open the Worksheet";
+    ? tr("Continue your worksheet", "Continuar tu hoja de trabajo")
+    : tr("Open the Worksheet", "Abrir la Hoja de trabajo");
+  const openExplorer = tr(
+    "Open the State Explorer",
+    "Abrir el Explorador de estados",
+  );
+  const savedHere = tr("Saved in this browser:", "Guardado en este navegador:");
 
   return (
     <div className="landing">
       <section className="landing__hero" aria-labelledby="landing-title">
         <div className="landing__inner landing__hero-grid">
-          <h1 id="landing-title">Thermodynamic states, worked out</h1>
+          <h1 id="landing-title">
+            {tr(
+              "Thermodynamic states, worked out",
+              "Estados termodinámicos, resueltos",
+            )}
+          </h1>
           <div className="landing__intro">
             <p>
-              CoolProp’s properties for 30 fluids, in your browser. Write states
-              as in your notebook and calculate with them, from a single heat to
-              a whole cycle, or explore them one at a time.
+              {tr(
+                "CoolProp’s properties for 30 fluids, in your browser. Write states as in your notebook and calculate with them, from a single heat to a whole cycle, or explore them one at a time.",
+                "Las propiedades de CoolProp para 30 fluidos, en tu navegador. Escribe estados como en tu cuaderno y calcula con ellos, desde un calor hasta un ciclo completo, o explóralos uno a uno.",
+              )}
             </p>
             <div className="landing__cta">
               <Link to="/worksheet" className="landing__primary">
                 {worksheetAction} <ArrowRight aria-hidden="true" />
               </Link>
               <Link to="/explorer" className="landing__secondary">
-                Open the State Explorer <ArrowRight aria-hidden="true" />
+                {openExplorer} <ArrowRight aria-hidden="true" />
               </Link>
             </div>
           </div>
@@ -65,16 +80,24 @@ export function Landing() {
       >
         <div className="landing__inner landing__mode-grid">
           <div className="landing__copy">
-            <h2 id="mode-worksheet">Worksheet</h2>
+            <h2 id="mode-worksheet">{tr("Worksheet", "Hoja de trabajo")}</h2>
             <p>
-              Define states as in your notebook, read any of their properties by
-              name (h1, s2) and calculate with them: a heat, a work, an
-              efficiency, a whole cycle. Results, charts and units update as you
-              type.
+              {tr(
+                "Define states as in your notebook, read any of their properties by name (h1, s2) and calculate with them: a heat, a work, an efficiency, a whole cycle. Results, charts and units update as you type.",
+                "Define estados como en tu cuaderno, lee cualquiera de sus propiedades por nombre (h1, s2) y calcula con ellas: un calor, un trabajo, una eficiencia, un ciclo completo. Resultados, diagramas y unidades se actualizan mientras escribes.",
+              )}
             </p>
             <p className="landing__note">
-              <strong>In development.</strong> Next comes solving for unknowns,
-              and more of what you would do in EES.
+              {tr(
+                <>
+                  <strong>In development.</strong> Next comes solving for
+                  unknowns, and more of what you would do in EES.
+                </>,
+                <>
+                  <strong>En desarrollo.</strong> Lo siguiente es resolver
+                  incógnitas, y más de lo que harías en EES.
+                </>,
+              )}
             </p>
             <div className="landing__actions">
               <Link to="/worksheet" className="landing__primary">
@@ -82,11 +105,11 @@ export function Landing() {
               </Link>
               {worksheet && (
                 <p className="landing__saved">
-                  Saved in this browser: {worksheet}
+                  {savedHere} {worksheet}
                 </p>
               )}
               <p className="landing__examples">
-                Or start from an example:{" "}
+                {tr("Or start from an example:", "O empieza con un ejemplo:")}{" "}
                 {EXAMPLES.map((e, i) => (
                   <span key={e.id}>
                     {i > 0 && " · "}
@@ -98,7 +121,10 @@ export function Landing() {
           </div>
           <DemoVideo
             name="worksheet"
-            label="A refrigeration cycle written in the Worksheet with its suggestions, then its results and its chart"
+            label={tr(
+              "A refrigeration cycle written in the Worksheet with its suggestions, then its results and its chart",
+              "Un ciclo de refrigeración escrito en la Hoja de trabajo con sus sugerencias, luego sus resultados y su diagrama",
+            )}
           />
         </div>
       </section>
@@ -109,40 +135,55 @@ export function Landing() {
       >
         <div className="landing__inner landing__mode-grid">
           <div className="landing__copy">
-            <h2 id="mode-explorer">State Explorer</h2>
+            <h2 id="mode-explorer">
+              {tr("State Explorer", "Explorador de estados")}
+            </h2>
             <p>
-              Pick a fluid and a unit system, then add states by any two
-              properties and see them in a table and on its charts.
+              {tr(
+                "Pick a fluid and a unit system, then add states by any two properties and see them in a table and on its charts.",
+                "Elige un fluido y un sistema de unidades, luego agrega estados por dos propiedades cualesquiera y míralos en una tabla y en sus diagramas.",
+              )}
             </p>
             <div className="landing__actions">
               {/* Its settings page offers to continue or to start again. */}
               <Link to="/explorer" className="landing__outline">
-                Open the State Explorer <ArrowRight aria-hidden="true" />
+                {openExplorer} <ArrowRight aria-hidden="true" />
               </Link>
               {explorer && (
                 <p className="landing__saved">
-                  Saved in this browser: {explorer}
+                  {savedHere} {explorer}
                 </p>
               )}
             </div>
           </div>
           <DemoVideo
             name="explorer"
-            label="Water chosen in the State Explorer, then three states added by two properties each and shown on its T–s chart"
+            label={tr(
+              "Water chosen in the State Explorer, then three states added by two properties each and shown on its T–s chart",
+              "Agua elegida en el Explorador de estados, luego tres estados agregados por dos propiedades cada uno y mostrados en su diagrama T–s",
+            )}
           />
         </div>
       </section>
 
       <section className="landing__charts" aria-labelledby="landing-charts">
         <div className="landing__inner">
-          <h2 id="landing-charts">Six charts for every fluid</h2>
+          <h2 id="landing-charts">
+            {tr(
+              "Six charts for every fluid",
+              "Seis diagramas para cada fluido",
+            )}
+          </h2>
           <ul>
             {CHARTS.map((c) => (
               <li key={c.id}>
                 <figure>
                   <img
                     src={`${import.meta.env.BASE_URL}demos/chart-${c.id}.jpg`}
-                    alt={`The ${c.name} chart of water, with three states`}
+                    alt={tr(
+                      `The ${c.name} chart of water, with three states`,
+                      `El diagrama ${c.name} del agua, con tres estados`,
+                    )}
                     width={1200}
                     height={504}
                     loading="lazy"
@@ -158,27 +199,39 @@ export function Landing() {
 
       <section className="landing__facts" aria-labelledby="landing-facts">
         <div className="landing__inner landing__facts-grid">
-          <h2 id="landing-facts">What it covers</h2>
+          <h2 id="landing-facts">{tr("What it covers", "Qué incluye")}</h2>
           <ul>
             <li>
-              <h3>30 fluids and refrigerants</h3>
+              <h3>
+                {tr("30 fluids and refrigerants", "30 fluidos y refrigerantes")}
+              </h3>
               <p>
-                Water, air, ammonia, CO₂, nitrogen, R134a, R410A, R32, R1234yf,
-                propane…
+                {tr(
+                  "Water, air, ammonia, CO₂, nitrogen, R134a, R410A, R32, R1234yf, propane…",
+                  "Agua, aire, amoníaco, CO₂, nitrógeno, R134a, R410A, R32, R1234yf, propano…",
+                )}
               </p>
             </li>
             <li>
-              <h3>Any two properties</h3>
+              <h3>
+                {tr("Any two properties", "Dos propiedades cualesquiera")}
+              </h3>
               <p>
-                Temperature, pressure, density, enthalpy, entropy, internal
-                energy, quality and more.
+                {tr(
+                  "Temperature, pressure, density, enthalpy, entropy, internal energy, quality and more.",
+                  "Temperatura, presión, densidad, entalpía, entropía, energía interna, calidad y más.",
+                )}
               </p>
             </li>
             <li>
-              <h3>Your units, your links</h3>
+              <h3>
+                {tr("Your units, your links", "Tus unidades, tus enlaces")}
+              </h3>
               <p>
-                SI or imperial, °C, K or °F. Every link keeps its fluid, units
-                and states.
+                {tr(
+                  "SI or imperial, °C, K or °F. Every link keeps its fluid, units and states.",
+                  "SI o imperial, °C, K o °F. Cada enlace conserva su fluido, unidades y estados.",
+                )}
               </p>
             </li>
           </ul>

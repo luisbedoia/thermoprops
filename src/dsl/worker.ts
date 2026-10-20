@@ -10,11 +10,13 @@ import {
   type StateInputs,
 } from "@luisbedoia/coolprop-rs-wasm";
 import { evaluate, type Engine, type EngineFluid } from "./evaluate";
+import { locale } from "../i18n";
 
 /** `fresh`: the page has no result yet, so "unchanged" would not do. */
 export type ScriptRequest = { id: number; source: string; fresh: boolean };
 
-const ready = loadCoolProp();
+// In the language its page named it with (see useScript).
+const ready = loadCoolProp({ locale });
 
 /** Solved states, so editing one line does not solve the others again. */
 const cache = new Map<string, ReturnType<EngineFluid["state"]> | Error>();
@@ -28,6 +30,7 @@ let lastSent = "";
 function cachedEngine(cp: CoolProp): Engine {
   return {
     pairs: () => cp.pairs(),
+    phases: () => cp.phases(),
     fluid(name, options) {
       const f = cp.fluid(name, options);
       // Cached by fluid and reference: h and s differ between references.

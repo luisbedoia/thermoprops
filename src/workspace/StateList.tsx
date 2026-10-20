@@ -13,6 +13,20 @@ import { fromSI, getDisplayUnit, resolveUnitSystem } from "../lib/units";
 import type { UnitSystem } from "../lib/units";
 import { symbolToMath, unitToMath } from "../lib/unitsFormat";
 import type { ComputedState, StateDefinition } from "./types";
+import { count, tr } from "../i18n";
+
+const T = {
+  exportCsv: tr("Export CSV", "Exportar CSV"),
+  trackedStates: tr("Tracked states", "Estados registrados"),
+  clearAll: tr("Clear all", "Borrar todo"),
+  confirmClear: tr(
+    "Remove all tracked states? This cannot be undone.",
+    "¿Eliminar todos los estados registrados? Esto no se puede deshacer.",
+  ),
+  addState: tr("Add state", "Agregar estado"),
+  remove: tr("Remove", "Eliminar"),
+  removeLabel: (label: string) => tr(`Remove ${label}`, `Eliminar ${label}`),
+};
 
 function UnitMath({ unit, className }: { unit: string; className?: string }) {
   if (!unit) return null;
@@ -83,7 +97,7 @@ function ExportCsvButton({
       }
     >
       <FileDown />
-      Export CSV
+      {T.exportCsv}
     </Button>
   );
 }
@@ -144,14 +158,17 @@ export function StateList({
   const system = resolveUnitSystem(units);
   const summary =
     states.length === 0
-      ? "No states tracked yet."
-      : `${states.length} state${states.length === 1 ? "" : "s"} tracked`;
+      ? tr("No states tracked yet.", "Aún no hay estados registrados.")
+      : tr(
+          `${count(states.length, "state", "states")} tracked`,
+          count(states.length, "estado registrado", "estados registrados"),
+        );
 
   return (
     <section className="state-list" aria-live="polite">
       <header className="state-list__header">
         <div>
-          <h2>Tracked states</h2>
+          <h2>{T.trackedStates}</h2>
           <p className="state-list__summary">{summary}</p>
         </div>
         <div className="state-list__header-actions">
@@ -164,17 +181,13 @@ export function StateList({
               size="sm"
               className="state-list__clear-all"
               onClick={() => {
-                if (
-                  window.confirm(
-                    "Remove all tracked states? This cannot be undone.",
-                  )
-                ) {
+                if (window.confirm(T.confirmClear)) {
                   onClearAll();
                 }
               }}
             >
               <Eraser />
-              Clear all
+              {T.clearAll}
             </Button>
           )}
           <Button
@@ -184,29 +197,35 @@ export function StateList({
             disabled={!fluidSelected}
           >
             <Plus />
-            Add state
+            {T.addState}
           </Button>
         </div>
       </header>
 
       {states.length === 0 ? (
         <p className="state-list__empty">
-          No states added yet. Add a state to populate the chart.
+          {tr(
+            "No states added yet. Add a state to populate the chart.",
+            "Aún no hay estados. Agrega un estado para llenar el diagrama.",
+          )}
         </p>
       ) : (
         <>
           <div
             className="state-list__table-wrapper"
             role="region"
-            aria-label="Tracked states table"
+            aria-label={tr(
+              "Tracked states table",
+              "Tabla de estados registrados",
+            )}
           >
             <table className="state-list__table">
               <thead>
                 <tr>
-                  <th scope="col">State</th>
-                  <th scope="col">Details</th>
+                  <th scope="col">{tr("State", "Estado")}</th>
+                  <th scope="col">{tr("Details", "Detalles")}</th>
                   <th scope="col" className="state-list__table-actions">
-                    Actions
+                    {tr("Actions", "Acciones")}
                   </th>
                 </tr>
               </thead>
@@ -223,7 +242,13 @@ export function StateList({
             </table>
           </div>
 
-          <ul className="state-list__cards" aria-label="Tracked states list">
+          <ul
+            className="state-list__cards"
+            aria-label={tr(
+              "Tracked states list",
+              "Lista de estados registrados",
+            )}
+          >
             {states.map((state) => (
               <StateCard
                 key={state.definition.id}
@@ -266,10 +291,10 @@ function StateRow({ state, onRemove, units }: StateRowProps) {
           variant="ghost"
           size="sm"
           onClick={() => onRemove(state.definition.id)}
-          aria-label={`Remove ${state.definition.label}`}
+          aria-label={T.removeLabel(state.definition.label)}
         >
           <Trash2 />
-          Remove
+          {T.remove}
         </Button>
       </td>
     </tr>
@@ -301,10 +326,10 @@ function StateCard({ state, onRemove, units }: StateCardProps) {
           size="sm"
           className="state-card__remove"
           onClick={() => onRemove(state.definition.id)}
-          aria-label={`Remove ${state.definition.label}`}
+          aria-label={T.removeLabel(state.definition.label)}
         >
           <Trash2 />
-          Remove
+          {T.remove}
         </Button>
       </header>
       <StateMetrics state={state} variant="card" units={units} />
@@ -323,14 +348,18 @@ function StateMetrics({ state, variant, units, filter }: StateMetricsProps) {
   if (state.pending) {
     return (
       <p className={`state-note state-note--${variant}`} role="status">
-        Computing…
+        {tr("Computing…", "Calculando…")}
       </p>
     );
   }
   if (state.error || !state.state) {
     return (
       <p className={`state-error state-error--${variant}`}>
-        {state.error ?? "Unable to evaluate this state."}
+        {state.error ??
+          tr(
+            "Unable to evaluate this state.",
+            "No se pudo evaluar este estado.",
+          )}
       </p>
     );
   }
@@ -369,10 +398,10 @@ function StateMetrics({ state, variant, units, filter }: StateMetricsProps) {
       {showPhase ? (
         <div className="state-metrics__row">
           <dt>
-            <span className="state-metrics__name">Phase</span>
+            <span className="state-metrics__name">{tr("Phase", "Fase")}</span>
           </dt>
           <dd title={phaseInfo(solved.phase)?.description}>
-            {phaseInfo(solved.phase)?.label ?? "unknown"}
+            {phaseInfo(solved.phase)?.label ?? tr("unknown", "desconocida")}
           </dd>
         </div>
       ) : null}
@@ -404,7 +433,7 @@ export function StateQuickActions({
   return (
     <section className="state-quick" aria-live="polite">
       <header className="state-quick__header">
-        <h2>Tracked states</h2>
+        <h2>{T.trackedStates}</h2>
         <div className="state-quick__header-actions">
           {states.length > 0 && (
             <ExportCsvButton states={states} fluid={fluid} units={system} />
@@ -415,28 +444,27 @@ export function StateQuickActions({
               size="sm"
               className="state-quick__clear-all"
               onClick={() => {
-                if (
-                  window.confirm(
-                    "Remove all tracked states? This cannot be undone.",
-                  )
-                ) {
+                if (window.confirm(T.confirmClear)) {
                   onClearAll();
                 }
               }}
             >
               <Eraser />
-              Clear all
+              {T.clearAll}
             </Button>
           )}
           <Button size="sm" onClick={onAddState} disabled={!fluidSelected}>
             <Plus />
-            Add state
+            {T.addState}
           </Button>
         </div>
       </header>
       {states.length === 0 ? (
         <p className="state-quick__empty">
-          No states tracked yet. Add a state to populate the chart.
+          {tr(
+            "No states tracked yet. Add a state to populate the chart.",
+            "Aún no hay estados registrados. Agrega un estado para llenar el diagrama.",
+          )}
         </p>
       ) : (
         <ul className="state-quick__list">
@@ -489,10 +517,10 @@ export function StateQuickActions({
                   size="sm"
                   className="state-quick__remove"
                   onClick={() => onRemoveState(state.definition.id)}
-                  aria-label={`Remove ${state.definition.label}`}
+                  aria-label={T.removeLabel(state.definition.label)}
                 >
                   <Trash2 />
-                  Remove
+                  {T.remove}
                 </Button>
               </li>
             );

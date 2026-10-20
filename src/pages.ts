@@ -1,19 +1,26 @@
+import { tr } from "./i18n";
+
 /**
  * The title and summary of the pages search engines should list. The build
  * writes them into each page's HTML (scripts/postbuild.mjs) and the app sets
  * the title as it moves between pages; the others keep the landing's.
+ * Built pages are English (the build has no language); the app gives the
+ * titles in the visitor's.
  */
 export const PAGES: Record<
   string,
   { title: string; description: string; noindex?: boolean }
 > = {
   explorer: {
-    title: "State Explorer – Thermoprops",
+    title: tr(
+      "State Explorer – Thermoprops",
+      "Explorador de estados – Thermoprops",
+    ),
     description:
       "Thermodynamic states of 30 fluids and refrigerants from any two properties: temperature, pressure, enthalpy, entropy, density, quality. Tables and p–h, T–s, h–s, p–v charts, by CoolProp.",
   },
   worksheet: {
-    title: "Worksheet – Thermoprops",
+    title: tr("Worksheet – Thermoprops", "Hoja de trabajo – Thermoprops"),
     description:
       "Define thermodynamic states as in your notebook, read their properties by name and calculate with them, from a single heat to a whole cycle. Solved by CoolProp as you type, with units and charts. In development: solving for unknowns.",
   },
@@ -26,8 +33,23 @@ export const PAGES: Record<
   },
 };
 
-export const DEFAULT_TITLE =
-  "Thermoprops – Thermodynamic Properties Calculator";
+export const DEFAULT_TITLE = tr(
+  "Thermoprops – Thermodynamic Properties Calculator",
+  "Thermoprops – Calculadora de propiedades termodinámicas",
+);
+
+/**
+ * The landing's title and summary in the page's language. The English
+ * landing keeps index.html's own; the build gives the Spanish one (/es/)
+ * these.
+ */
+export const LANDING = {
+  title: DEFAULT_TITLE,
+  description: tr(
+    "Free online calculator for thermodynamic properties of fluids and refrigerants. Compute temperature, pressure, enthalpy, entropy, density and more using CoolProp. Ideal for engineers and students in thermodynamics and refrigeration.",
+    "Calculadora gratuita en línea de propiedades termodinámicas de fluidos y refrigerantes. Calcula temperatura, presión, entalpía, entropía, densidad y más con CoolProp. Para ingenieros y estudiantes de termodinámica y refrigeración.",
+  ),
+};
 
 /** The title of the page at a router path ("/explorer", "/workspace"…). */
 export function pageTitle(pathname: string): string {
@@ -43,8 +65,9 @@ export function pageTitle(pathname: string): string {
  */
 export function appTitle(pathname: string): string {
   const page = pathname.replace(/^\/+|\/+$/g, "").split("/")[0];
-  if (page === "worksheet" || page === "script") return "Worksheet";
+  if (page === "worksheet" || page === "script")
+    return tr("Worksheet", "Hoja de trabajo");
   if (page === "explorer" || page === "settings" || page === "workspace")
-    return "State Explorer";
-  return "Home";
+    return tr("State Explorer", "Explorador de estados");
+  return tr("Home", "Inicio");
 }

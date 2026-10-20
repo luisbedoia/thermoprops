@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { prerender } from "../prerender";
 import { pageTitle } from "../pages";
 import { setCoolProp } from "../coolprop";
@@ -21,6 +21,26 @@ describe("prerender", () => {
       expect(html).toContain("Loading calculator…");
       expect(html).toContain("Thermoprops");
     }
+  });
+});
+
+describe("prerender in Spanish", () => {
+  afterEach(() => {
+    delete (globalThis as { name?: string }).name;
+    vi.resetModules();
+  });
+
+  it("writes the Spanish landing, linking its pages by their own addresses", async () => {
+    // As the build names the Spanish render (scripts/postbuild.mjs).
+    (globalThis as { name?: string }).name = "prerender:es";
+    vi.resetModules();
+    const { prerender } = await import("../prerender");
+    const { LANDING } = await import("../pages");
+    const html = prerender("/es");
+    expect(html).toContain("Estados termodinámicos, resueltos");
+    expect(html).toContain("Abrir la Hoja de trabajo");
+    expect(html).toContain('href="/worksheet"');
+    expect(LANDING.title).toContain("Calculadora");
   });
 });
 

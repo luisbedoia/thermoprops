@@ -5,6 +5,8 @@ import { formatQuantity } from "../dsl/format";
 import { phaseLabel, propertyValue } from "../dsl/editor/describe";
 import { formatNumber } from "../dsl/format";
 import { fromSI, getDisplayUnit, type UnitSystem } from "../lib/units";
+import { displayName } from "../coolprop";
+import { count, tr } from "../i18n";
 
 const COLUMNS: { label: string; name: InputName }[] = [
   { label: "T", name: "temperature" },
@@ -14,6 +16,10 @@ const COLUMNS: { label: string; name: InputName }[] = [
   { label: "x", name: "quality" },
 ];
 
+const OUTPUTS = tr("Outputs", "Salidas");
+const STATES = tr("States", "Estados");
+const VALUES = tr("Values", "Valores");
+
 function unit(name: string, units: UnitSystem) {
   return getDisplayUnit(name, units).replace(/\*/g, "·");
 }
@@ -21,7 +27,7 @@ function unit(name: string, units: UnitSystem) {
 /** "T, x · two-phase", with the fluid when it is not the script's. */
 function how(state: ScriptState, fluid: string | undefined): string {
   return [
-    state.fluid && state.fluid !== fluid ? state.fluid : null,
+    state.fluid && state.fluid !== fluid ? displayName(state.fluid) : null,
     state.how,
     state.state?.phase ? phaseLabel(state.state.phase) : null,
   ]
@@ -44,16 +50,25 @@ type Props = {
 export function Problems({ result, onGoTo }: Props) {
   if (result.diagnostics.length === 0) return null;
   return (
-    <section className="results__section" aria-label="Problems">
+    <section
+      className="results__section"
+      aria-label={tr("Problems", "Problemas")}
+    >
       <h2 className="results__heading results__heading--error">
-        <TriangleAlert /> {result.diagnostics.length} problem
-        {result.diagnostics.length === 1 ? "" : "s"}
+        <TriangleAlert />{" "}
+        {count(
+          result.diagnostics.length,
+          tr("problem", "problema"),
+          tr("problems", "problemas"),
+        )}
       </h2>
       <ul className="problems">
         {result.diagnostics.map((d, i) => (
           <li key={i}>
             <button type="button" onClick={() => onGoTo(d.line, d.col)}>
-              <span className="problems__where">Line {d.line}</span>
+              <span className="problems__where">
+                {tr("Line", "Línea")} {d.line}
+              </span>
               <span>{d.message}</span>
             </button>
           </li>
@@ -75,14 +90,22 @@ export function ResultsPanel({ result, onGoTo }: Props) {
 
       {empty && result.diagnostics.length === 0 && (
         <p className="results__empty">
-          Define a state, e.g. <code>1: T = 25 °C, P = 1 bar</code>, and its
-          properties appear here.
+          {tr(
+            <>
+              Define a state, e.g. <code>1: T = 25 °C, P = 1 bar</code>, and its
+              properties appear here.
+            </>,
+            <>
+              Define un estado, p. ej. <code>1: T = 25 °C, P = 1 bar</code>, y
+              sus propiedades aparecen aquí.
+            </>,
+          )}
         </p>
       )}
 
       {result.prints.length > 0 && (
-        <section className="results__section" aria-label="Outputs">
-          <h2 className="results__heading">Outputs</h2>
+        <section className="results__section" aria-label={OUTPUTS}>
+          <h2 className="results__heading">{OUTPUTS}</h2>
           {/* The first print is the answer: it leads, the rest follow. */}
           <dl className="outputs">
             {result.prints.map((p, i) => (
@@ -105,18 +128,18 @@ export function ResultsPanel({ result, onGoTo }: Props) {
       )}
 
       {result.states.length > 0 && (
-        <section className="results__section" aria-label="States">
-          <h2 className="results__heading">States</h2>
+        <section className="results__section" aria-label={STATES}>
+          <h2 className="results__heading">{STATES}</h2>
           <div
             className="states-table"
             role="region"
-            aria-label="States table"
+            aria-label={tr("States table", "Tabla de estados")}
             tabIndex={0}
           >
             <table>
               <thead>
                 <tr>
-                  <th scope="col">State</th>
+                  <th scope="col">{tr("State", "Estado")}</th>
                   {COLUMNS.map((c) => (
                     <th key={c.name} scope="col">
                       {c.label}
@@ -196,8 +219,8 @@ export function ResultsPanel({ result, onGoTo }: Props) {
       )}
 
       {result.values.length > 0 && (
-        <section className="results__section" aria-label="Values">
-          <h2 className="results__heading">Values</h2>
+        <section className="results__section" aria-label={VALUES}>
+          <h2 className="results__heading">{VALUES}</h2>
           <dl className="variables">
             {result.values.map((v) => (
               <div key={v.name} className={v.error ? "is-error" : undefined}>

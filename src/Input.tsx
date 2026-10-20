@@ -7,12 +7,18 @@ import { resolveUnitSystem } from "./lib/units";
 import "./Input.css";
 import { MathText } from "./components/MathText";
 import { Button } from "./components/Button";
+import { tr } from "./i18n";
 
 const UNIT_SYSTEMS = [
-  { value: "celsius", label: "Default (°C, kPa, kJ)" },
+  {
+    value: "celsius",
+    label: tr("Default (°C, kPa, kJ)", "Predeterminado (°C, kPa, kJ)"),
+  },
   { value: "kelvin", label: "Kelvin (K, kPa, kJ)" },
   { value: "imperial", label: "Imperial (°F, psi, BTU)" },
 ];
+
+const NOT_PROVIDED = tr("Not provided", "No disponible");
 
 type FormState = {
   fluid: string;
@@ -22,14 +28,15 @@ type FormState = {
 export function SettingsView() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const fluids = useMemo(
+  // By the name shown, in the page's language; the canonical name is the value.
+  const catalog = useMemo(
     () =>
-      coolprop()
-        .catalog()
-        .map((f) => f.name)
-        .sort(),
+      [...coolprop().catalog()].sort((a, b) =>
+        a.display_name.localeCompare(b.display_name),
+      ),
     [],
   );
+  const fluids = useMemo(() => catalog.map((f) => f.name), [catalog]);
   const [formState, setFormState] = useState<FormState>(() => {
     const requested = searchParams.get("fluid") ?? "";
     return {
@@ -94,7 +101,10 @@ export function SettingsView() {
     if (startsAgain) {
       if (
         !window.confirm(
-          `Start a new workspace? Your saved states (${resume.summary}) will be removed. This cannot be undone.`,
+          tr(
+            `Start a new workspace? Your saved states (${resume.summary}) will be removed. This cannot be undone.`,
+            `¿Empezar un nuevo espacio de trabajo? Tus estados guardados (${resume.summary}) se eliminarán. Esto no se puede deshacer.`,
+          ),
         )
       ) {
         return;
@@ -148,41 +158,54 @@ export function SettingsView() {
     <section className="settings">
       <form className="settings__form" onSubmit={handleSubmit}>
         <header className="settings__header">
-          <h1>State Explorer</h1>
+          <h1>{tr("State Explorer", "Explorador de estados")}</h1>
         </header>
         {startsAgain && (
           <div className="settings__resume">
-            <p>You have a workspace saved in this browser.</p>
+            <p>
+              {tr(
+                "You have a workspace saved in this browser.",
+                "Tienes un espacio de trabajo guardado en este navegador.",
+              )}
+            </p>
             <Link
               className="settings__resume-link"
               to={{ pathname: "/workspace", search: resume.search }}
             >
-              Continue with {resume.summary} <ArrowRight aria-hidden="true" />
+              {tr("Continue with", "Continuar con")} {resume.summary}{" "}
+              <ArrowRight aria-hidden="true" />
             </Link>
             <p className="settings__resume-or">
-              Or choose a fluid and units below to start a new one.
+              {tr(
+                "Or choose a fluid and units below to start a new one.",
+                "O elige abajo un fluido y unidades para empezar uno nuevo.",
+              )}
             </p>
           </div>
         )}
         <div className="settings__fields">
           <div className="field">
-            <label htmlFor="fluid">Working fluid</label>
+            <label htmlFor="fluid">
+              {tr("Working fluid", "Fluido de trabajo")}
+            </label>
             <select
               id="fluid"
               name="fluid"
               value={formState.fluid}
               onChange={(event) => handleChange({ fluid: event.target.value })}
             >
-              {fluids.map((name) => (
-                <option key={name} value={name}>
-                  {name}
+              {catalog.map((f) => (
+                <option key={f.name} value={f.name}>
+                  {f.display_name}
                 </option>
               ))}
             </select>
           </div>
 
           <div className="field">
-            <label htmlFor="units">Unit system</label>
+            <label htmlFor="units">
+              {tr("Unit system", "Sistema de unidades")}
+            </label>
             <select
               id="units"
               name="units"
@@ -201,15 +224,15 @@ export function SettingsView() {
         <div className="settings__meta" aria-live="polite">
           <dl>
             <div>
-              <dt>Aliases</dt>
+              <dt>{tr("Aliases", "Alias")}</dt>
               <dd>
                 {details?.aliases?.length
                   ? details.aliases.join(", ")
-                  : "Not provided"}
+                  : NOT_PROVIDED}
               </dd>
             </div>
             <div>
-              <dt>Formula</dt>
+              <dt>{tr("Formula", "Fórmula")}</dt>
               <dd>
                 {formulaExpression ? (
                   <MathText
@@ -217,12 +240,12 @@ export function SettingsView() {
                     ariaLabel={details?.formula}
                   />
                 ) : (
-                  "Not provided"
+                  NOT_PROVIDED
                 )}
               </dd>
             </div>
             <div>
-              <dt>Unit profile</dt>
+              <dt>{tr("Unit profile", "Perfil de unidades")}</dt>
               <dd>
                 {unitExpression ? (
                   <MathText
@@ -230,7 +253,7 @@ export function SettingsView() {
                     ariaLabel={unitLabel ?? undefined}
                   />
                 ) : (
-                  (unitLabel ?? "Not provided")
+                  (unitLabel ?? NOT_PROVIDED)
                 )}
               </dd>
             </div>
@@ -239,7 +262,12 @@ export function SettingsView() {
 
         <div className="settings__actions">
           <Button type="submit">
-            {startsAgain ? "Start a new workspace" : "Continue to workspace"}
+            {startsAgain
+              ? tr(
+                  "Start a new workspace",
+                  "Empezar un nuevo espacio de trabajo",
+                )
+              : tr("Continue to workspace", "Continuar al espacio de trabajo")}
             <ArrowRight />
           </Button>
         </div>

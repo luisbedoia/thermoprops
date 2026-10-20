@@ -28,6 +28,7 @@ import {
 } from "../vocabulary";
 import { PROCESSES as PROCESS_NAMES } from "../parser";
 import { propertyValue, stateSummary } from "./describe";
+import { tr } from "../../i18n";
 
 export type CompletionData = {
   result?: ScriptResult;
@@ -67,7 +68,9 @@ function stateOptions(data: CompletionData, names: string[]): Completion[] {
     return {
       label: name,
       type: "class",
-      detail: st?.state ? stateSummary(st, data.result!.unitSystem) : "state",
+      detail: st?.state
+        ? stateSummary(st, data.result!.unitSystem)
+        : tr("state", "estado"),
       boost: 2,
     };
   });
@@ -81,7 +84,7 @@ function varOptions(data: CompletionData, names: string[]): Completion[] {
       type: "variable",
       detail: v?.value
         ? `= ${formatQuantity(v.value, data.result!.unitSystem)}`
-        : "variable",
+        : tr("variable", "variable"),
       boost: 1,
     };
   });
@@ -155,9 +158,9 @@ export function scriptCompletions(get: () => CompletionData): CompletionSource {
     if ((m = /^\s*(\w+)(\s*)$/.exec(before)) && !/^\s*print\s+$/.test(before)) {
       if (!context.explicit || STATEMENT_KEYWORDS.includes(m[1])) return null;
       const gap = m[2] ? "" : " ";
-      const options = [option(":", ": ", "a state")];
+      const options = [option(":", ": ", tr("a state", "un estado"))];
       if (/^[A-Za-z_]/.test(m[1]))
-        options.push(option("=", `${gap}= `, "a value"));
+        options.push(option("=", `${gap}= `, tr("a value", "un valor")));
       return { from: context.pos, options };
     }
 
@@ -193,7 +196,15 @@ export function scriptCompletions(get: () => CompletionData): CompletionSource {
           label: f.name,
           type: "constant",
           detail: plainFormula(f.formula),
-          info: f.aliases.length ? `Also: ${f.aliases.join(", ")}` : undefined,
+          info:
+            [
+              f.display_name !== f.name ? f.display_name : null,
+              f.aliases.length
+                ? `${tr("Also", "También")}: ${f.aliases.join(", ")}`
+                : null,
+            ]
+              .filter(Boolean)
+              .join(" · ") || undefined,
         })),
         validFor: /^[\w-]*$/,
       };
@@ -232,7 +243,9 @@ export function scriptCompletions(get: () => CompletionData): CompletionSource {
     ) {
       return {
         from: context.pos,
-        options: [option(",", ", ", "then the process")],
+        options: [
+          option(",", ", ", tr("then the process", "luego el proceso")),
+        ],
       };
     }
 
@@ -275,7 +288,9 @@ export function scriptCompletions(get: () => CompletionData): CompletionSource {
       ) {
         const options = inputOptions("to ");
         if (!hasFrom)
-          options.unshift(option("from", "from ", "starting state"));
+          options.unshift(
+            option("from", "from ", tr("starting state", "estado inicial")),
+          );
         return { from: context.pos - m[2].length, options };
       }
       if ((m = /\bto\s+([A-Za-z]*)$/.exec(before))) {
@@ -290,9 +305,12 @@ export function scriptCompletions(get: () => CompletionData): CompletionSource {
               option(
                 "eta",
                 "eta = ",
-                "efficiency",
+                tr("efficiency", "eficiencia"),
                 "property",
-                "Isentropic efficiency, e.g. 80%.",
+                tr(
+                  "Isentropic efficiency, e.g. 80%.",
+                  "Eficiencia isentrópica, p. ej. 80%.",
+                ),
               ),
             );
           if (process === "polytropic")
@@ -300,9 +318,9 @@ export function scriptCompletions(get: () => CompletionData): CompletionSource {
               option(
                 "n",
                 "n = ",
-                "exponent",
+                tr("exponent", "exponente"),
                 "property",
-                "Polytropic exponent.",
+                tr("Polytropic exponent.", "Exponente politrópico."),
               ),
             );
           options.push(...inputOptions());
@@ -312,7 +330,11 @@ export function scriptCompletions(get: () => CompletionData): CompletionSource {
           // The common ones first: the chips show only the first few.
           const inputs = inputOptions();
           options.push(
-            option("from", "from ", "reached by a process"),
+            option(
+              "from",
+              "from ",
+              tr("reached by a process", "alcanzado por un proceso"),
+            ),
             ...inputs.slice(0, 2),
             ...SATURATED,
             ...inputs.slice(2),
@@ -344,8 +366,8 @@ export function scriptCompletions(get: () => CompletionData): CompletionSource {
         return {
           from: context.pos,
           options: [
-            option("in", "in ", "show in a unit"),
-            option(",", ", ", "another output"),
+            option("in", "in ", tr("show in a unit", "mostrar en una unidad")),
+            option(",", ", ", tr("another output", "otra salida")),
           ],
         };
       }
@@ -431,7 +453,7 @@ function textbookOptions(
         type: "property",
         detail:
           (st?.state && system && propertyValue(st, p.field, system)) ||
-          `${p.detail} of ${name}`,
+          tr(`${p.detail} of ${name}`, `${p.detail} de ${name}`),
         boost: p.input ? 3 : 2.5,
       }));
     });

@@ -5,6 +5,7 @@ import {
   quantityValue,
   tableQuantities,
 } from "./quantities";
+import { tr } from "../i18n";
 import { fromSI, getDisplayUnit } from "./units";
 import type { UnitSystem } from "./units";
 import { unitToPlain } from "./unitsFormat";
@@ -25,8 +26,8 @@ export function statesToCsv(
 ): string {
   const quantities = tableQuantities();
   const header = [
-    "State",
-    "Defined by",
+    tr("State", "Estado"),
+    tr("Defined by", "Definido por"),
     ...quantities.map((q) => {
       const unit = unitToPlain(getDisplayUnit(q, units));
       const { description, symbol } = quantityInfo(q);
@@ -34,7 +35,7 @@ export function statesToCsv(
         ? `${description} ${symbol} (${unit})`
         : `${description} ${symbol}`;
     }),
-    "Phase",
+    tr("Phase", "Fase"),
   ];
   const rows = states.map(({ definition, state, error, pending }) => {
     const definedBy = [definition.property1, definition.property2]
@@ -45,7 +46,9 @@ export function statesToCsv(
         definition.label,
         definedBy,
         ...quantities.map(() => ""),
-        pending ? "not computed yet" : (error ?? "error"),
+        pending
+          ? tr("not computed yet", "aún no calculado")
+          : (error ?? tr("error", "error")),
       ];
     }
     return [

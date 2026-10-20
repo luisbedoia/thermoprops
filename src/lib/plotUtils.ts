@@ -10,6 +10,7 @@ import type { UnitSystem } from "./units";
 import { quantityInfo } from "./quantities";
 import type { Quantity } from "./quantities";
 import { unitToPlain } from "./unitsFormat";
+import { tr } from "../i18n";
 
 export type PlotPoint = {
   id: string;
@@ -187,10 +188,10 @@ export function buildDomeTraces(
   look: ChartLook = APP_LOOK,
 ): Record<string, unknown>[] {
   const branches: [string, Curve][] = sameCurve(dome.liquid, dome.vapor)
-    ? [["Saturation curve", dome.liquid]]
+    ? [[tr("Saturation curve", "Curva de saturación"), dome.liquid]]
     : [
-        ["Saturated liquid", dome.liquid],
-        ["Saturated vapor", dome.vapor],
+        [tr("Saturated liquid", "Líquido saturado"), dome.liquid],
+        [tr("Saturated vapor", "Vapor saturado"), dome.vapor],
       ];
   // Both branches share one red line, so they share one legend entry (which
   // toggles them together); hovering still names the branch.
@@ -199,7 +200,10 @@ export function buildDomeTraces(
     mode: "lines",
     x: convertArray(curve.x, xProperty, unitSystem),
     y: convertArray(curve.y, yProperty, unitSystem),
-    name: branches.length > 1 ? "Saturation dome" : name,
+    name:
+      branches.length > 1
+        ? tr("Saturation dome", "Campana de saturación")
+        : name,
     legendgroup: "dome",
     line: { width: 2, color: look.dome },
     showlegend: index === 0,
@@ -277,7 +281,7 @@ export function buildPathTraces(
     mode: "lines",
     x: path.x.map((v) => fromSI(xProperty, v, unitSystem)),
     y: path.y.map((v) => fromSI(yProperty, v, unitSystem)),
-    name: "Processes",
+    name: tr("Processes", "Procesos"),
     legendgroup: "paths",
     showlegend: index === shown,
     line: {
@@ -485,7 +489,7 @@ export function buildPointTrace(
     mode: look.pointLabels && !look.inlineLabels ? "markers+text" : "markers",
     x: points.map((p) => fromSI(xProperty, p.x, unitSystem)),
     y: points.map((p) => fromSI(yProperty, p.y, unitSystem)),
-    name: "Tracked states",
+    name: tr("Tracked states", "Estados registrados"),
     text: points.map((p) => p.label),
     textposition: "top right",
     textfont: { family: look.font, size: 13, color: look.text },

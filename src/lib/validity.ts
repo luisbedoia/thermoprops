@@ -2,6 +2,7 @@ import type { FluidData, State } from "@luisbedoia/coolprop-rs-wasm";
 import { fromSI, getDisplayUnit } from "./units";
 import type { UnitSystem } from "./units";
 import { unitToPlain } from "./unitsFormat";
+import { tr } from "../i18n";
 
 const LIMIT_FORMAT = new Intl.NumberFormat(undefined, {
   maximumSignificantDigits: 6,
@@ -31,9 +32,15 @@ export function validityError(
     const unit = unitToPlain(getDisplayUnit(name, units));
     return `${LIMIT_FORMAT.format(fromSI(name, si, units))}${unit ? ` ${unit}` : ""}`;
   };
-  return (
-    `Outside the range of ${data.name}'s equation of state: ` +
-    `T from ${show("temperature", data.t_triple)} to ${show("temperature", data.t_max)}, ` +
-    `p up to ${show("pressure", data.p_max)}.`
+  const [tMin, tMax, pMax] = [
+    show("temperature", data.t_triple),
+    show("temperature", data.t_max),
+    show("pressure", data.p_max),
+  ];
+  return tr(
+    `Outside the range of ${data.display_name}'s equation of state: ` +
+      `T from ${tMin} to ${tMax}, p up to ${pMax}.`,
+    `Fuera del rango de la ecuación de estado de ${data.display_name}: ` +
+      `T de ${tMin} a ${tMax}, p hasta ${pMax}.`,
   );
 }

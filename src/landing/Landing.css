@@ -44,18 +44,22 @@ body:has(.landing) .app-header {
   box-shadow: none; /* taste-skill-ignore: removes the shell's shadow */
 }
 
+body:has(.landing) .locale-button,
 body:has(.landing) .about-button {
   border-color: transparent;
   background: rgba(255, 255, 255, 0.12);
   color: #ffffff;
 }
 
+body:has(.landing) .locale-button:hover,
+body:has(.landing) .locale-button:focus-visible,
 body:has(.landing) .about-button:hover,
 body:has(.landing) .about-button:focus-visible {
   background: rgba(255, 255, 255, 0.22);
 }
 
 body:has(.landing) .brand-title:focus-visible,
+body:has(.landing) .locale-button:focus-visible,
 body:has(.landing) .about-button:focus-visible {
   outline: 2px solid #ffffff;
   outline-offset: 2px;

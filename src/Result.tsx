@@ -23,15 +23,21 @@ import { pickInput, swapPair } from "./workspace/pairs";
 import type { PairForm, Replacement } from "./workspace/pairs";
 import { useComputedStates, useWorkspaceUrlParams } from "./workspace/hooks";
 import type { WorkspaceViewMode } from "./workspace/hooks";
+import { count, tr } from "./i18n";
 import "./Result.css";
 
 const UNIT_LABELS: Record<string, string> = {
-  celsius: "Default",
+  celsius: tr("Default", "Predeterminado"),
   kelvin: "Kelvin",
   imperial: "Imperial",
 };
 
 type FormState = PairForm;
+
+const NOT_NUMERIC = tr(
+  "Both values must be numeric.",
+  "Ambos valores deben ser numéricos.",
+);
 
 // ── WorkspaceHeader ──────────────────────────────────────────────────────────
 
@@ -55,24 +61,34 @@ function WorkspaceHeader({
   onNavigateBack,
 }: WorkspaceHeaderProps) {
   const headerSubtitle = unitLabel
-    ? `${unitLabel} units · ${statesSummary}`
+    ? `${tr(`${unitLabel} units`, `Unidades: ${unitLabel}`)} · ${statesSummary}`
     : statesSummary;
 
   return (
     <header className="workspace__header">
       <div className="workspace__title">
-        <h1>{fluid || "Select a fluid in settings"}</h1>
+        <h1>
+          {fluid
+            ? fluidData(fluid).display_name
+            : tr(
+                "Select a fluid in settings",
+                "Elige un fluido en la configuración",
+              )}
+        </h1>
         <p>{headerSubtitle}</p>
       </div>
       <div className="workspace__actions">
         <Button variant="ghost" size="sm" onClick={onNavigateBack}>
           <ArrowLeft />
-          Back to settings
+          {tr("Back to settings", "Volver a la configuración")}
         </Button>
         <div
           className="workspace__view-toggle"
           role="group"
-          aria-label="Workspace content view"
+          aria-label={tr(
+            "Workspace content view",
+            "Vista del espacio de trabajo",
+          )}
         >
           {canViewGraph ? (
             <Button
@@ -82,12 +98,15 @@ function WorkspaceHeader({
               onClick={() => onViewModeChange("graph")}
             >
               <ChartLine />
-              Chart
+              {tr("Chart", "Diagrama")}
             </Button>
           ) : (
             <span
               className="workspace__view-disabled-tip"
-              data-tooltip="The chart could not be generated for this fluid. Only the table view is available."
+              data-tooltip={tr(
+                "The chart could not be generated for this fluid. Only the table view is available.",
+                "No se pudo generar el diagrama para este fluido. Solo está disponible la vista de tabla.",
+              )}
             >
               <Button
                 variant="plain"
@@ -97,7 +116,7 @@ function WorkspaceHeader({
                 tabIndex={-1}
               >
                 <ChartLine />
-                Chart
+                {tr("Chart", "Diagrama")}
               </Button>
             </span>
           )}
@@ -108,7 +127,7 @@ function WorkspaceHeader({
             onClick={() => onViewModeChange("table")}
           >
             <Table2 />
-            Table
+            {tr("Table", "Tabla")}
           </Button>
         </div>
       </div>
@@ -212,7 +231,12 @@ export function WorkspaceView() {
     setFormError(null);
 
     if (!fluid) {
-      setFormError("Select a fluid first in settings.");
+      setFormError(
+        tr(
+          "Select a fluid first in settings.",
+          "Primero elige un fluido en la configuración.",
+        ),
+      );
       return;
     }
 
@@ -220,7 +244,7 @@ export function WorkspaceView() {
     const normalizedValue2 = normalizeNumericInput(formState.value2);
 
     if (!normalizedValue1 || !normalizedValue2) {
-      setFormError("Both values must be numeric.");
+      setFormError(NOT_NUMERIC);
       return;
     }
 
@@ -228,7 +252,7 @@ export function WorkspaceView() {
     const displayValue2 = Number(normalizedValue2);
 
     if (!Number.isFinite(displayValue1) || !Number.isFinite(displayValue2)) {
-      setFormError("Both values must be numeric.");
+      setFormError(NOT_NUMERIC);
       return;
     }
 
@@ -253,8 +277,10 @@ export function WorkspaceView() {
         problem = validityError(solved, fluidData(fluid), system);
       } catch (error) {
         console.error("State validation failed", error);
-        problem =
-          "CoolProp rejected these inputs. Try different properties or values.";
+        problem = tr(
+          "CoolProp rejected these inputs. Try different properties or values.",
+          "CoolProp rechazó estas entradas. Prueba otras propiedades o valores.",
+        );
       }
       // Closed, reopened or submitted again while the worker was solving.
       if (token !== submission.current) return;
@@ -340,8 +366,11 @@ export function WorkspaceView() {
 
   const unitLabel = UNIT_LABELS[units] ?? units.toUpperCase();
   const statesSummary = states.length
-    ? `${states.length} state${states.length > 1 ? "s" : ""} tracked`
-    : "No states tracked yet";
+    ? tr(
+        `${count(states.length, "state", "states")} tracked`,
+        count(states.length, "estado registrado", "estados registrados"),
+      )
+    : tr("No states tracked yet", "Aún no hay estados registrados");
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -360,13 +389,14 @@ export function WorkspaceView() {
       {legacyLink ? (
         <div className="workspace__notice" role="status">
           <p>
-            This link was created with an earlier version of Thermoprops and its
-            states can no longer be opened. Add them again to share an
-            up-to-date link.
+            {tr(
+              "This link was created with an earlier version of Thermoprops and its states can no longer be opened. Add them again to share an up-to-date link.",
+              "Este enlace se creó con una versión anterior de Thermoprops y sus estados ya no se pueden abrir. Agrégalos de nuevo para compartir un enlace actualizado.",
+            )}
           </p>
           <Button variant="ghost" size="sm" onClick={dismissLegacyLink}>
             <X />
-            Dismiss
+            {tr("Dismiss", "Descartar")}
           </Button>
         </div>
       ) : null}

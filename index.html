@@ -8,16 +8,45 @@
       // before the first paint, so the landing is never seen there. Keep in
       // step with src/lib/installed.ts. (Apps installed before /home existed
       // still start at the landing's address.)
-      if (
+      var toHome =
         /^\/thermoprops\/?$/.test(location.pathname) &&
         (matchMedia(
           "(display-mode: standalone), (display-mode: minimal-ui), (display-mode: fullscreen), (display-mode: window-controls-overlay)",
         ).matches ||
-          navigator.standalone === true)
-      ) {
-        location.replace("/thermoprops/home/" + location.search);
-      }
+          navigator.standalone === true);
+      if (toHome) location.replace("/thermoprops/home/" + location.search);
+      // The page's language (see src/i18n/index.ts, and keep the key in
+      // step): Spanish at /es/, the Spanish landing, which also makes it the
+      // visitor's choice; else the visitor's choice; else English. The
+      // English landing takes a Spanish visitor to /es/. A built page in
+      // another language (the others are English) stays hidden until the app
+      // draws it in this one (src/main.tsx).
+      (function () {
+        var html = document.documentElement;
+        var path = location.pathname;
+        var base = /^\/thermoprops(\/|$)/.test(path) ? "/thermoprops/" : "/";
+        var spanishLanding = path === base + "es" || path === base + "es/";
+        var saved = null;
+        try {
+          if (spanishLanding) localStorage.setItem("thermoprops.locale", "es");
+          saved = localStorage.getItem("thermoprops.locale");
+        } catch (e) {}
+        var lang = spanishLanding || saved === "es" ? "es" : "en";
+        if (path === base && lang === "es" && !toHome) {
+          location.replace(base + "es/" + location.search);
+        }
+        html.dataset.built = html.lang;
+        if (lang !== html.lang) {
+          html.lang = lang;
+          html.classList.add("locale-pending");
+        }
+      })();
     </script>
+    <style>
+      .locale-pending #root {
+        visibility: hidden;
+      }
+    </style>
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual"

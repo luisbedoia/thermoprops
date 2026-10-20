@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import { initCoolProp, isCoolPropLoaded } from "../coolprop";
+import { tr } from "../i18n";
 
 type Status = "loading" | "ready" | "error";
 
@@ -38,7 +39,10 @@ export function CoolPropGate() {
   if (status === "error")
     return (
       <p className="app-loader error" role="status">
-        Unable to load CoolProp module.
+        {tr(
+          "Unable to load CoolProp module.",
+          "No se pudo cargar el módulo de CoolProp.",
+        )}
       </p>
     );
   return <Loading />;
@@ -47,7 +51,7 @@ export function CoolPropGate() {
 function Loading() {
   return (
     <p className="app-loader" role="status">
-      Loading calculator…
+      {tr("Loading calculator…", "Cargando la calculadora…")}
     </p>
   );
 }

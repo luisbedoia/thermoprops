@@ -18,6 +18,8 @@ import {
 import { textbookProperty } from "../evaluate";
 import { lineKind, type CompletionData } from "./completions";
 import { phaseLabel, propertyValue } from "./describe";
+import { displayName } from "../../coolprop";
+import { tr } from "../../i18n";
 
 const CARD_PROPERTIES = ["T", "P", "h", "s", "x", "D"];
 
@@ -95,13 +97,17 @@ export function scriptHover(get: () => CompletionData) {
       const value = st ? propertyValue(st, prop.field, units) : undefined;
       const { root, body } = card(
         w.before.endsWith(".") ? `${owner}.${prop.name}` : w.text,
-        `${prop.info} of state ${owner}`,
+        tr(
+          `${prop.info} of state ${owner}`,
+          `${prop.info} del estado ${owner}`,
+        ),
       );
       body.append(
         el(
           "p",
           "script-hover__value",
-          value ?? (st?.error ? "State not solved" : "—"),
+          value ??
+            (st?.error ? tr("State not solved", "Estado no resuelto") : "—"),
         ),
       );
       return make(root);
@@ -116,8 +122,8 @@ export function scriptHover(get: () => CompletionData) {
       (statement === "state" && /\bfrom\s+$/.test(w.before));
     if (isStateHere && st) {
       const { root, body } = card(
-        `State ${st.name}`,
-        [st.fluid, st.how].filter(Boolean).join(" · "),
+        `${tr("State", "Estado")} ${st.name}`,
+        [st.fluid && displayName(st.fluid), st.how].filter(Boolean).join(" · "),
       );
       if (st.state) {
         const grid = el("dl", "script-hover__grid");
@@ -132,7 +138,13 @@ export function scriptHover(get: () => CompletionData) {
           el("p", "script-hover__sub", phaseLabel(st.state.phase)),
         );
       } else {
-        body.append(el("p", "script-hover__error", st.error ?? "Not solved"));
+        body.append(
+          el(
+            "p",
+            "script-hover__error",
+            st.error ?? tr("Not solved", "No resuelto"),
+          ),
+        );
       }
       return make(root);
     }
@@ -140,11 +152,15 @@ export function scriptHover(get: () => CompletionData) {
     // A variable.
     const v = result?.values.find((x) => x.name === w.text);
     if (v && !w.after.startsWith(".") && !w.after.startsWith("(")) {
-      const { root, body } = card(v.name, "variable");
+      const { root, body } = card(v.name, tr("variable", "variable"));
       body.append(
         v.value
           ? el("p", "script-hover__value", formatQuantity(v.value, units))
-          : el("p", "script-hover__error", v.error ?? "No value"),
+          : el(
+              "p",
+              "script-hover__error",
+              v.error ?? tr("No value", "Sin valor"),
+            ),
       );
       return make(root);
     }

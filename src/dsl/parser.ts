@@ -17,6 +17,7 @@
  * does `1.h` (the only way for a state named by a word: `inlet.h`).
  */
 import { UNIT_NAMES } from "./units";
+import { tr } from "../i18n";
 
 export type Span = { line: number; col: number };
 
@@ -224,7 +225,10 @@ export function tokenize(source: string): Token[] {
     if (c === '"') {
       const close = source.indexOf('"', i + 1);
       if (close < 0 || source.slice(i, close).includes("\n")) {
-        throw new ParseError("Unterminated string", at(i));
+        throw new ParseError(
+          tr("Unterminated string", "Cadena sin cerrar"),
+          at(i),
+        );
       }
       tokens.push({
         kind: "string",
@@ -257,7 +261,10 @@ export function tokenize(source: string): Token[] {
       i += punct.length;
       continue;
     }
-    throw new ParseError(`Unexpected character "${c}"`, at(i));
+    throw new ParseError(
+      tr(`Unexpected character "${c}"`, `Carácter inesperado "${c}"`),
+      at(i),
+    );
   }
   tokens.push({ kind: "newline", text: "\n", ...at(i), start: i, end: i });
   tokens.push({ kind: "eof", text: "", ...at(i), start: i, end: i });
@@ -296,26 +303,32 @@ class Parser {
   private expect(text: string, what = `"${text}"`): Token {
     const t = this.peek();
     if (t.kind === "punct" && t.text === text) return this.next();
-    throw new ParseError(`Expected ${what}, found ${describe(t)}`, t);
+    throw new ParseError(expected(what, t), t);
   }
 
   private word(what: string): Token {
     const t = this.peek();
     if (t.kind === "word") return this.next();
-    throw new ParseError(`Expected ${what}, found ${describe(t)}`, t);
+    throw new ParseError(expected(what, t), t);
   }
 
   /** A fluid name: bare (R134a) or quoted ("R-410A"). */
   private fluidName(): string {
     const t = this.peek();
     if (t.kind === "word" || t.kind === "string") return this.next().text;
-    throw new ParseError(`Expected a fluid name, found ${describe(t)}`, t);
+    throw new ParseError(
+      expected(tr("a fluid name", "un nombre de fluido"), t),
+      t,
+    );
   }
 
   private endOfStatement() {
     const t = this.peek();
     if (t.kind !== "newline") {
-      throw new ParseError(`Unexpected ${describe(t)}`, t);
+      throw new ParseError(
+        tr(`Unexpected ${describe(t)}`, `Inesperado: ${describe(t)}`),
+        t,
+      );
     }
   }
 
@@ -363,14 +376,19 @@ class Parser {
       case "units":
         return {
           kind: "units",
-          system: this.word("a unit system").text,
+          system: this.word(tr("a unit system", "un sistema de unidades")).text,
           span,
           text,
         };
       case "reference":
         return {
           kind: "reference",
-          name: this.word("a reference state (IIR, ASHRAE, NBP or DEF)").text,
+          name: this.word(
+            tr(
+              "a reference state (IIR, ASHRAE, NBP or DEF)",
+              "un estado de referencia (IIR, ASHRAE, NBP o DEF)",
+            ),
+          ).text,
           span,
           text,
         };
@@ -379,7 +397,10 @@ class Parser {
         while (this.accept("->")) states.push(this.stateName());
         if (states.length < 2) {
           throw new ParseError(
-            "draw links two or more states with ->, e.g. draw 1 -> 2",
+            tr(
+              "draw links two or more states with ->, e.g. draw 1 -> 2",
+              "draw une dos o más estados con ->, p. ej. draw 1 -> 2",
+            ),
             span,
           );
         }
@@ -398,7 +419,10 @@ class Parser {
   private value(name: Token, span: Span, text: string): Stmt {
     if (/^\d/.test(name.text)) {
       throw new ParseError(
-        `Names of values start with a letter; "${name.text}" is a state's name (${name.text}: T = ..., P = ...)`,
+        tr(
+          `Names of values start with a letter; "${name.text}" is a state's name (${name.text}: T = ..., P = ...)`,
+          `Los nombres de valores empiezan con una letra; "${name.text}" es el nombre de un estado (${name.text}: T = ..., P = ...)`,
+        ),
         name,
       );
     }
@@ -431,8 +455,14 @@ class Parser {
     }
     throw new ParseError(
       fluid !== undefined || /^\d/.test(name)
-        ? `Expected ":" after the state's name: ${name}: T = ..., P = ...`
-        : `Expected ":" (a state: ${name}: T = ..., P = ...) or "=" (a value: ${name} = ...)`,
+        ? tr(
+            `Expected ":" after the state's name: ${name}: T = ..., P = ...`,
+            `Se esperaba ":" después del nombre del estado: ${name}: T = ..., P = ...`,
+          )
+        : tr(
+            `Expected ":" (a state: ${name}: T = ..., P = ...) or "=" (a value: ${name} = ...)`,
+            `Se esperaba ":" (un estado: ${name}: T = ..., P = ...) o "=" (un valor: ${name} = ...)`,
+          ),
       this.peek(),
     );
   }
@@ -448,7 +478,14 @@ class Parser {
     const assigns: Assign[] = [];
     const takeFrom = () => {
       const t = this.next();
-      if (from) throw new ParseError("The starting state is given twice", t);
+      if (from)
+        throw new ParseError(
+          tr(
+            "The starting state is given twice",
+            "El estado inicial se da dos veces",
+          ),
+          t,
+        );
       from = this.stateName();
     };
     do {
@@ -463,13 +500,18 @@ class Parser {
         !isAssign
       ) {
         this.next();
-        const phase = this.word('"liquid" or "vapor"');
+        const phase = this.word(
+          tr('"liquid" or "vapor"', '"liquid" o "vapor"'),
+        );
         const x = has(SATURATION, phase.text)
           ? SATURATION[phase.text]
           : undefined;
         if (x === undefined) {
           throw new ParseError(
-            `Expected "liquid" or "vapor", found "${phase.text}"`,
+            tr(
+              `Expected "liquid" or "vapor", found "${phase.text}"`,
+              `Se esperaba "liquid" o "vapor", se encontró "${phase.text}"`,
+            ),
             phase,
           );
         }
@@ -481,7 +523,13 @@ class Parser {
       } else if (t.kind === "word" && PROCESSES.includes(t.text) && !isAssign) {
         this.next();
         if (process) {
-          throw new ParseError("A state is reached by one process", t);
+          throw new ParseError(
+            tr(
+              "A state is reached by one process",
+              "Un estado se alcanza por un solo proceso",
+            ),
+            t,
+          );
         }
         process = {
           name: t.text,
@@ -502,7 +550,10 @@ class Parser {
     if (process) {
       if (!from) {
         throw new ParseError(
-          `Say where it starts: ${name}: from 1, ${process.name} to ...`,
+          tr(
+            `Say where it starts: ${name}: from 1, ${process.name} to ...`,
+            `Indica desde dónde parte: ${name}: from 1, ${process.name} to ...`,
+          ),
           process.span,
         );
       }
@@ -517,15 +568,24 @@ class Parser {
     }
     if (from) {
       throw new ParseError(
-        `Say how it is reached from ${from.name}: isentropic, isobaric, compressed, expanded, throttled, ...`,
+        tr(
+          `Say how it is reached from ${from.name}: isentropic, isobaric, compressed, expanded, throttled, ...`,
+          `Indica cómo se alcanza desde ${from.name}: isentropic, isobaric, compressed, expanded, throttled, ...`,
+        ),
         from.span,
       );
     }
     if (assigns.length !== 2) {
       throw new ParseError(
         assigns.length < 2
-          ? "A state needs two properties, e.g. T = 25 °C, P = 1 bar"
-          : `A state is fixed by two properties, not ${assigns.length}`,
+          ? tr(
+              "A state needs two properties, e.g. T = 25 °C, P = 1 bar",
+              "Un estado necesita dos propiedades, p. ej. T = 25 °C, P = 1 bar",
+            )
+          : tr(
+              `A state is fixed by two properties, not ${assigns.length}`,
+              `Un estado se fija con dos propiedades, no ${assigns.length}`,
+            ),
         assigns[assigns.length < 2 ? 0 : 2].span,
       );
     }
@@ -533,7 +593,10 @@ class Parser {
   }
 
   /** A state name: a word (2s, evap_out) or a plain number (1). */
-  private stateName(what = "a state name"): { name: string; span: Span } {
+  private stateName(what = tr("a state name", "un nombre de estado")): {
+    name: string;
+    span: Span;
+  } {
     const t = this.peek();
     if (
       t.kind === "word" ||
@@ -542,11 +605,11 @@ class Parser {
       this.next();
       return { name: t.text, span: { line: t.line, col: t.col } };
     }
-    throw new ParseError(`Expected ${what}, found ${describe(t)}`, t);
+    throw new ParseError(expected(what, t), t);
   }
 
   private assign(): Assign {
-    const t = this.word("a property name");
+    const t = this.word(PROPERTY_NAME);
     this.expect("=");
     return {
       span: { line: t.line, col: t.col },
@@ -568,7 +631,13 @@ class Parser {
       this.next();
       const unit = this.peek();
       if (unit.kind !== "unit") {
-        throw new ParseError(`Expected a unit after "in", e.g. in °F`, unit);
+        throw new ParseError(
+          tr(
+            `Expected a unit after "in", e.g. in °F`,
+            `Se esperaba una unidad después de "in", p. ej. in °F`,
+          ),
+          unit,
+        );
       }
       this.next();
       item.unit = unit.text;
@@ -655,7 +724,7 @@ class Parser {
         return {
           kind: "prop",
           state: t.text,
-          prop: this.word("a property name").text,
+          prop: this.word(PROPERTY_NAME).text,
           span,
         };
       }
@@ -670,7 +739,10 @@ class Parser {
       }
       if (/^\d/.test(t.text)) {
         throw new ParseError(
-          `"${t.text}" is a state: read a property, e.g. h${t.text} or ${t.text}.h`,
+          tr(
+            `"${t.text}" is a state: read a property, e.g. h${t.text} or ${t.text}.h`,
+            `"${t.text}" es un estado: lee una propiedad, p. ej. h${t.text} o ${t.text}.h`,
+          ),
           t,
         );
       }
@@ -681,24 +753,33 @@ class Parser {
       this.expect(")");
       return inner;
     }
-    throw new ParseError(`Expected a value, found ${describe(t)}`, t);
+    throw new ParseError(expected(tr("a value", "un valor"), t), t);
   }
 }
 
 function describe(t: Token): string {
   switch (t.kind) {
     case "newline":
-      return "end of line";
+      return tr("end of line", "fin de línea");
     case "eof":
-      return "end of script";
+      return tr("end of script", "fin del código");
     case "string":
       return `"${t.text}"`;
     case "unit":
-      return `the unit "${t.text}"`;
+      return tr(`the unit "${t.text}"`, `la unidad "${t.text}"`);
     default:
       return `"${t.text}"`;
   }
 }
+
+/** "Expected a value, found end of line". */
+const expected = (what: string, t: Token) =>
+  tr(
+    `Expected ${what}, found ${describe(t)}`,
+    `Se esperaba ${what}, se encontró ${describe(t)}`,
+  );
+
+const PROPERTY_NAME = tr("a property name", "un nombre de propiedad");
 
 export function parse(source: string): {
   statements: Stmt[];

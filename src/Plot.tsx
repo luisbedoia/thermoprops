@@ -12,7 +12,8 @@ import type {
   InputName,
 } from "@luisbedoia/coolprop-rs-wasm";
 import "./Plot.css";
-import { coolprop, fluidData } from "./coolprop";
+import { tr } from "./i18n";
+import { coolprop, displayName, fluidData } from "./coolprop";
 import { buildChartLabels } from "./lib/chartLabels";
 import {
   APP_LOOK,
@@ -69,7 +70,10 @@ type ThermoPlotProps = {
   units?: string;
 };
 
-const PLOT_FAILED = "The plot could not be generated for the current settings.";
+const PLOT_FAILED = tr(
+  "The plot could not be generated for the current settings.",
+  "No se pudo generar el diagrama con la configuración actual.",
+);
 
 function useLegendPlacement(
   wrapperRef: RefObject<HTMLDivElement | null>,
@@ -324,7 +328,10 @@ export function ThermoPlot({
   }, [answer, requestKey]);
 
   const setupError = !fluid
-    ? "Select a fluid in settings to render a chart."
+    ? tr(
+        "Select a fluid in settings to render a chart.",
+        "Elige un fluido en la configuración para dibujar un diagrama.",
+      )
     : computed && "error" in computed
       ? PLOT_FAILED
       : null;
@@ -461,8 +468,8 @@ export function ThermoPlot({
     const layout = {
       ...buildPlotLayout(
         look.shortTitle
-          ? `${fluidData(fluid).name} · ${diagramSymbols(diagram)}`
-          : `${fluidData(fluid).name} - ${diagramLabel(diagram)}`,
+          ? `${fluidData(fluid).display_name} · ${diagramSymbols(diagram)}`
+          : `${fluidData(fluid).display_name} - ${diagramLabel(diagram)}`,
         x,
         y,
         legendPlacement,
@@ -565,7 +572,7 @@ export function ThermoPlot({
       <div className="plot-controls">
         {fluids && fluids.length > 1 && (
           <div className="control">
-            <label htmlFor="plot-fluid">Fluid</label>
+            <label htmlFor="plot-fluid">{tr("Fluid", "Fluido")}</label>
             <select
               id="plot-fluid"
               name="plot-fluid"
@@ -574,14 +581,16 @@ export function ThermoPlot({
             >
               {fluids.map((f) => (
                 <option key={f} value={f}>
-                  {f}
+                  {displayName(f)}
                 </option>
               ))}
             </select>
           </div>
         )}
         <div className="control">
-          <label htmlFor="plot-type">Chart type</label>
+          <label htmlFor="plot-type">
+            {tr("Chart type", "Tipo de diagrama")}
+          </label>
           <select
             id="plot-type"
             name="plot-type"
@@ -598,7 +607,7 @@ export function ThermoPlot({
           </select>
         </div>
         <div className="control">
-          <label htmlFor="isolines">Isolines</label>
+          <label htmlFor="isolines">{tr("Isolines", "Isolíneas")}</label>
           <select
             id="isolines"
             name="isolines"
@@ -635,7 +644,7 @@ export function ThermoPlot({
           }}
         >
           <ImageDown />
-          Download PNG
+          {tr("Download PNG", "Descargar PNG")}
         </Button>
       </div>
 
@@ -647,7 +656,9 @@ export function ThermoPlot({
           <div className="plot-message error">{shownError}</div>
         ) : null}
         {shownStatus === "loading" && (
-          <div className="plot-message">Preparing plot…</div>
+          <div className="plot-message">
+            {tr("Preparing plot…", "Preparando el diagrama…")}
+          </div>
         )}
         {/* Always mounted, so a re-render after an error still finds it. */}
         <div

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ScriptResult } from "./evaluate";
 import type { ScriptRequest } from "./worker";
+import { workerName } from "../i18n";
 
 type Reply =
   | { id: number; result: ScriptResult }
@@ -15,7 +16,8 @@ function run(source: string, fresh: boolean): Promise<Reply> {
   if (!worker) {
     worker = new Worker(new URL("./worker.ts", import.meta.url), {
       type: "module",
-      name: "script",
+      // Its messages, and coolprop-rs's, in the page's language.
+      name: workerName("script"),
     });
     worker.onmessage = (e: MessageEvent<Reply>) => {
       pending.get(e.data.id)?.(e.data);
