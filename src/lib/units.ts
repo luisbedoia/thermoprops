@@ -97,6 +97,14 @@ function unitOf(name: string, system: UnitSystem) {
   return kind && kind !== "dimensionless" ? UNIT_OF[system][kind] : null;
 }
 
+/**
+ * The unit `name` is shown and read in by default in `system`, by its name
+ * in the script language ("kPa", "lbm/ft^3"); null for dimensionless ones.
+ */
+export function systemUnit(name: string, system: UnitSystem): string | null {
+  return unitOf(name, system)?.unit ?? null;
+}
+
 /** Display unit of `name` in `system`; "" for dimensionless quantities. */
 export function getDisplayUnit(name: string, system: UnitSystem): string {
   return unitOf(name, system)?.label ?? "";

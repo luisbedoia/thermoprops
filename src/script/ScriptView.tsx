@@ -827,7 +827,11 @@ export function ScriptView() {
               onSuggestions={setSuggestions}
               bottomInset={inset ? inset + 12 : 0}
               onCaretMoved={editing ? onCaretMoved : undefined}
-              data={{ result, fluids: coolprop().catalog() }}
+              data={{
+                result,
+                fluids: coolprop().catalog(),
+                pairs: coolprop().pairs(),
+              }}
               current={!pending}
             />
           </div>
