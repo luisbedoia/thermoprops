@@ -15,26 +15,33 @@
         ).matches ||
           navigator.standalone === true);
       if (toHome) location.replace("/thermoprops/home/" + location.search);
-      // The page's language (see src/i18n/index.ts, and keep the key in
-      // step): Spanish at /es/, the Spanish landing, which also makes it the
-      // visitor's choice; else the visitor's choice; else English. The
-      // English landing takes a Spanish visitor to /es/. A built page in
-      // another language (the others are English) stays hidden until the app
-      // draws it in this one (src/main.tsx).
+      // The page's language (see src/i18n/index.ts, and keep the key and
+      // the addresses in step): pages with an address per language are in
+      // theirs, and a Spanish one (/es/...) also makes it the visitor's
+      // choice; the others in the visitor's choice, else English. A Spanish
+      // visitor on an English address of those (the landing, /fluids/...)
+      // goes to the Spanish one. A built page in another language than the
+      // visitor's stays hidden until the app draws it in theirs (main.tsx).
       (function () {
         var html = document.documentElement;
         var path = location.pathname;
         var base = /^\/thermoprops(\/|$)/.test(path) ? "/thermoprops/" : "/";
-        var spanishLanding = path === base + "es" || path === base + "es/";
+        var rel = "/" + path.slice(base.length);
+        var spanish = /^\/es(\/|$)/.test(rel);
+        var english = /^\/fluids(\/|$)/.test(rel);
         var saved = null;
         try {
-          if (spanishLanding) localStorage.setItem("thermoprops.locale", "es");
+          if (spanish) localStorage.setItem("thermoprops.locale", "es");
           saved = localStorage.getItem("thermoprops.locale");
         } catch (e) {}
-        var lang = spanishLanding || saved === "es" ? "es" : "en";
-        if (path === base && lang === "es" && !toHome) {
-          location.replace(base + "es/" + location.search);
+        if (saved === "es" && !toHome) {
+          if (rel === "/") location.replace(base + "es/" + location.search);
+          else if (english)
+            location.replace(
+              base + "es/fluidos" + rel.slice(7) + location.search,
+            );
         }
+        var lang = spanish || (saved === "es" && !english) ? "es" : "en";
         html.dataset.built = html.lang;
         if (lang !== html.lang) {
           html.lang = lang;
@@ -151,9 +158,9 @@
       gtag("js", new Date());
       gtag("config", "G-R76PJHB69S");
     </script>
-    <script type="module" crossorigin src="/thermoprops/assets/index-QWpXV6b7.js"></script>
+    <script type="module" crossorigin src="/thermoprops/assets/index-BxEnIZVj.js"></script>
     <link rel="modulepreload" crossorigin href="/thermoprops/assets/rolldown-runtime-WkwZ5CU-.js">
-    <link rel="stylesheet" crossorigin href="/thermoprops/assets/index-BCOXidob.css">
+    <link rel="stylesheet" crossorigin href="/thermoprops/assets/index-DiA4KHkT.css">
   <link rel="manifest" href="/thermoprops/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/thermoprops/registerSW.js" defer></script>
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="/thermoprops/favicon.ico" sizes="48x48">
