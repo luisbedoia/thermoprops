@@ -58,29 +58,38 @@ export function isDimensionless(d: Dim): boolean {
 type UnitDef = { dim: Dim; scale: number; offset?: number; absolute?: true };
 
 const R_PER_K = 9 / 5;
+/** 0 °C in kelvin. */
+const ZERO_C = 273.15;
 const FT = 0.3048;
 const LB = 0.45359237;
 const BTU = 1055.05585262;
+const PSI = 6894.757293168361;
+/** BTU/lbm and BTU/(lbm·R) as the steam tables define them (IT). */
+const BTU_PER_LB = 2326;
+const BTU_PER_LB_R = 4186.8;
 
 /**
  * Units a literal can carry, `si = value * scale + offset`. Matched longest
  * first, so "kJ/(kg*K)" wins over "kJ/kg" and "kJ". No "h", "s", "J" or
  * "R": they read as names (`1.h`, `s = 1.s`, a gas constant R).
+ *
+ * The app's only conversion table: the unit systems' display units
+ * (lib/units.ts) convert with it too.
  */
 export const UNITS: Record<string, UnitDef> = {
   K: { dim: TEMPERATURE, scale: 1 },
-  "°C": { dim: TEMPERATURE, scale: 1, offset: 273.15, absolute: true },
-  degC: { dim: TEMPERATURE, scale: 1, offset: 273.15, absolute: true },
+  "°C": { dim: TEMPERATURE, scale: 1, offset: ZERO_C, absolute: true },
+  degC: { dim: TEMPERATURE, scale: 1, offset: ZERO_C, absolute: true },
   "°F": {
     dim: TEMPERATURE,
     scale: 1 / R_PER_K,
-    offset: 273.15 - 32 / R_PER_K,
+    offset: ZERO_C - 32 / R_PER_K,
     absolute: true,
   },
   degF: {
     dim: TEMPERATURE,
     scale: 1 / R_PER_K,
-    offset: 273.15 - 32 / R_PER_K,
+    offset: ZERO_C - 32 / R_PER_K,
     absolute: true,
   },
   Pa: { dim: PRESSURE, scale: 1 },
@@ -88,14 +97,14 @@ export const UNITS: Record<string, UnitDef> = {
   MPa: { dim: PRESSURE, scale: 1e6 },
   bar: { dim: PRESSURE, scale: 1e5 },
   atm: { dim: PRESSURE, scale: 101325 },
-  psi: { dim: PRESSURE, scale: 6894.757293168361 },
+  psi: { dim: PRESSURE, scale: PSI },
   "kg/m^3": { dim: DENSITY, scale: 1 },
   "kg/m3": { dim: DENSITY, scale: 1 },
   "m^3/kg": { dim: SPEC_VOLUME, scale: 1 },
   "m3/kg": { dim: SPEC_VOLUME, scale: 1 },
   "J/kg": { dim: SPEC_ENERGY, scale: 1 },
   "kJ/kg": { dim: SPEC_ENERGY, scale: 1e3 },
-  "BTU/lb": { dim: SPEC_ENERGY, scale: 2326 },
+  "BTU/lb": { dim: SPEC_ENERGY, scale: BTU_PER_LB },
   "J/(kg*K)": { dim: SPEC_ENTROPY, scale: 1 },
   "kJ/(kg*K)": { dim: SPEC_ENTROPY, scale: 1e3 },
   "kJ/kgK": { dim: SPEC_ENTROPY, scale: 1e3 },
@@ -120,9 +129,10 @@ export const UNITS: Record<string, UnitDef> = {
   "W/(m^2*K)": { dim: HEAT_COEFFICIENT, scale: 1 },
   "kW/(m^2*K)": { dim: HEAT_COEFFICIENT, scale: 1e3 },
   "W/(m*K)": { dim: CONDUCTIVITY, scale: 1 },
+  "Pa*s": { dim: VISCOSITY, scale: 1 },
   // US customary.
   "°R": { dim: TEMPERATURE, scale: 1 / R_PER_K },
-  psia: { dim: PRESSURE, scale: 6894.757293168361 },
+  psia: { dim: PRESSURE, scale: PSI },
   ft: { dim: LENGTH, scale: FT },
   "ft^2": { dim: AREA, scale: FT ** 2 },
   "ft^3": { dim: VOLUME, scale: FT ** 3 },
@@ -133,8 +143,10 @@ export const UNITS: Record<string, UnitDef> = {
   "lbm/ft^3": { dim: DENSITY, scale: LB / FT ** 3 },
   "ft^3/lbm": { dim: SPEC_VOLUME, scale: FT ** 3 / LB },
   BTU: { dim: ENERGY, scale: BTU },
-  "BTU/lbm": { dim: SPEC_ENERGY, scale: 2326 },
-  "BTU/(lbm*R)": { dim: SPEC_ENTROPY, scale: 4186.8 },
+  "BTU/lbm": { dim: SPEC_ENERGY, scale: BTU_PER_LB },
+  "BTU/(lbm*R)": { dim: SPEC_ENTROPY, scale: BTU_PER_LB_R },
+  "lbm/(ft*s)": { dim: VISCOSITY, scale: LB / FT },
+  "BTU/(h*ft*R)": { dim: CONDUCTIVITY, scale: ((BTU / 3600) * R_PER_K) / FT },
   "BTU/s": { dim: POWER, scale: BTU },
   "BTU/h": { dim: POWER, scale: BTU / 3600 },
   "BTU/(h*R)": { dim: CONDUCTANCE, scale: (BTU / 3600) * R_PER_K },

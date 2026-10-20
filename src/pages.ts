@@ -1,6 +1,24 @@
 import { tr } from "./i18n";
 
 /**
+ * Every address with a page of its own in the build, by its folder: "" is
+ * the landing, "es" the Spanish one. The only list of them: the build writes
+ * each (scripts/postbuild.mjs) and lists them in pages.json, which the
+ * service worker reads to keep them for offline use (public/sw-pages.js).
+ * Each is a route of src/Router.tsx, which a test checks.
+ */
+export const BUILT_PAGES = [
+  "",
+  "es",
+  "home",
+  "explorer",
+  "settings",
+  "workspace",
+  "worksheet",
+  "script",
+];
+
+/**
  * The title and summary of the pages search engines should list. The build
  * writes them into each page's HTML (scripts/postbuild.mjs) and the app sets
  * the title as it moves between pages; the others keep the landing's.

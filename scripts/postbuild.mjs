@@ -17,18 +17,6 @@ import { createServer } from "vite";
 const DIST = "dist";
 const SITE_URL = "https://luisbedoia.github.io/thermoprops/";
 
-// Keep in sync with the routes in src/Router.tsx, and with the pages the
-// service worker keeps for offline use (public/sw-pages.js). "" is the landing.
-const APP_ROUTES = [
-  "",
-  "home",
-  "explorer",
-  "settings",
-  "workspace",
-  "worksheet",
-  "script",
-];
-
 // The text face, asked for with the page instead of after its stylesheet:
 // the first paint is in Inter, not in a fallback then Inter again.
 const inter = readdirSync(join(DIST, "assets")).find((f) =>
@@ -56,8 +44,9 @@ async function app(locale) {
   });
   try {
     const { prerender } = await server.ssrLoadModule("/src/prerender.tsx");
-    const { PAGES, LANDING } = await server.ssrLoadModule("/src/pages.ts");
-    return { server, prerender, PAGES, LANDING };
+    const { PAGES, LANDING, BUILT_PAGES } =
+      await server.ssrLoadModule("/src/pages.ts");
+    return { server, prerender, PAGES, LANDING, BUILT_PAGES };
   } catch (error) {
     await server.close();
     throw error;
@@ -65,7 +54,9 @@ async function app(locale) {
 }
 
 const en = await app("en");
-const { prerender, PAGES } = en;
+const { prerender, PAGES, BUILT_PAGES } = en;
+// The English pages; the Spanish landing is written apart.
+const APP_ROUTES = BUILT_PAGES.filter((route) => route !== "es");
 
 const escape = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
 
@@ -166,6 +157,13 @@ try {
 mkdirSync(join(DIST, "es"), { recursive: true });
 writeFileSync(join(DIST, "es", "index.html"), await spanishLanding());
 
+// The pages the service worker keeps for offline use, by their address
+// under its scope (public/sw-pages.js).
+writeFileSync(
+  join(DIST, "pages.json"),
+  JSON.stringify(BUILT_PAGES.map((route) => route && `${route}/`)),
+);
+
 // Only canonical, indexable URLs belong here.
 const SITEMAP_PATHS = [
   "",
@@ -190,7 +188,7 @@ ${urls}
 );
 
 console.log(
-  `postbuild: index.html, 404.html, ${[...APP_ROUTES.filter(Boolean), "es"]
+  `postbuild: index.html, 404.html, ${BUILT_PAGES.filter(Boolean)
     .map((r) => `${r}/index.html`)
-    .join(", ")}, sitemap.xml (${SITEMAP_PATHS.length} URLs)`,
+    .join(", ")}, pages.json, sitemap.xml (${SITEMAP_PATHS.length} URLs)`,
 );

@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { prerender } from "../prerender";
-import { pageTitle } from "../pages";
+import { createRoutesFromChildren, matchRoutes } from "react-router-dom";
+import type { ReactElement } from "react";
+import { BUILT_PAGES, pageTitle } from "../pages";
+import { AppRoutes } from "../Router";
 import { setCoolProp } from "../coolprop";
 
 afterEach(() => setCoolProp(null));
@@ -41,6 +44,19 @@ describe("prerender in Spanish", () => {
     expect(html).toContain("Abrir la Hoja de trabajo");
     expect(html).toContain('href="/worksheet"');
     expect(LANDING.title).toContain("Calculadora");
+  });
+});
+
+describe("BUILT_PAGES", () => {
+  it("are all routes of the app, none taken by the catch-all", () => {
+    // <Routes> around the layout's <Route>: the route tree, as the app has it.
+    const tree = (AppRoutes() as ReactElement<{ children: ReactElement }>).props
+      .children;
+    const routes = createRoutesFromChildren(tree);
+    const last = (path: string) => matchRoutes(routes, path)?.pop()?.route.path;
+    for (const page of BUILT_PAGES)
+      expect(last(`/${page}`), `/${page}`).not.toBe("*");
+    expect(last("/nowhere")).toBe("*");
   });
 });
 
