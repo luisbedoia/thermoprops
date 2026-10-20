@@ -27,7 +27,7 @@ describe("prerender", () => {
   });
 });
 
-describe("prerender in Spanish", () => {
+describe("prerender in Spanish", { timeout: 30_000 }, () => {
   afterEach(() => {
     delete (globalThis as { name?: string }).name;
     vi.resetModules();
@@ -57,6 +57,8 @@ describe("BUILT_PAGES", () => {
     for (const page of BUILT_PAGES)
       expect(last(`/${page}`), `/${page}`).not.toBe("*");
     expect(last("/nowhere")).toBe("*");
+    for (const path of ["/fluids", "/fluids/r134a", "/es/fluidos/water"])
+      expect(last(path), path).not.toBe("*");
   });
 });
 

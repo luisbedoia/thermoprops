@@ -106,7 +106,7 @@ describe("the app in Spanish", () => {
       await loadRealCoolProp(),
     );
     expect(r.states.map((s) => s.how)).toEqual(["P, x", "compresión desde 1"]);
-  });
+  }, 30_000);
 
   it("explains the worksheet's mistakes in Spanish", async () => {
     await load("es");

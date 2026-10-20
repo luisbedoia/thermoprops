@@ -1,0 +1,310 @@
+/*
+ * The fluids' pages, in the home's design (PlayStation's): a white canvas,
+ * light display type, 8px cards on the soft card tone, PlayStation Blue on
+ * the one action. Tables as the textbooks print them: numbers aligned on
+ * their figures, a quiet rule between rows.
+ */
+.fluid {
+  --ps-blue: #0070d1;
+  --ps-blue-pressed: #0064b7;
+  --ps-blue-active: #004d8d;
+  --ink: #000000;
+  --mute: #6b6b6b;
+  --card: #f5f7fa;
+  --rule: #e6e9ee;
+  --dome: #c81e3a;
+
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.25rem);
+  min-width: 0;
+  padding-block: clamp(0.25rem, 1.5vw, 1rem) 1.5rem;
+  color: var(--ink);
+}
+
+body:has(.fluid),
+body:has(.fluid) .app-shell {
+  background: #ffffff;
+}
+
+body:has(.fluid) .app-header {
+  box-shadow: none;
+}
+
+.fluid h1 {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  font-size: clamp(2rem, 2.6vw + 1rem, 3rem);
+  font-weight: 300;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+/* "Thermodynamic properties": the words searched for, under the name. */
+.fluid h1 span {
+  font-size: clamp(1.05rem, 0.5vw + 0.95rem, 1.3rem);
+  font-weight: 400;
+  color: var(--mute);
+}
+
+.fluid h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 300;
+  line-height: 1.25;
+}
+
+.fluid section {
+  min-width: 0;
+}
+
+.fluid__crumbs {
+  font-size: 0.9375rem;
+  color: var(--mute);
+}
+
+.fluid__crumbs a,
+.fluid__others a {
+  color: var(--ps-blue-pressed);
+  text-decoration: none;
+}
+
+.fluid__crumbs a:hover,
+.fluid__others a:hover,
+.fluid__table th a:hover {
+  text-decoration: underline;
+}
+
+.fluid__lead {
+  max-width: 44rem;
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.fluid__hint,
+.fluid__note {
+  max-width: 44rem;
+  margin: 0 0 0.75rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--mute);
+}
+
+.fluid__note code {
+  font-size: 0.875rem;
+}
+
+.fluid__cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+}
+
+/* Pills: the one action in PlayStation Blue, the other a plain link. */
+.fluid__primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  max-width: 100%;
+  padding: 0 1.5rem;
+  border-radius: 999px;
+  box-sizing: border-box;
+  background: var(--ps-blue);
+  color: #ffffff;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-decoration: none;
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.fluid__primary:hover {
+  background: var(--ps-blue-pressed);
+}
+
+.fluid__primary:active {
+  background: var(--ps-blue-active);
+  transform: scale(0.97);
+}
+
+.fluid__secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--ps-blue-pressed);
+  font-size: 1rem;
+  text-decoration: none;
+}
+
+.fluid__secondary:hover {
+  text-decoration: underline;
+}
+
+.fluid__primary svg,
+.fluid__secondary svg {
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.fluid a:focus-visible,
+.fluid__table:focus-visible {
+  outline: 2px solid var(--ps-blue);
+  outline-offset: 3px;
+}
+
+.fluid__constants {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 1px;
+  margin: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--rule);
+}
+
+.fluid__constants div {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.85rem 1rem;
+  background: var(--card);
+}
+
+.fluid__constants dt {
+  font-size: 0.8125rem;
+  color: var(--mute);
+}
+
+.fluid__constants dd {
+  margin: 0;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+/* Wide tables scroll within themselves, never the page. */
+.fluid__table {
+  max-width: 100%;
+  overflow-x: auto;
+  border-radius: 8px;
+  background: var(--card);
+}
+
+.fluid__table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.fluid__table caption {
+  padding: 0.75rem 1rem 0;
+  text-align: left;
+  font-size: 0.8125rem;
+  color: var(--mute);
+}
+
+.fluid__table th,
+.fluid__table td {
+  padding: 0.5rem 0.85rem;
+  border-bottom: 1px solid var(--rule);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.fluid__table thead th {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--mute);
+}
+
+.fluid__table tbody th {
+  font-weight: 600;
+}
+
+.fluid__table th:first-child {
+  text-align: left;
+}
+
+.fluid__table tr:last-child > * {
+  border-bottom: 0;
+}
+
+.fluid__table th a {
+  color: var(--ps-blue-pressed);
+  text-decoration: none;
+}
+
+.fluid__charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+  gap: 1.25rem;
+}
+
+.fluid__charts figure {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: var(--card);
+}
+
+.fluid__charts figcaption {
+  font-size: 0.875rem;
+  color: var(--mute);
+}
+
+.fluid-chart {
+  width: 100%;
+  height: auto;
+}
+
+.fluid-chart__grid line {
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+
+.fluid-chart text {
+  font-size: 12px;
+  fill: var(--mute);
+  font-variant-numeric: tabular-nums;
+}
+
+.fluid-chart__axis {
+  font-size: 13px;
+  fill: var(--ink);
+}
+
+.fluid-chart__isoline {
+  fill: none;
+  stroke: #8a94a3;
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+
+.fluid-chart text.fluid-chart__label {
+  font-size: 11px;
+  fill: #4b5563;
+}
+
+.fluid-chart__dome {
+  fill: none;
+  stroke: var(--dome);
+  stroke-width: 2;
+}
+
+.fluid__others ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

@@ -1,7 +1,9 @@
 /**
- * The page's language, chosen once when it loads: Spanish on the Spanish
- * landing (/es/), else the visitor's saved choice, else English. Changing it saves the choice and loads the page
- * again, so every text (the app's here, and coolprop-rs's: fluid names,
+ * The page's language, chosen once when it loads. The pages with an address
+ * in each language (the landing, the fluids' pages: see `localizedPath`) are
+ * in their address's; the others in the visitor's saved choice, else
+ * English. Changing it saves the choice and loads the page (or its address
+ * in the other language) again, so every text (the app's here, and coolprop-rs's: fluid names,
  * property descriptions, errors) comes in the new one. The work in progress
  * is kept in this browser (lib/sessions.ts), so nothing is lost.
  *
@@ -31,8 +33,10 @@ function detect(): Locale {
       const tag = name.slice(name.lastIndexOf(":") + 1);
       return isLocale(tag) ? tag : "en";
     }
-    // index.html saves the choice on /es/ too; this holds where storage refuses.
-    if (onSpanishLanding()) return "es";
+    // index.html saves the choice on Spanish addresses too; this holds where
+    // storage refuses.
+    const own = addressLocale(appPath());
+    if (own) return own;
     const saved = localStorage.getItem(KEY);
     return isLocale(saved) ? saved : "en";
   } catch {
@@ -59,16 +63,38 @@ export const workerName = (name: string) => `${name}:${locale}`;
 /** The landing in a language: "/" (English) or "/es" (Spanish), router paths. */
 export const landingPath = (l: Locale = locale) => (l === "es" ? "/es" : "/");
 
-/** Whether the page is the Spanish landing, built in Spanish (/es/). */
-function onSpanishLanding(): boolean {
+/**
+ * A page with an address in each language, in `l`: the landing ("/",
+ * "/es") and the fluids' pages ("/fluids/r134a", "/es/fluidos/r134a"),
+ * router paths. Null for the app's pages, which have one address for both.
+ * Keep in step with index.html, which takes Spanish visitors to theirs.
+ */
+export function localizedPath(path: string, l: Locale): string | null {
+  const p = path.replace(/\/+$/, "") || "/";
+  if (p === "/" || p === "/es") return landingPath(l);
+  const fluids = /^(?:\/fluids|\/es\/fluidos)(\/[^/]+)?$/.exec(p);
+  if (fluids)
+    return (l === "es" ? "/es/fluidos" : "/fluids") + (fluids[1] ?? "");
+  return null;
+}
+
+/** The language a page's address is in: Spanish under /es, English for /fluids. */
+function addressLocale(path: string): Locale | null {
+  if (/^\/es(\/|$)/.test(path)) return "es";
+  if (/^\/fluids(\/|$)/.test(path)) return "en";
+  return null;
+}
+
+/** The page's router path: the address without the app's base. */
+function appPath(): string {
   const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-  return /^\/es\/?$/.test(location.pathname.slice(base.length));
+  return location.pathname.slice(base.length) || "/";
 }
 
 /**
- * Saves `next` as the visitor's language and loads the page in it: the
- * landings by their own addresses, any other page again. Where storage
- * refuses, nothing is saved and the page stays as it is.
+ * Saves `next` as the visitor's language and loads the page in it: those
+ * with an address per language by theirs, any other page again. Where
+ * storage refuses, nothing is saved and the page stays as it is.
  */
 export function setLocale(next: Locale) {
   if (next === locale) return;
@@ -77,9 +103,9 @@ export function setLocale(next: Locale) {
   } catch {
     return;
   }
+  const other = localizedPath(appPath(), next);
+  if (other === null) return location.reload();
   const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-  const path = location.pathname.slice(base.length);
-  if (/^\/?$|^\/es\/?$/.test(path)) {
-    location.assign(base + (next === "es" ? "/es/" : "/") + location.search);
-  } else location.reload();
+  // Folder-style, as the built pages are served: "/es/", "/fluids/r134a/".
+  location.assign(base + (other === "/" ? "/" : `${other}/`) + location.search);
 }

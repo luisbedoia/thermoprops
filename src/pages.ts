@@ -70,7 +70,9 @@ export const LANDING = {
 };
 
 /** The title of the page at a router path ("/explorer", "/workspace"…). */
-export function pageTitle(pathname: string): string {
+export function pageTitle(pathname: string): string | null {
+  // The fluids' pages name themselves (src/fluids), by their fluid.
+  if (/^\/(fluids|es\/fluidos)(\/|$)/.test(pathname)) return null;
   const page = pathname.replace(/^\/+|\/+$/g, "").split("/")[0];
   // The State Explorer's other pages are the State Explorer too.
   const same = page === "settings" || page === "workspace" ? "explorer" : page;

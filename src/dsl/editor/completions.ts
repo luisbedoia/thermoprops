@@ -53,6 +53,9 @@ import {
 } from "../../lib/units";
 import { propertyValue, stateSummary } from "./describe";
 import { tr } from "../../i18n";
+import { plainFormula } from "../../lib/formula";
+
+export { plainFormula };
 
 export type CompletionData = {
   result?: ScriptResult;
@@ -783,19 +786,4 @@ export function suggestionsAt(
           .sort((a, b) => (b.boost ?? 0) - (a.boost ?? 0))
   ).slice(0, limit);
   return options.length ? { from: r.from, to: pos, options } : null;
-}
-
-const SUBSCRIPTS = "₀₁₂₃₄₅₆₇₈₉";
-
-/**
- * A formula as CoolProp writes it for LaTeX ("C_{2}F_{4}H_{2}") in plain
- * text, with subscript digits and no 1s: "C₂F₄H₂", "H₂O".
- */
-export function plainFormula(formula: string | null | undefined) {
-  if (!formula) return undefined;
-  return formula
-    .replace(/[$\\]/g, "")
-    .replace(/_\{(\d+)\}/g, (_, n: string) =>
-      n === "1" ? "" : [...n].map((d) => SUBSCRIPTS[Number(d)]).join(""),
-    );
 }

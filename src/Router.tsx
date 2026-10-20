@@ -12,6 +12,8 @@ import { Home } from "./home/Home";
 import { useInstalled } from "./lib/installed";
 import { CoolPropGate } from "./layout/CoolPropGate";
 import { landingPath } from "./i18n";
+import { FluidIndex } from "./fluids/FluidIndex";
+import { FluidPage } from "./fluids/FluidPage";
 
 // Each mode's code loads only when one of its pages is opened, so the
 // landing carries neither (the worksheet's editor is CodeMirror).
@@ -50,6 +52,11 @@ export function AppRoutes() {
         {/* The landing in Spanish, with its own address for search engines. */}
         <Route path="/es" element={<Root />} />
         <Route path="/home" element={<Home />} />
+        {/* Each fluid's properties, in each language: for search engines. */}
+        <Route path="/fluids" element={<FluidIndex />} />
+        <Route path="/fluids/:slug" element={<FluidPage />} />
+        <Route path="/es/fluidos" element={<FluidIndex />} />
+        <Route path="/es/fluidos/:slug" element={<FluidPage />} />
         <Route element={<CoolPropGate />}>
           {/* The State Explorer: a fluid and units, then its states. */}
           <Route path="/explorer" element={<SettingsView />} />

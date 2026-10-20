@@ -4,7 +4,7 @@ import { exampleLink } from "../lib/examples";
 import { useSavedWork } from "../lib/useSavedWork";
 import { LiveCycle } from "./LiveCycle";
 import { DemoVideo } from "./DemoVideo";
-import { tr } from "../i18n";
+import { locale, localizedPath, tr } from "../i18n";
 import "./Landing.css";
 
 const EXAMPLES = [
@@ -48,7 +48,14 @@ export function Landing() {
     <div className="landing">
       <section className="landing__hero" aria-labelledby="landing-title">
         <div className="landing__inner landing__hero-grid">
+          {/* What it is, as people search for it, over what it does. */}
           <h1 id="landing-title">
+            <span className="landing__kicker">
+              {tr(
+                "Free thermodynamic properties calculator",
+                "Calculadora de propiedades termodinámicas gratuita",
+              )}
+            </span>{" "}
             {tr(
               "Thermodynamic states, worked out",
               "Estados termodinámicos, resueltos",
@@ -57,8 +64,8 @@ export function Landing() {
           <div className="landing__intro">
             <p>
               {tr(
-                "CoolProp’s properties for 30 fluids, in your browser. Write states as in your notebook and calculate with them, from a single heat to a whole cycle, or explore them one at a time.",
-                "Las propiedades de CoolProp para 30 fluidos, en tu navegador. Escribe estados como en tu cuaderno y calcula con ellos, desde un calor hasta un ciclo completo, o explóralos uno a uno.",
+                "Thermodynamic properties of 30 fluids and refrigerants, by CoolProp, in your browser. Write states as in your notebook and calculate with them, from a single heat to a whole cycle, or explore them one at a time.",
+                "Propiedades termodinámicas de 30 fluidos y refrigerantes, calculadas con CoolProp en tu navegador. Escribe estados como en tu cuaderno y calcula con ellos, desde un calor hasta un ciclo completo, o explóralos uno a uno.",
               )}
             </p>
             <div className="landing__cta">
@@ -203,7 +210,12 @@ export function Landing() {
           <ul>
             <li>
               <h3>
-                {tr("30 fluids and refrigerants", "30 fluidos y refrigerantes")}
+                <Link to={localizedPath("/fluids", locale)!}>
+                  {tr(
+                    "30 fluids and refrigerants",
+                    "30 fluidos y refrigerantes",
+                  )}
+                </Link>
               </h3>
               <p>
                 {tr(

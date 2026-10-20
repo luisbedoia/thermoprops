@@ -146,6 +146,17 @@ body:has(.landing) .app-footer a:focus-visible {
   line-height: 1.05;
 }
 
+/* What the app is, in the words people search for: a line over the headline. */
+.landing__kicker {
+  display: block;
+  margin-bottom: 1rem;
+  font-size: clamp(0.95rem, 0.4vw + 0.85rem, 1.125rem);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.4;
+  color: var(--on-dark-mute);
+}
+
 .landing__intro > p {
   max-width: 34rem;
   font-size: clamp(1.125rem, 0.5vw + 1rem, 1.375rem);

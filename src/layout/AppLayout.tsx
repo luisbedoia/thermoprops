@@ -5,7 +5,14 @@ import { Button } from "../components/Button";
 import { Modal } from "../components/Modal";
 import { appTitle, pageTitle } from "../pages";
 import { useInstalled } from "../lib/installed";
-import { LOCALE_NAMES, landingPath, locale, setLocale, tr } from "../i18n";
+import {
+  LOCALE_NAMES,
+  landingPath,
+  localizedPath,
+  locale,
+  setLocale,
+  tr,
+} from "../i18n";
 import "./AppLayout.css";
 
 export function AppLayout() {
@@ -14,7 +21,8 @@ export function AppLayout() {
   const installed = useInstalled();
   const other = locale === "es" ? "en" : "es";
   useEffect(() => {
-    document.title = installed ? appTitle(pathname) : pageTitle(pathname);
+    const title = installed ? appTitle(pathname) : pageTitle(pathname);
+    if (title) document.title = title;
     // The browser's (or the installed app's) bar takes the page's ground:
     // black on the landing, white everywhere else.
     document
@@ -62,6 +70,9 @@ export function AppLayout() {
         <Outlet />
       </main>
       <footer className="app-footer">
+        <Link to={localizedPath("/fluids", locale)!}>
+          {tr("Fluid properties", "Propiedades de fluidos")}
+        </Link>
         <span>
           {tr("Properties by", "Propiedades por")}{" "}
           <a
