@@ -151,7 +151,8 @@ export function scriptCompletions(get: () => CompletionData): CompletionSource {
       }
     }
     // After a name at the start of a line: "1", "inlet", "COP".
-    if ((m = /^\s*(\w+)(\s*)$/.exec(before))) {
+    // ("print |" goes on to what there is to print, as after its commas.)
+    if ((m = /^\s*(\w+)(\s*)$/.exec(before)) && !/^\s*print\s+$/.test(before)) {
       if (!context.explicit || STATEMENT_KEYWORDS.includes(m[1])) return null;
       const gap = m[2] ? "" : " ";
       const options = [option(":", ": ", "a state")];

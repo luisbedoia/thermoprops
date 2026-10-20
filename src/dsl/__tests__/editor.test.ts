@@ -191,6 +191,10 @@ describe("keypad suggestions", () => {
 
   it("narrow by what is typed and drop the exact match", () => {
     expect(at("print 1.c|").map(([l]) => l)).toEqual(["cp", "cv"]);
+    // Right after "print": what there is to print, the values first.
+    expect(at("print |").map(([l]) => l)).toEqual(
+      expect.arrayContaining(["q", "1"]),
+    );
     expect(at("p = 25 kPa|")).toEqual([]);
   });
 });

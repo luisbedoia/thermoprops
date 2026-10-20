@@ -169,22 +169,36 @@ const STAGE = () => {
       });
       document.body.append(box);
       window.__demoBox = box;
+      // As a native list opens: on the option chosen now.
+      box.querySelector(".is-chosen")?.scrollIntoView({ block: "nearest" });
     },
-    /** Scrolls the option into view and says where it is. */
-    reveal(value) {
-      const row = [...window.__demoBox.querySelectorAll("div")].find(
+    row(value) {
+      return [...window.__demoBox.querySelectorAll("div")].find(
         (r) => r.dataset.value === value,
       );
-      row.scrollIntoView({ block: "center", behavior: "smooth" });
-      return new Promise((done) =>
-        setTimeout(() => {
-          const r = row.getBoundingClientRect();
-          done({
-            x: r.left + Math.min(60, r.width / 2),
-            y: r.top + r.height / 2,
-          });
-        }, 550),
-      );
+    },
+    /** How far the option is from being in view: 0 when it is, ± px if not. */
+    offset(value) {
+      const box = window.__demoBox.getBoundingClientRect();
+      const r = this.row(value).getBoundingClientRect();
+      if (r.top < box.top + 8) return r.top - box.top - 8;
+      if (r.bottom > box.bottom - 8) return r.bottom - box.bottom + 8;
+      return 0;
+    },
+    scroll(dy) {
+      window.__demoBox.scrollTop += dy;
+    },
+    /** The middle of the list, and of the option. */
+    centre() {
+      const r = window.__demoBox.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    },
+    where(value) {
+      const r = this.row(value).getBoundingClientRect();
+      return {
+        x: r.left + Math.min(70, r.width / 2),
+        y: r.top + r.height / 2,
+      };
     },
     mark(value) {
       for (const row of window.__demoBox.querySelectorAll("div"))
@@ -307,6 +321,54 @@ async function record(name, device, act) {
     at = p;
   }
 
+  /** The mark of a finger on the screen, where no tap is to happen. */
+  const touchMark = (x, y) =>
+    page.evaluate(
+      ([x, y]) => {
+        const dot = document.createElement("div");
+        dot.className = "demo-touch";
+        dot.style.left = `${x}px`;
+        dot.style.top = `${y}px`;
+        document.body.append(dot);
+        setTimeout(() => dot.remove(), 500);
+      },
+      [x, y],
+    );
+
+  /** Scrolls the page down by `px`, as one reads: the wheel, or a swipe. */
+  async function read(px, ms = 2400) {
+    const steps = Math.max(1, Math.round(ms / 60));
+    if (!touch) await glide(width * 0.6, height * 0.55);
+    for (let i = 0; i < steps; i++) {
+      if (touch) {
+        await page.evaluate((d) => window.scrollBy(0, d), px / steps);
+        if (i % 8 === 0)
+          await touchMark(width * 0.6, height * 0.7 - (i % 16) * 8);
+      } else {
+        await page.mouse.wheel(0, px / steps);
+      }
+      await wait(60);
+    }
+  }
+
+  /** Points at each tracked state on the chart: its properties show. */
+  async function hoverStates(hold = 1300) {
+    const points = await page.$$eval(
+      ".plot-container .scatterlayer path.point",
+      (ps) =>
+        ps
+          .map((p) => p.getBoundingClientRect())
+          .filter((r) => r.width > 0 && r.top > 0 && r.bottom < innerHeight)
+          .map((r) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 })),
+    );
+    for (const p of points.slice(-3)) {
+      if (touch) await page.touchscreen.tap(p.x, p.y);
+      else await glide(p.x, p.y);
+      at = p;
+      await wait(hold);
+    }
+  }
+
   /** Opens a select, looks through it, and chooses `value`. */
   async function choose(selector, value) {
     await seemPress(page.locator(selector));
@@ -315,21 +377,39 @@ async function record(name, device, act) {
       ([s, sheet]) => window.__demoList.open(s, sheet),
       [selector, device === "phone"],
     );
-    await pause(350, 600);
-    const p = await page.evaluate((v) => window.__demoList.reveal(v), value);
+    await pause(260, 420);
+    // Out of view: scrolled to, as a hand does (the wheel, or a finger).
+    let off = await page.evaluate((v) => window.__demoList.offset(v), value);
+    if (off !== 0) {
+      const c = await page.evaluate(() => window.__demoList.centre());
+      if (!touch) await glide(c.x, c.y);
+      for (let i = 0; i < 60 && off !== 0; i++) {
+        const dy = Math.sign(off) * Math.min(Math.abs(off) + 20, 48);
+        if (touch) {
+          await page.evaluate((d) => window.__demoList.scroll(d), dy);
+          if (i % 3 === 0) await touchMark(c.x, c.y - (i % 6) * 6);
+        } else {
+          await page.mouse.wheel(0, dy);
+        }
+        await wait(28);
+        off = await page.evaluate((v) => window.__demoList.offset(v), value);
+      }
+      await pause(140, 240);
+    }
+    const p = await page.evaluate((v) => window.__demoList.where(v), value);
     if (touch) {
       await page.evaluate((v) => window.__demoList.mark(v), value);
-      await pause(250, 400);
+      await pause(120, 220);
       await page.touchscreen.tap(p.x, p.y);
     } else {
       await glide(p.x, p.y);
-      await pause(200, 350);
+      await pause(110, 200);
       await page.mouse.down();
       await wait(70);
       await page.mouse.up();
       at = p;
     }
-    await pause(120, 200);
+    await pause(80, 140);
     await page.evaluate(() => window.__demoList.close());
     await page.locator(selector).selectOption(value);
     await pause(300, 500);
@@ -343,7 +423,19 @@ async function record(name, device, act) {
       maxHeight: height * 2,
     });
 
-  await act({ page, wait, pause, press, type, choose, start, touch, device });
+  await act({
+    page,
+    wait,
+    pause,
+    press,
+    type,
+    choose,
+    read,
+    hoverStates,
+    start,
+    touch,
+    device,
+  });
   // The pointer leaves the last frame (the poster) clear.
   if (!touch) await glide(width - 6, height - 6);
   await wait(900);
@@ -394,13 +486,13 @@ async function worksheetByKeyboard({ page, wait, pause, press, type }) {
     );
     // Slow to come: asked for, as a person who knows the shortcut does.
     if (
-      !(await shown.waitFor({ timeout: 1500 }).then(
+      !(await shown.waitFor({ timeout: 2500 }).then(
         () => true,
         () => false,
       ))
     ) {
       await page.keyboard.press("Control+Space");
-      await shown.waitFor({ timeout: 3000 });
+      await shown.waitFor({ timeout: 8000 });
     }
     await pause(420, 700);
     await page.keyboard.press("Enter");
@@ -454,7 +546,19 @@ async function worksheetByKeyboard({ page, wait, pause, press, type }) {
   await key("End");
   await key("Enter");
 
-  await type("COP = (h1 - h4) / (h2 - h1)");
+  // What the states are for: calculations with their properties.
+  await type("qL = h1 - h4");
+  await close();
+  await key("Enter");
+  await type("w = h2 - h1");
+  await close();
+  await key("Enter");
+  await type("COP = qL / w");
+  await close();
+  await key("Enter");
+  await type("pr");
+  await take(); // print
+  await type("COP, qL, w");
   await close();
   await wait(1400);
 }
@@ -543,6 +647,43 @@ async function worksheetByKeypad({ page, wait, pause, press }) {
   await named("Next field");
   await named("Next field");
   await keys("3", "->", "4", "->", "1");
+  await named("New line");
+
+  // What the states are for: calculations with their properties.
+  await keys("ABC", "q");
+  await named("Shift");
+  await key("l");
+  await chip("=");
+  await key("h");
+  await chip("h1");
+  await keys("123", "-", "ABC", "h");
+  await chip("h4");
+  await named("New line");
+
+  await key("w");
+  await chip("=");
+  await key("h");
+  await chip("h2");
+  await keys("123", "-", "ABC", "h");
+  await chip("h1");
+  await named("New line");
+
+  for (const letter of ["c", "o", "p"]) {
+    await named("Shift");
+    await key(letter);
+  }
+  await chip("=");
+  await chip("qL");
+  await keys("123", "/");
+  await chip("w");
+  await named("New line");
+
+  await chip("print");
+  await chip("COP");
+  await key(",");
+  await chip("qL");
+  await key(",");
+  await chip("w");
   await wait(900);
   await named("Close keypad");
   await wait(900);
@@ -556,10 +697,14 @@ const WORKSHEET = [
   "3: P = P2, sat liquid",
   "4: from 3, throttled to P = P1",
   "draw 1 -> 2 -> 3 -> 4 -> 1",
+  "qL = h1 - h4",
+  "w = h2 - h1",
+  "COP = qL / w",
+  "print COP, qL, w",
 ];
 
 async function worksheet(h) {
-  const { page, wait, pause, press, start, touch } = h;
+  const { page, wait, pause, press, read, start, touch } = h;
   await page.goto(`${BASE}/worksheet/?${new URLSearchParams({ s: "" })}`);
   await page.locator(".cm-content").waitFor();
   await wait(2500);
@@ -574,8 +719,13 @@ async function worksheet(h) {
       typeof want === "string" ? lines[i] === want : want.test(lines[i]);
     if (!ok) throw new Error(`line ${i + 1}: "${lines[i]}", not ${want}`);
   });
+  // The results: what print shows first, then the states and the values.
   await press(page.getByRole("tab", { name: "Results" }));
-  await wait(2800);
+  await pause(1800, 2100);
+  await read(touch ? 900 : 420, touch ? 3600 : 2200);
+  await pause(1500, 1700);
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "smooth" }));
+  await pause(700, 900);
   await press(page.getByRole("tab", { name: "Chart" }));
   await page.locator(".plot-wrapper.is-ready").waitFor();
   await pause(900, 1100);
@@ -589,7 +739,17 @@ async function worksheet(h) {
 
 // ── The State Explorer ────────────────────────────────────────────────────
 
-async function explorer({ page, wait, pause, press, type, choose, start }) {
+async function explorer({
+  page,
+  wait,
+  pause,
+  press,
+  type,
+  choose,
+  read,
+  hoverStates,
+  start,
+}) {
   await page.goto(`${BASE}/explorer/`);
   await page.locator("#fluid").waitFor();
   await wait(1500);
@@ -630,13 +790,25 @@ async function explorer({ page, wait, pause, press, type, choose, start }) {
     await page.locator("#property1").waitFor({ state: "detached" });
     await pause(900, 1200);
   }
-  // Back up to the chart: the three states on it.
+  // Back up to the chart: the three states on it, and what each one is.
   await page.evaluate(() =>
     document
       .querySelector(".plot-wrapper")
       ?.scrollIntoView({ behavior: "smooth", block: "center" }),
   );
-  await wait(3600);
+  await wait(1400);
+  await hoverStates();
+  await pause(500, 700);
+
+  // The table: every property of each state.
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "smooth" }));
+  await pause(700, 900);
+  await press(
+    page.locator(".workspace__view-toggle button", { hasText: "Table" }),
+  );
+  await pause(1600, 1900);
+  await read(1500, 5200);
+  await pause(1600, 1800);
 }
 
 for (const device of WANTED) {
