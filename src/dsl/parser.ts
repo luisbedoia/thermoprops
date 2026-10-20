@@ -81,7 +81,7 @@ export const PROCESSES = [
 ];
 
 /** "sat liquid", "saturated vapor": the quality they fix. */
-export const SATURATION: Record<string, number> = {
+const SATURATION: Record<string, number> = {
   liquid: 0,
   vapor: 1,
   vapour: 1,
@@ -132,7 +132,7 @@ const PUNCT = [
   "^",
 ];
 
-export class ParseError extends Error {
+class ParseError extends Error {
   constructor(
     message: string,
     readonly span: Span,

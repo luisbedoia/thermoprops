@@ -96,6 +96,18 @@ describe("the app in Spanish", () => {
     );
   });
 
+  it("names how each state was reached in Spanish", async () => {
+    await load("es");
+    const { evaluate } = await import("../../dsl/evaluate");
+    const { loadRealCoolProp } =
+      await import("../../test-fixtures/realCoolProp");
+    const r = evaluate(
+      "fluid Water\n1: P = 10 kPa, sat liquid\n2: from 1, compressed to P = 1 MPa, eta = 80%\n",
+      await loadRealCoolProp(),
+    );
+    expect(r.states.map((s) => s.how)).toEqual(["P, x", "compresión desde 1"]);
+  });
+
   it("explains the worksheet's mistakes in Spanish", async () => {
     await load("es");
     const { parse } = await import("../../dsl/parser");

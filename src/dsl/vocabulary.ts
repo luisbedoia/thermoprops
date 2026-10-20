@@ -182,14 +182,10 @@ export const UNIT_SYSTEMS: Doc[] = [
   },
 ];
 
-/**
- * Processes, as a state's definition names them; `label` names one in the
- * page's language where it is shown, not written ("compresión desde 1").
- */
-export const PROCESSES: (Doc & { snippet: string; label: string })[] = [
+/** Processes, as a state's definition names them. */
+export const PROCESSES: (Doc & { snippet: string })[] = [
   {
     name: "isentropic",
-    label: tr("isentropic", "isentrópico"),
     detail: "s = const",
     info: tr(
       "Ideal compression or expansion: keeps the entropy.",
@@ -199,7 +195,6 @@ export const PROCESSES: (Doc & { snippet: string; label: string })[] = [
   },
   {
     name: "compressed",
-    label: tr("compressed", "compresión"),
     detail: tr("real compressor", "compresor real"),
     info: tr(
       "h₂ = h₁ + (h₂ₛ − h₁)/η, with 2s the isentropic outlet. Needs eta.",
@@ -209,7 +204,6 @@ export const PROCESSES: (Doc & { snippet: string; label: string })[] = [
   },
   {
     name: "expanded",
-    label: tr("expanded", "expansión"),
     detail: tr("real turbine", "turbina real"),
     info: tr(
       "h₂ = h₁ − η·(h₁ − h₂ₛ), with 2s the isentropic outlet. Needs eta.",
@@ -219,7 +213,6 @@ export const PROCESSES: (Doc & { snippet: string; label: string })[] = [
   },
   {
     name: "throttled",
-    label: tr("throttled", "estrangulamiento"),
     detail: "h = const",
     info: tr(
       "Expansion valve: keeps the enthalpy.",
@@ -229,7 +222,6 @@ export const PROCESSES: (Doc & { snippet: string; label: string })[] = [
   },
   {
     name: "isobaric",
-    label: tr("isobaric", "isobárico"),
     detail: "P = const",
     info: tr(
       "Heating or cooling at constant pressure.",
@@ -239,14 +231,12 @@ export const PROCESSES: (Doc & { snippet: string; label: string })[] = [
   },
   {
     name: "isothermal",
-    label: tr("isothermal", "isotérmico"),
     detail: "T = const",
     info: tr("Keeps the temperature.", "Conserva la temperatura."),
     snippet: "isothermal to ${1:P} = ${2}",
   },
   {
     name: "isochoric",
-    label: tr("isochoric", "isocórico"),
     detail: "v = const",
     info: tr(
       "Keeps the specific volume (rigid tank).",
@@ -256,14 +246,12 @@ export const PROCESSES: (Doc & { snippet: string; label: string })[] = [
   },
   {
     name: "isenthalpic",
-    label: tr("isenthalpic", "isentálpico"),
     detail: "h = const",
     info: tr("Keeps the enthalpy.", "Conserva la entalpía."),
     snippet: "isenthalpic to ${1:P} = ${2}",
   },
   {
     name: "polytropic",
-    label: tr("polytropic", "politrópico"),
     detail: "P·vⁿ = const",
     info: tr(
       "Polytropic compression or expansion to a pressure. Needs n.",

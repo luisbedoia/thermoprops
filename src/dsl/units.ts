@@ -180,7 +180,7 @@ export const PROPERTY_DIM: Record<string, Dim> = {
   speed_of_sound: SPEED,
 };
 
-export function dimName(d: Dim): string | undefined {
+function dimName(d: Dim): string | undefined {
   return Object.keys(PROPERTY_DIM).find((name) => dimEq(PROPERTY_DIM[name], d));
 }
 

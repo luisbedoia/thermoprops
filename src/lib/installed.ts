@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 const APP_WINDOW =
   "(display-mode: standalone), (display-mode: minimal-ui), (display-mode: fullscreen), (display-mode: window-controls-overlay)";
 
-export function isInstalled(): boolean {
+function isInstalled(): boolean {
   if (typeof window === "undefined") return false;
   const standalone =
     typeof matchMedia === "function" && matchMedia(APP_WINDOW).matches;

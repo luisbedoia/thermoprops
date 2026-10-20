@@ -7,7 +7,7 @@
 export const KEYPAD_IN_MS = 220;
 
 /** cubic-bezier(0.2, 0.8, 0.2, 1), as in the CSS: progress at time t ∈ [0, 1]. */
-export function keypadEase(t: number): number {
+function keypadEase(t: number): number {
   const [x1, y1, x2, y2] = [0.2, 0.8, 0.2, 1];
   const bez = (a: number, b: number, s: number) =>
     3 * a * s * (1 - s) ** 2 + 3 * b * s * s * (1 - s) + s ** 3;
@@ -22,7 +22,7 @@ export function keypadEase(t: number): number {
   return bez(y1, y2, (lo + hi) / 2);
 }
 
-export function prefersReducedMotion(): boolean {
+function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 

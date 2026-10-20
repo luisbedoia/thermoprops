@@ -46,7 +46,7 @@ export function lineKind(line: string): string | null {
 }
 
 /** States and values the document defines, valid or not yet solved. */
-export function definedNames(doc: string): {
+function definedNames(doc: string): {
   states: string[];
   vars: string[];
 } {

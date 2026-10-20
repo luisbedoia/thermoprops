@@ -47,7 +47,7 @@ type Props = {
   onGoTo(line: number, col: number): void;
 };
 
-export function Problems({ result, onGoTo }: Props) {
+function Problems({ result, onGoTo }: Props) {
   if (result.diagnostics.length === 0) return null;
   return (
     <section

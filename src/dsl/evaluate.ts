@@ -14,7 +14,6 @@ import type {
   StateInputs,
 } from "@luisbedoia/coolprop-rs-wasm";
 import { count, tr } from "../i18n";
-import { PROCESSES as PROCESS_DOCS } from "./vocabulary";
 import { isUnitSystem, toSI, type UnitSystem } from "../lib/units";
 import {
   parse,
@@ -56,7 +55,7 @@ export interface Engine {
  * Where enthalpy and entropy are measured from, by the names a script may
  * use, and the state each one fixes (for messages).
  */
-export const REFERENCES: Record<ReferenceState, string> = {
+const REFERENCES: Record<ReferenceState, string> = {
   DEF: tr(
     "the fluid's own (CoolProp's default)",
     "el del fluido (el predeterminado de CoolProp)",
@@ -499,7 +498,7 @@ export function evaluate(source: string, engine: Engine): ScriptResult {
           ? `${pairLabel(s.def.a.name)}, ${pairLabel(s.def.b.name)}`
           : tr(
               `${s.def.process} from ${s.def.from}`,
-              `${processLabel(s.def.process)} desde ${s.def.from}`,
+              `${SPANISH_PROCESS[s.def.process] ?? s.def.process} desde ${s.def.from}`,
             ),
     };
     states.set(s.name, entry);
@@ -684,10 +683,18 @@ function dependsOn(key: string): string {
       );
 }
 
-/** "compresión": a process as the page's language names it. */
-function processLabel(process: string): string {
-  return PROCESS_DOCS.find((p) => p.name === process)?.label ?? process;
-}
+/** A process as a Spanish sentence names it: "compresión desde 1". */
+const SPANISH_PROCESS: Record<string, string> = {
+  isentropic: "isentrópico",
+  isenthalpic: "isentálpico",
+  throttled: "estrangulamiento",
+  isobaric: "isobárico",
+  isothermal: "isotérmico",
+  isochoric: "isocórico",
+  compressed: "compresión",
+  expanded: "expansión",
+  polytropic: "politrópico",
+};
 
 function unknownState(name: string): string {
   return tr(`Unknown state "${name}"`, `Estado desconocido "${name}"`);
