@@ -43,8 +43,19 @@ export default defineConfig({
         // wasm included: without it the app loads offline but cannot compute.
         // woff2 only: KaTeX lists it first and every browser with service
         // workers supports it, so its woff/ttf fallbacks are never fetched.
-        globPatterns: ["**/*.{js,css,html,svg,png,ico,wasm,woff2}"],
+        // No HTML: precached pages would be answered from the device first,
+        // so a reload after a deploy would show the old app. The pages are
+        // public/sw-pages.js's: network first, kept for offline use.
+        globPatterns: ["**/*.{js,css,svg,png,ico,wasm,woff2}"],
+        globIgnores: ["sw-pages.js"],
+        navigateFallback: null,
+        // Named for the build: a new one is fetched with each new worker.
+        importScripts: [`sw-pages.js?${Date.now()}`],
         cleanupOutdatedCaches: true,
+        // A new worker takes over as soon as it is installed. Without it,
+        // it waits for every tab of the app to close (registerSW.js never
+        // asks it to skip waiting), and reloads keep the old app.
+        skipWaiting: true,
         clientsClaim: true,
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
       },

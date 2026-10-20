@@ -17,7 +17,8 @@ import { createServer } from "vite";
 const DIST = "dist";
 const SITE_URL = "https://luisbedoia.github.io/thermoprops/";
 
-// Keep in sync with the routes in src/Router.tsx. "" is the landing.
+// Keep in sync with the routes in src/Router.tsx, and with the pages the
+// service worker keeps for offline use (public/sw-pages.js). "" is the landing.
 const APP_ROUTES = [
   "",
   "home",

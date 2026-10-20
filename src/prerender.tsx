@@ -7,8 +7,13 @@ import { AppRoutes } from "./Router";
 
 export function prerender(path: string): string {
   const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+  // The browser's basename as it is (src/Router.tsx), trailing slash and
+  // all: links come out the same ("/thermoprops/", not "/thermoprops").
   return renderToString(
-    <MemoryRouter basename={base} initialEntries={[base + path]}>
+    <MemoryRouter
+      basename={import.meta.env.BASE_URL}
+      initialEntries={[base + path]}
+    >
       <AppRoutes />
     </MemoryRouter>,
   );
