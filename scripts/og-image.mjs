@@ -1,6 +1,8 @@
-// Draws public/og-image.png (1200 × 630), the picture a shared link shows,
-// in the landing's look: its black opening, its headline, and the cycle the
-// landing solves (src/landing/cycle.json, solved by CoolProp), with its COP.
+// Draws public/og-image.png and public/og-image-es.png (1200 × 630), the
+// picture a shared link shows, in English and in Spanish (the build gives the
+// Spanish pages theirs: scripts/postbuild.mjs). In the landing's look: its
+// black opening, its headline, and the cycle the landing solves
+// (src/landing/cycle.json, solved by CoolProp), with its COP.
 //
 //   node scripts/og-image.mjs
 //
@@ -68,43 +70,59 @@ const chart = `
       .join("")}
   </svg>`;
 
-const html = `<!doctype html><html><head><meta charset="utf-8"><style>
+/**
+ * The words of each picture: what the app is, as the landing says it over
+ * its headline (src/landing), and a short line. Few and large: a shared
+ * link's preview is often 300 px wide, and the platforms print the title
+ * and the address under it. The cycle is the same in both.
+ */
+const PICTURES = [
+  {
+    file: "public/og-image.png",
+    lang: "en",
+    headline: "Thermodynamic<br>properties<br>calculator",
+    // What it costs and where it runs, apart from how many fluids (in the
+    // description under it): "Free · 30 fluids" read as a free tier.
+    line: "Free, in your browser",
+  },
+  {
+    file: "public/og-image-es.png",
+    lang: "es",
+    headline: "Calculadora de<br>propiedades<br>termodinámicas",
+    line: "Gratuita, en tu navegador",
+  },
+];
+
+const html = ({
+  lang,
+  headline,
+  line,
+}) => `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><style>
   @font-face { font-family: Inter; src: url("${font}") format("woff2");
     font-weight: 100 900; }
   * { box-sizing: border-box; margin: 0; }
   body { width: 1200px; height: 630px; overflow: hidden; background: #000;
     color: #fff; font-family: Inter, sans-serif; }
   .page { display: grid; grid-template-columns: minmax(0, 1fr) 460px; gap: 40px;
-    height: 100%; padding: 60px 60px 56px 68px; }
-  .words { display: flex; flex-direction: column; }
-  .brand { font-size: 30px; font-weight: 600; letter-spacing: .01em; }
-  h1 { margin-top: auto; font-size: 64px; font-weight: 300; line-height: 1.04;
+    align-items: center; height: 100%; padding: 60px 60px 60px 68px; }
+  .words { display: flex; flex-direction: column; justify-content: center;
+    height: 100%; }
+  .brand { font-size: 32px; font-weight: 600; letter-spacing: .01em; }
+  h1 { margin-top: auto; font-size: 68px; font-weight: 300; line-height: 1.04;
     letter-spacing: -.02em; }
-  p { margin-top: 28px; font-size: 27px; line-height: 1.4; color: #ccc;
-    text-wrap: balance; }
-  .result span { white-space: nowrap; }
-  .url { margin-top: auto; font-size: 22px; color: #53b1ff; }
-  .card { align-self: center; border-radius: 14px; overflow: hidden;
-    background: #181818; }
-  .card svg { display: block; padding: 18px 18px 0 22px; }
+  p { margin-top: 30px; margin-bottom: auto; font-size: 32px; line-height: 1.3;
+    color: #ccc; text-wrap: balance; }
+  .card { border-radius: 14px; overflow: hidden; background: #181818; }
+  .card svg { display: block; padding: 18px 18px 8px 22px; }
   .axis { font-size: 18px; fill: #ccc; }
   .state { font-size: 22px; font-weight: 600; fill: #fff; }
-  .result { display: flex; align-items: baseline; justify-content: space-between;
-    padding: 12px 24px 20px; background: #121314; font-size: 19px; color: #ccc; }
-  .result strong { font-size: 46px; font-weight: 300; color: #53b1ff;
-    font-variant-numeric: tabular-nums; }
 </style></head><body><div class="page">
   <div class="words">
     <div class="brand">Thermoprops</div>
-    <h1>Thermodynamic<br>states, worked out</h1>
-    <p>CoolProp’s properties for 30 fluids, in your browser.</p>
-    <div class="url">luisbedoia.github.io/thermoprops</div>
+    <h1>${headline}</h1>
+    <p>${line}</p>
   </div>
-  <div class="card">
-    ${chart}
-    <div class="result"><span>R134a cycle, T–s</span>
-      <span>COP <strong>${cycle.cop.toFixed(2)}</strong></span></div>
-  </div>
+  <div class="card">${chart}</div>
 </div></body></html>`;
 
 const browser = await chromium.launch({
@@ -114,10 +132,12 @@ const browser = await chromium.launch({
 const page = await browser.newPage({ viewport: { width: 1200, height: 630 } });
 // From a file, so the page may load the font from node_modules.
 const dir = mkdtempSync(join(tmpdir(), "og-"));
-writeFileSync(join(dir, "og.html"), html);
-await page.goto(pathToFileURL(join(dir, "og.html")).href);
-await page.evaluate(() => document.fonts.ready);
-await page.screenshot({ path: "public/og-image.png" });
+for (const picture of PICTURES) {
+  writeFileSync(join(dir, "og.html"), html(picture));
+  await page.goto(pathToFileURL(join(dir, "og.html")).href);
+  await page.evaluate(() => document.fonts.ready);
+  await page.screenshot({ path: picture.file });
+  console.log(picture.file);
+}
 await browser.close();
 rmSync(dir, { recursive: true, force: true });
-console.log("public/og-image.png");

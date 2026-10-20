@@ -100,8 +100,13 @@ function withAlternates(html, locale, { en = "", es = "es/" } = {}) {
 }
 
 /** The page's meta tags set to `meta`'s title, summary and address. */
+/**
+ * The page's meta tags set to `meta`'s title, summary and address; its
+ * picture's words too (`imageAlt`), and the app's summary in its
+ * structured data (`app`), in the page's language.
+ */
 function withMeta(html, meta, url) {
-  return html
+  let out = html
     .replace(/<title>[^<]*<\/title>/, `<title>${meta.title}</title>`)
     .replace(
       /(<meta\s+name="description"\s+content=")[^"]*"/,
@@ -117,6 +122,17 @@ function withMeta(html, meta, url) {
     )
     .replace(/(<link rel="canonical" href=")[^"]*"/, `$1${url}"`)
     .replace(/(<meta\s+property="og:url"\s+content=")[^"]*"/, `$1${url}"`);
+  if (meta.imageAlt)
+    out = out.replace(
+      /(<meta\s+(?:property|name)="(?:og|twitter):image:alt"\s+content=")[^"]*"/g,
+      `$1${escape(meta.imageAlt)}"`,
+    );
+  if (meta.app) {
+    const ld = /("@type": "WebApplication",[\s\S]*?"description": ")[^"]*"/;
+    if (!ld.test(out)) throw new Error("index.html has no WebApplication data");
+    out = out.replace(ld, `$1${meta.app.replace(/"/g, '\\"')}"`);
+  }
+  return out;
 }
 
 function page(route, render = prerender) {
@@ -142,12 +158,25 @@ function page(route, render = prerender) {
 }
 
 /** A page built in Spanish: its language, for browsers and search engines. */
+/** The shared links' picture in Spanish (scripts/og-image.mjs), and its words. */
+/**
+ * A page built in Spanish: its language, for browsers and search engines,
+ * and the picture its shared links show (its words come with its meta).
+ */
 function inSpanish(html) {
   const out = html
     .replace(/<html lang="en">/, '<html lang="es">')
-    .replace(/(<meta property="og:locale" content=")[^"]*"/, '$1es_ES"');
+    .replace(/(<meta property="og:locale" content=")[^"]*"/, '$1es_ES"')
+    .replace(
+      /(<meta\s+(?:property|name)="(?:og|twitter):image"\s+content="[^"]*)og-image\.png"/g,
+      '$1og-image-es.png"',
+    );
   if (!out.includes('<html lang="es">'))
     throw new Error('index.html has no <html lang="en">');
+  if ((out.match(/og-image-es\.png/g) ?? []).length !== 2)
+    throw new Error(
+      "index.html has no og:image and twitter:image to translate",
+    );
   return out;
 }
 
@@ -164,7 +193,16 @@ function dataPage(app, route, data, meta) {
   );
   if (!html.includes('<div id="root"><'))
     throw new Error('index.html has no empty <div id="root"></div>');
-  const out = withMeta(html, meta, `${SITE_URL}${route}/`);
+  // The landing's picture, and its words in the page's language.
+  const out = withMeta(
+    html,
+    {
+      ...meta,
+      imageAlt: app.LANDING.imageAlt,
+      app: app.LANDING.description,
+    },
+    `${SITE_URL}${route}/`,
+  );
   return app.locale === "es" ? inSpanish(out) : out;
 }
 
@@ -252,7 +290,19 @@ let fluids;
 try {
   for (const route of APP_ROUTES) {
     const html = page(route);
-    write(route, route === "" ? withAlternates(html, "en") : html);
+    write(
+      route,
+      route === ""
+        ? withAlternates(
+            withMeta(
+              html,
+              { ...en.LANDING, app: en.LANDING.description },
+              SITE_URL,
+            ),
+            "en",
+          )
+        : html,
+    );
   }
   // Unknown addresses: the app renders them (and takes them to the landing)
   // from an empty page, as no built page matches them.
@@ -270,7 +320,11 @@ try {
     "es",
     withAlternates(
       inSpanish(
-        withMeta(page("es", es.prerender), es.LANDING, `${SITE_URL}es/`),
+        withMeta(
+          page("es", es.prerender),
+          { ...es.LANDING, app: es.LANDING.description },
+          `${SITE_URL}es/`,
+        ),
       ),
       "es",
     ),

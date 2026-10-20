@@ -47,7 +47,8 @@ export default defineConfig({
         // so a reload after a deploy would show the old app. The pages are
         // public/sw-pages.js's: network first, kept for offline use.
         globPatterns: ["**/*.{js,css,svg,png,ico,wasm,woff2}"],
-        globIgnores: ["sw-pages.js"],
+        // og-image*.png: for shared links' previews, never shown by the app.
+        globIgnores: ["sw-pages.js", "og-image*.png"],
         navigateFallback: null,
         // Named for the build: a new one is fetched with each new worker.
         importScripts: [`sw-pages.js?${Date.now()}`],

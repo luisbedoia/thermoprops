@@ -57,15 +57,22 @@ export const DEFAULT_TITLE = tr(
 );
 
 /**
- * The landing's title and summary in the page's language. The English
- * landing keeps index.html's own; the build gives the Spanish one (/es/)
- * these.
+ * What the landing says of the app where it is not shown: its title, the
+ * summary search results and shared links show, and the words of the shared
+ * links' picture (scripts/og-image.mjs). As the landing says it: what it is
+ * (its line over the headline), then its first sentence. The build gives
+ * both landings these (scripts/postbuild.mjs); index.html keeps the English
+ * ones for the dev server.
  */
 export const LANDING = {
   title: DEFAULT_TITLE,
   description: tr(
-    "Free online calculator for thermodynamic properties of fluids and refrigerants. Compute temperature, pressure, enthalpy, entropy, density and more using CoolProp. Ideal for engineers and students in thermodynamics and refrigeration.",
-    "Calculadora gratuita en línea de propiedades termodinámicas de fluidos y refrigerantes. Calcula temperatura, presión, entalpía, entropía, densidad y más con CoolProp. Para ingenieros y estudiantes de termodinámica y refrigeración.",
+    "Free thermodynamic properties calculator: 30 fluids and refrigerants by CoolProp, in your browser. Write states as in your notebook and solve a whole cycle.",
+    "Calculadora de propiedades termodinámicas gratuita: 30 fluidos y refrigerantes con CoolProp, en tu navegador. Escribe estados como en tu cuaderno y resuelve un ciclo.",
+  ),
+  imageAlt: tr(
+    "Thermoprops, a free thermodynamic properties calculator in your browser, beside a refrigeration cycle on a T–s diagram.",
+    "Thermoprops, calculadora de propiedades termodinámicas gratuita en tu navegador, junto a un ciclo de refrigeración en un diagrama T–s.",
   ),
 };
 
