@@ -12,19 +12,22 @@
 const PAGES = "thermoprops-pages";
 const NETWORK_MS = 4000;
 
-// Every built page (scripts/postbuild.mjs): its folder under the scope.
-const ROUTES = [
-  "",
-  "es/",
-  "home/",
-  "explorer/",
-  "settings/",
-  "workspace/",
-  "worksheet/",
-  "script/",
-];
-
 const scope = self.registration.scope;
+
+/**
+ * Every built page, by its address under the scope ("explorer/"), as the
+ * build lists them (scripts/postbuild.mjs); the landing at least.
+ */
+async function builtPages() {
+  try {
+    const response = await fetch(scope + "pages.json", { cache: "reload" });
+    const pages = await response.json();
+    if (Array.isArray(pages)) return pages;
+  } catch {
+    // Offline or no list: the landing alone.
+  }
+  return [""];
+}
 
 /** A page's key: its address without query, folder-style ("explorer/"). */
 function pageKey(url) {
@@ -42,11 +45,13 @@ async function keep(key, response) {
 self.addEventListener("install", (event) => {
   // Each page on its own: one that fails must not stop the update.
   event.waitUntil(
-    Promise.all(
-      ROUTES.map((route) =>
-        fetch(new Request(scope + route, { cache: "reload" }))
-          .then((response) => keep(scope + route, response))
-          .catch(() => {}),
+    builtPages().then((pages) =>
+      Promise.all(
+        pages.map((page) =>
+          fetch(new Request(scope + page, { cache: "reload" }))
+            .then((response) => keep(scope + page, response))
+            .catch(() => {}),
+        ),
       ),
     ),
   );
