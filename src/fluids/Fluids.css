@@ -294,6 +294,14 @@ body:has(.fluid) .app-header {
   fill: #4b5563;
 }
 
+/* On its line it cuts it, in the figure's own background. */
+.fluid-chart text.fluid-chart__label--on {
+  stroke: var(--card);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+
 .fluid-chart__dome {
   fill: none;
   stroke: var(--dome);

@@ -1,4 +1,5 @@
-import type { PlotProperty } from "@luisbedoia/coolprop-rs-wasm";
+import type { IsolineCurve, PlotProperty } from "@luisbedoia/coolprop-rs-wasm";
+import { buildChartLabels } from "../lib/chartLabels";
 import { fromSI, getDisplayUnit } from "../lib/units";
 import { unitToPlain } from "../lib/unitsFormat";
 import type { FluidChart as Chart } from "./data";
@@ -161,12 +162,13 @@ export function FluidChart({ chart, title }: { chart: Chart; title: string }) {
           />
         ))}
       </g>
-      {labels(chart, x.at, y.at).map((l) => (
+      {isolineLabels(chart).map((l) => (
         <text
           key={l.text}
-          className="fluid-chart__label"
-          x={l.x + 3}
-          y={l.y - 3}
+          className={`fluid-chart__label${l.onLine ? " fluid-chart__label--on" : ""}`}
+          transform={`translate(${l.x.toFixed(1)} ${l.y.toFixed(1)}) rotate(${l.angle.toFixed(1)})`}
+          textAnchor="middle"
+          dominantBaseline="central"
         >
           {l.text}
         </text>
@@ -176,58 +178,44 @@ export function FluidChart({ chart, title }: { chart: Chart; title: string }) {
 }
 
 /**
- * Each isoline's name where it crosses a band the isolines cross apart (low
- * on a p–h diagram, where the isotherms rise through the vapor; high on a
- * T–s one, where the isobars fan out), its rightmost crossing; none that
- * would overlap the one before.
+ * Each isoline's value along its line, placed as the worksheet's chart
+ * places them (chartLabels.ts): on the line, at its slope, clear of the
+ * dome and the other isolines; left out where there is no room.
  */
-function labels(
-  chart: Chart,
-  x: (v: number) => number,
-  y: (v: number) => number,
-) {
-  const top = M.top;
-  const height = H - M.top - M.bottom;
-  const band = top + height * (chart.id === "pressure_enthalpy" ? 0.8 : 0.22);
-  const placed = chart.isolines
-    .map((iso) => {
-      const at = crossing(iso.x, iso.y, x, y, band);
-      if (!at) return null;
-      const unit = unitToPlain(getDisplayUnit(iso.kind, "celsius"));
-      const text = `${label(fromSI(iso.kind, iso.value, "celsius"))}${unit ? ` ${unit}` : ""}`;
-      return { x: at, y: band, text };
-    })
-    .filter((l) => l !== null)
-    .sort((a, b) => a.x - b.x);
-  const kept: typeof placed = [];
-  for (const l of placed) {
-    const prev = kept[kept.length - 1];
-    // About 6.5 px per character at the labels' size.
-    if (prev && l.x < prev.x + prev.text.length * 6.5 + 6) continue;
-    if (l.x + l.text.length * 6.5 > W - M.right) continue;
-    kept.push(l);
-  }
-  return kept;
-}
-
-/** Where a curve crosses the height `band` (px), its rightmost crossing. */
-function crossing(
-  xs: (number | null)[],
-  ys: (number | null)[],
-  x: (v: number) => number,
-  y: (v: number) => number,
-  band: number,
-): number | null {
-  let best: number | null = null;
-  for (let i = 1; i < xs.length; i++) {
-    const [x0, y0, x1, y1] = [xs[i - 1], ys[i - 1], xs[i], ys[i]];
-    if (x0 === null || y0 === null || x1 === null || y1 === null) continue;
-    const [px0, py0, px1, py1] = [x(x0), y(y0), x(x1), y(y1)];
-    if (![px0, py0, px1, py1].every(Number.isFinite)) continue;
-    if ((py0 - band) * (py1 - band) > 0 || py0 === py1) continue;
-    const px = px0 + ((band - py0) / (py1 - py0)) * (px1 - px0);
-    if (px >= M.left && px <= W - M.right && (best === null || px > best))
-      best = px;
-  }
-  return best;
+function isolineLabels(chart: Chart) {
+  const w = W - M.left - M.right;
+  const h = H - M.top - M.bottom;
+  // The axes' spans as chartLabels reads them: shown units, log10 on a log axis.
+  const span = (axis: Axis) =>
+    axis.range
+      .map((v) => fromSI(axis.property, v, "celsius"))
+      .map((v) => (axis.scale === "log" ? Math.log10(v) : v)) as [
+      number,
+      number,
+    ];
+  const view = { x: span(chart.x), y: span(chart.y) };
+  const [liquid, vapor] = chart.dome;
+  const annotations = buildChartLabels({
+    points: [],
+    paths: [],
+    isolines: chart.isolines as IsolineCurve[],
+    dome: { liquid, vapor },
+    xProperty: chart.x.property,
+    yProperty: chart.y.property,
+    unitSystem: "celsius",
+    scales: { x: chart.x.scale, y: chart.y.scale },
+    view,
+    size: { w, h },
+    // Styled by the page's CSS.
+    colors: { text: "", isoline: "" },
+    font: "",
+  }) as { x: number; y: number; text: string; textangle: number }[];
+  return annotations.map((a) => ({
+    x: M.left + ((a.x - view.x[0]) / (view.x[1] - view.x[0])) * w,
+    y: M.top + (1 - (a.y - view.y[0]) / (view.y[1] - view.y[0])) * h,
+    angle: a.textangle,
+    text: a.text,
+    // On its line it cuts it (a backdrop); beside it, nothing to cut.
+    onLine: "bgcolor" in a,
+  }));
 }
