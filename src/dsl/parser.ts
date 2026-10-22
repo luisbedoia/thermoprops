@@ -16,7 +16,7 @@
  * One statement per line; `#` starts a comment. `h1` reads state 1's h, as
  * does `1.h` (the only way for a state named by a word: `inlet.h`).
  */
-import { UNIT_NAMES } from "./units";
+import { gluedUnit, unitAt } from "./units";
 import { tr } from "../i18n";
 
 export type Span = { line: number; col: number };
@@ -100,17 +100,11 @@ export type Token = Span & {
   start: number;
   end: number;
   value?: number;
+  /** Its name in UNITS; `text` keeps it as typed ("ºC" for "°C"). */
   unit?: string;
 };
 
-const NUMBER = /^\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/;
-
-/** The unit starting `text`, if a whole one does ("kPa" but not "kPax"). */
-function unitAt(text: string): string | undefined {
-  return UNIT_NAMES.find(
-    (u) => text.startsWith(u) && !/[A-Za-z0-9_]/.test(text[u.length] ?? ""),
-  );
-}
+export const NUMBER = /^\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/;
 const WORD = /^[A-Za-z0-9_]+/;
 const PUNCT = [
   "->",
@@ -175,7 +169,12 @@ export function tokenize(source: string): Token[] {
     const num = NUMBER.exec(rest);
     // "2s" is a state name; "1.2MPa" a number with its unit.
     const glued = num && /[A-Za-z0-9_]/.test(rest[num[0].length] ?? "");
-    if (num && (!glued || unitAt(rest.slice(num[0].length)))) {
+    if (num && (!glued || gluedUnit(rest.slice(num[0].length)))) {
+      if (!Number.isFinite(Number(num[0])))
+        throw new ParseError(
+          tr("Number too large", "Número demasiado grande"),
+          at(i),
+        );
       const start = i;
       i += num[0].length;
       // A unit after the number, e.g. "25 °C" or "1.2MPa".
@@ -187,7 +186,7 @@ export function tokenize(source: string): Token[] {
         kind: "num",
         text: source.slice(start, i),
         value: Number(num[0]),
-        unit,
+        unit: unit?.name,
         ...at(start),
         start,
         end: i,
@@ -212,7 +211,8 @@ export function tokenize(source: string): Token[] {
         if (unit) {
           tokens.push({
             kind: "unit",
-            text: unit,
+            text: source.slice(j, j + unit.length),
+            unit: unit.name,
             ...at(j),
             start: j,
             end: j + unit.length,
@@ -325,8 +325,22 @@ class Parser {
   private endOfStatement() {
     const t = this.peek();
     if (t.kind !== "newline") {
+      // "1,5": a decimal comma.
+      const before = this.tokens[this.pos - 1];
+      const after = this.peek(1);
+      const comma =
+        t.text === "," &&
+        before?.kind === "num" &&
+        after.kind === "num" &&
+        before.end === t.start &&
+        after.start === t.end;
       throw new ParseError(
-        tr(`Unexpected ${describe(t)}`, `Inesperado: ${describe(t)}`),
+        comma
+          ? tr(
+              `Unexpected ",": decimals take a point, ${before.text}.${after.text}`,
+              `Inesperado: ",": los decimales llevan punto, ${before.text}.${after.text}`,
+            )
+          : tr(`Unexpected ${describe(t)}`, `Inesperado: ${describe(t)}`),
         t,
       );
     }
@@ -640,7 +654,7 @@ class Parser {
         );
       }
       this.next();
-      item.unit = unit.text;
+      item.unit = unit.unit;
       item.unitSpan = { line: unit.line, col: unit.col };
     }
     return item;

@@ -29,8 +29,11 @@ import {
   dimEq,
   dimMul,
   dimPow,
+  hasOffset,
+  isAbsolute,
   isDimensionless,
   literal,
+  literalDifference,
   NONE,
   PROPERTY_DIM,
   type Quantity,
@@ -237,6 +240,7 @@ export function evaluate(source: string, engine: Engine): ScriptResult {
 
   // Settings: fluid, units and reference state.
   let unitSystem: UnitSystem = "celsius";
+  let unitsStmt: Stmt | undefined;
   let defaultFluid: string | undefined;
   let reference: ReferenceState = "DEF";
   let referenceStmt: Stmt | undefined;
@@ -268,8 +272,20 @@ export function evaluate(source: string, engine: Engine): ScriptResult {
         );
     }
     if (stmt.kind === "units") {
-      if (isUnitSystem(stmt.system)) unitSystem = stmt.system;
-      else
+      if (unitsStmt)
+        report(
+          new EvalError(
+            tr(
+              "The unit system is already set",
+              "El sistema de unidades ya está definido",
+            ),
+          ),
+          stmt.span,
+        );
+      else if (isUnitSystem(stmt.system)) {
+        unitSystem = stmt.system;
+        unitsStmt = stmt;
+      } else
         report(
           new EvalError(
             tr(
@@ -758,14 +774,20 @@ function readProperty(
   return {
     value: raw as number,
     dim: PROPERTY_DIM[name],
-    absolute: name === "temperature",
+    absolute: name === "temperature" ? 1 : undefined,
   };
 }
 
-function evalExpr(e: Expr, ctx: Ctx): Quantity {
+/**
+ * `asDifference`: literals in °C or °F are read as degrees, for a constant
+ * that shifts a temperature (see "bin").
+ */
+function evalExpr(e: Expr, ctx: Ctx, asDifference = false): Quantity {
   switch (e.kind) {
     case "num":
-      return literal(e.value, e.unit);
+      return asDifference && hasOffset(e.unit)
+        ? literalDifference(e.value, e.unit!)
+        : literal(e.value, e.unit);
     case "var": {
       const r = resolveName(e.name, ctx.stateNames);
       if (r.kind === "prop") {
@@ -817,22 +839,67 @@ function evalExpr(e: Expr, ctx: Ctx): Quantity {
       return readProperty(st, e.prop, e.span, ctx);
     }
     case "neg": {
-      const q = evalExpr(e.arg, ctx);
-      return { value: -q.value, dim: q.dim };
+      const q = evalExpr(e.arg, ctx, asDifference);
+      return { ...q, value: -q.value, absolute: -(q.absolute ?? 0) };
     }
-    case "bin":
-      return binary(
-        e.op,
-        evalExpr(e.left, ctx),
-        evalExpr(e.right, ctx),
-        e.span,
-      );
+    case "bin": {
+      let left = evalExpr(e.left, ctx, asDifference);
+      let right = evalExpr(e.right, ctx, asDifference);
+      // A temperature plus or minus a constant in °C or °F shifts it by that
+      // many degrees: `T1 + 10 °C` and `T1 + 2*5 °C` are 10 K above T1. A
+      // constant minus a temperature (`100 °C - T1`) stays a difference.
+      const shift = (q: Quantity, other: Quantity, ex: Expr) =>
+        !asDifference &&
+        weight(other) !== 0 &&
+        isConstant(ex) &&
+        weight(q) !== 0
+          ? evalExpr(ex, ctx, true)
+          : q;
+      if (e.op === "+") {
+        right = shift(right, left, e.right);
+        left = shift(left, right, e.left);
+      } else if (e.op === "-" && !isConstant(e.left)) {
+        right = shift(right, left, e.right);
+      }
+      return finite(binary(e.op, left, right, e.span), e.span);
+    }
     case "call":
-      return callFunction(
-        e.fn,
-        e.args.map((a) => evalExpr(a, ctx)),
+      return finite(
+        callFunction(
+          e.fn,
+          e.args.map((a) => evalExpr(a, ctx, asDifference)),
+          e.span,
+        ),
         e.span,
       );
+  }
+}
+
+/** `q`, unless arithmetic left the real numbers (2^5000, (-8)^0.5). */
+function finite(q: Quantity, span: Span): Quantity {
+  if (Number.isFinite(q.value)) return q;
+  throw new EvalError(
+    tr(
+      "The result is not a finite real number",
+      "El resultado no es un número real finito",
+    ),
+    span,
+  );
+}
+
+/** An expression of literals alone: `10 °C`, `2*5 °C`. */
+function isConstant(e: Expr): boolean {
+  switch (e.kind) {
+    case "num":
+      return true;
+    case "neg":
+      return isConstant(e.arg);
+    case "bin":
+      return isConstant(e.left) && isConstant(e.right);
+    case "call":
+      return e.args.every(isConstant);
+    default:
+      return false;
   }
 }
 
@@ -846,8 +913,23 @@ function binary(
     case "+":
     case "-":
       if (!dimEq(a.dim, b.dim)) {
+        // `T1 + 10`: a number is read in the unit system only as an input.
+        const other = isDimensionless(a.dim) ? b : a;
+        const kelvin = dimEq(other.dim, PROPERTY_DIM.temperature);
+        const bare =
+          isDimensionless(a.dim) || isDimensionless(b.dim)
+            ? kelvin
+              ? tr(
+                  " (does the number lack its unit? e.g. 10 K)",
+                  " (¿le falta la unidad al número? p. ej. 10 K)",
+                )
+              : tr(
+                  " (does the number lack its unit?)",
+                  " (¿le falta la unidad al número?)",
+                )
+            : "";
         throw new EvalError(
-          op === "+"
+          (op === "+"
             ? tr(
                 "Cannot add quantities of different dimensions",
                 "No se pueden sumar cantidades de dimensiones distintas",
@@ -855,7 +937,7 @@ function binary(
             : tr(
                 "Cannot subtract quantities of different dimensions",
                 "No se pueden restar cantidades de dimensiones distintas",
-              ),
+              )) + bare,
           span,
         );
       }
@@ -863,13 +945,32 @@ function binary(
         value: op === "+" ? a.value + b.value : a.value - b.value,
         dim: a.dim,
         // T + ΔT is a temperature; T - T is a difference.
-        absolute:
-          op === "+" ? a.absolute !== b.absolute : a.absolute && !b.absolute,
+        absolute: weight(a) + (op === "+" ? 1 : -1) * weight(b),
+        kelvin: a.kelvin && b.kelvin,
       };
     case "*":
-      return { value: a.value * b.value, dim: dimMul(a.dim, b.dim) };
+      return {
+        value: a.value * b.value,
+        dim: dimMul(a.dim, b.dim),
+        // (T1 + T4) * 0.5 and m1*T1 + m2*T2 scale their coefficients.
+        absolute:
+          weight(a) !== 0 && weight(b) !== 0
+            ? NaN
+            : weight(a) * b.value + weight(b) * a.value,
+        // 2 * 300 K
+        kelvin:
+          (a.kelvin && isDimensionless(b.dim)) ||
+          (b.kelvin && isDimensionless(a.dim)),
+      };
     case "/":
-      return { value: a.value / b.value, dim: dimMul(a.dim, b.dim, -1) };
+      if (b.value === 0)
+        throw new EvalError(tr("Division by zero", "División por cero"), span);
+      return {
+        value: a.value / b.value,
+        dim: dimMul(a.dim, b.dim, -1),
+        absolute: weight(b) !== 0 ? NaN : weight(a) / b.value,
+        kelvin: a.kelvin && isDimensionless(b.dim),
+      };
     case "^":
       if (!isDimensionless(b.dim)) {
         throw new EvalError(
@@ -880,8 +981,22 @@ function binary(
           span,
         );
       }
-      return { value: a.value ** b.value, dim: dimPow(a.dim, b.value) };
+      return {
+        value: a.value ** b.value,
+        dim: dimPow(a.dim, b.value),
+        absolute: power(a, b.value),
+      };
   }
+}
+
+/** Sum of the coefficients of absolute temperatures in `q` (see Quantity). */
+function weight(q: Quantity): number {
+  return q.absolute ?? 0;
+}
+
+/** The weight of `q^n`: a temperature to a power is no longer linear. */
+function power(q: Quantity, n: number): number {
+  return !weight(q) || n === 1 ? weight(q) : NaN;
 }
 
 function callFunction(fn: string, args: Quantity[], span: Span): Quantity {
@@ -908,10 +1023,23 @@ function callFunction(fn: string, args: Quantity[], span: Span): Quantity {
   switch (fn) {
     case "sqrt":
       arity(1);
-      return { value: Math.sqrt(args[0].value), dim: dimPow(args[0].dim, 0.5) };
+      if (args[0].value < 0)
+        throw new EvalError(
+          tr("sqrt() of a negative value", "sqrt() de un valor negativo"),
+          span,
+        );
+      return {
+        value: Math.sqrt(args[0].value),
+        dim: dimPow(args[0].dim, 0.5),
+        absolute: power(args[0], 0.5),
+      };
     case "abs":
       arity(1);
-      return { ...args[0], value: Math.abs(args[0].value) };
+      return {
+        ...args[0],
+        value: Math.abs(args[0].value),
+        absolute: Math.sign(args[0].value) * weight(args[0]),
+      };
     case "min":
     case "max": {
       if (args.length === 0)
@@ -934,15 +1062,28 @@ function callFunction(fn: string, args: Quantity[], span: Span): Quantity {
       const pick = args.reduce((m, a) =>
         (fn === "min" ? a.value < m.value : a.value > m.value) ? a : m,
       );
-      return pick;
+      // max(T1, 300 K): the literal is a temperature too (a difference
+      // worked out from temperatures, T2 - T1, keeps its weight of 0).
+      return pick.absolute === undefined && args.some(isAbsolute)
+        ? { ...pick, absolute: 1 }
+        : pick;
     }
     case "ln":
     case "exp":
       arity(1);
       dimensionless();
+      if (fn === "ln" && args[0].value <= 0)
+        throw new EvalError(
+          tr(
+            "ln() of a value that is not positive",
+            "ln() de un valor que no es positivo",
+          ),
+          span,
+        );
       return {
         value: fn === "ln" ? Math.log(args[0].value) : Math.exp(args[0].value),
         dim: NONE,
+        absolute: power(args[0], 0),
       };
   }
   throw new EvalError(

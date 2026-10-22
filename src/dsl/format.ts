@@ -1,5 +1,11 @@
 import { fromSI, getDisplayUnit, type UnitSystem } from "../lib/units";
-import { convertTo, displayKind, siUnit, type Quantity } from "./units";
+import {
+  convertTo,
+  displayKind,
+  isAbsolute,
+  siUnit,
+  type Quantity,
+} from "./units";
 
 /**
  * A point for decimals and no thousands separator, whatever the browser's
@@ -50,7 +56,7 @@ export function formatQuantity(
   }
   const kind = displayKind(q.dim);
   if (kind && "property" in kind) {
-    if (kind.property === "temperature" && !q.absolute) {
+    if (kind.property === "temperature" && !isAbsolute(q)) {
       // A difference: kelvin, or Rankine degrees in imperial.
       return system === "imperial"
         ? `${formatNumber((q.value * 9) / 5)} °R`

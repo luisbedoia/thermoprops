@@ -375,8 +375,153 @@ pv2 = P2 * v2 ^ 1.3
     expect(state(r, "2").temperature).toBeCloseTo(308.15, 9);
     expect(value(r, "dT")).toMatchObject({
       value: expect.closeTo(15, 9),
-      absolute: false,
+      absolute: 0,
     });
+  });
+
+  it("reads a °C literal added to a temperature as degrees", () => {
+    const r = run(
+      "fluid Water\nunits celsius\n1: T = 20 °C, P = 100 kPa\n" +
+        "2: T = T1 + 10 °C, P = 100 kPa\n3: T = 10 °C + T1, P = 100 kPa\n" +
+        "4: T = T2 - 5 °C, P = 100 kPa\n" +
+        "Tm = (T1 + T2) / 2\nTh = 0.5 * (T1 + T2)\nd = 100 °C - T1\nd2 = 30 °C - 10 °C\n" +
+        "print Tm in °C, Tm, d, abs(-T1)",
+    );
+    expect(r.diagnostics).toEqual([]);
+    expect(state(r, "2").temperature).toBeCloseTo(303.15, 9);
+    expect(state(r, "3").temperature).toBeCloseTo(303.15, 9);
+    expect(state(r, "4").temperature).toBeCloseTo(298.15, 9);
+    expect(value(r, "Tm")).toMatchObject({
+      value: expect.closeTo(298.15, 9),
+      absolute: 1,
+    });
+    expect(value(r, "Th").absolute).toBe(1);
+    expect(value(r, "d")).toMatchObject({
+      value: expect.closeTo(80, 9),
+      absolute: 0,
+    });
+    expect(value(r, "d2")).toMatchObject({
+      value: expect.closeTo(20, 9),
+      absolute: 0,
+    });
+    expect(
+      r.prints.map((p) => formatQuantity(p.value!, r.unitSystem, p.unit)),
+    ).toEqual(["25.00 °C", "25.00 °C", "80.00 K", "20.00 °C"]);
+  });
+
+  it("tells a temperature from a difference through arithmetic", () => {
+    const r = run(
+      "fluid Water\n1: T = 20 °C, P = 100 kPa\n2: T = 80 °C, P = 500 kPa\n" +
+        "m1 = 2 kg/s\nm2 = 1 kg/s\nQ = 10 kW\nUA = 1 kW/K\n" +
+        "Tmix = (m1*T1 + m2*T2) / (m1 + m2)\n" +
+        "T2s = T1 * (P2/P1)^0.2857\n" +
+        "Tg = sqrt(T1*T2)\n" +
+        "dT = Q / UA\n" +
+        "Tout = T1 + Q / UA\n" +
+        "Tx = 2*T1 - T2\n" +
+        "print Tmix, T2s, T2s in °C, Tg in °C, dT in °F, Tout, Tx",
+    );
+    expect(r.diagnostics).toEqual([]);
+    expect(
+      r.prints.map((p) => formatQuantity(p.value!, r.unitSystem, p.unit)),
+    ).toEqual([
+      "40.00 °C",
+      "464.29 K",
+      "191.14 °C",
+      "48.60 °C",
+      "18.00 °F",
+      "30.00 °C",
+      "-40.00 °C",
+    ]);
+  });
+
+  it("reads a °C constant added to a temperature as degrees", () => {
+    const r = run(
+      "fluid Water\n1: T = 20 °C, P = 100 kPa\n2: T = T1 + 2*5 °C, P = 100 kPa",
+    );
+    expect(state(r, "2").temperature).toBeCloseTo(303.15, 9);
+  });
+
+  it("hints at a number missing its unit", () => {
+    const r = run("fluid Water\n1: T = 20 °C, P = 100 kPa\nX = T1 + 10");
+    expect(r.values[0].error).toMatch(/lack its unit\? e\.g\. 10 K/);
+  });
+
+  it("reads units as the app shows them and a Spanish keyboard types them", () => {
+    const r = run(
+      "fluid Water\nunits imperial\n1: T = 25 ºC, P = 1 bar\n" +
+        "a = 1 kJ/(kg·K)\nb = 2 m²\nc = 1 kg/m³\nd = 1 lb/ft^3\ne = 1 BTU/(lb·°R)\nf = 300 °K\n" +
+        "print T1 in ℃, a in kJ/(kg*K), b in m^2, c in kg/m^3, d in lbm/ft^3, e in BTU/(lbm*R), f",
+    );
+    expect(r.diagnostics).toEqual([]);
+    expect(
+      r.prints.map((p) => formatQuantity(p.value!, r.unitSystem, p.unit)),
+    ).toEqual([
+      "25.00 ℃",
+      "1.00 kJ/(kg·K)",
+      "2.00 m²",
+      "1.00 kg/m³",
+      "1.00 lbm/ft³",
+      "1.00 BTU/(lbm·R)",
+      "540.00 °R",
+    ]);
+  });
+
+  it("takes a state named like a number with a unit", () => {
+    const r = run("fluid Water\n1m: T = 20 °C, P = 1 bar\nx = 1m.h + h1m");
+    expect(r.diagnostics).toEqual([]);
+  });
+
+  it("reports arithmetic that leaves the real numbers", () => {
+    const errors = (expr: string) =>
+      run(`X = ${expr}`).diagnostics.map((d) => d.message);
+    expect(errors("1 / 0")).toEqual(["Division by zero"]);
+    expect(errors("sqrt(-1)")).toEqual(["sqrt() of a negative value"]);
+    expect(errors("ln(0)")).toEqual(["ln() of a value that is not positive"]);
+    expect(errors("1e309")).toEqual(["Number too large"]);
+    expect(errors("10^400")).toEqual([
+      "The result is not a finite real number",
+    ]);
+    expect(errors("(-8)^0.5")).toEqual([
+      "The result is not a finite real number",
+    ]);
+  });
+
+  it("sets the unit system once", () => {
+    const r = run(
+      "fluid Water\nunits kelvin\nunits imperial\n1: T = 300, P = 100",
+    );
+    expect(r.unitSystem).toBe("kelvin");
+    expect(r.diagnostics.map((d) => d.message)).toEqual([
+      "The unit system is already set",
+    ]);
+  });
+
+  it("keeps a temperature through min and max", () => {
+    const r = run(
+      "fluid Water\n1: T = 20 °C, P = 1 bar\n2: T = 80 °C, P = 1 bar\n" +
+        "a = max(T1, 300 K)\nb = min(T1, T2 - T1)\nprint a, b",
+    );
+    expect(
+      r.prints.map((p) => formatQuantity(p.value!, r.unitSystem, p.unit)),
+    ).toEqual(["26.85 °C", "60.00 K"]);
+  });
+
+  it("reads a kelvin literal as a temperature, a difference only of two", () => {
+    const r = run(
+      "fluid Water\n1: T = 20 °C, P = 1 bar\n2: T = 80 °C, P = 1 bar\n" +
+        "a = 323.15 K\nb = T1 + 15 K\nc = (T2 - T1) + 15 K\n" +
+        "print a, a in °C, b, c in °F, 15 K in °F",
+    );
+    expect(
+      r.prints.map((p) => formatQuantity(p.value!, r.unitSystem, p.unit)),
+    ).toEqual(["323.15 K", "50.00 °C", "35.00 °C", "135.00 °F", "-432.67 °F"]);
+  });
+
+  it("points out a decimal comma", () => {
+    expect(run("X = 1,5").diagnostics[0].message).toBe(
+      'Unexpected ",": decimals take a point, 1.5',
+    );
   });
 });
 

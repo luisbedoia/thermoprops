@@ -11,11 +11,35 @@ export type Quantity = {
   value: number;
   dim: Dim;
   /**
-   * An absolute temperature (a state's T, a literal in °C or °F), shown in
-   * the unit system's scale; a difference of two is a plain K quantity.
+   * The value as a linear form in absolute temperatures: the sum of their
+   * coefficients. 1 for a temperature (a state's T, a literal in °C or °F),
+   * shown in the unit system's scale; 0 (or absent) for anything else, a
+   * difference of temperatures among them. `T1 + T4` is 2, `(T1 + T4) / 2`
+   * and `(m1*T1 + m2*T2) / (m1 + m2)` are back at 1. NaN when the value is
+   * not linear in them (`T1 * T2`, `T1 / T2`).
    */
-  absolute?: boolean;
+  absolute?: number;
+  /**
+   * A literal in K or °R, alone or scaled (`300 K`, `2 * 300 K`): a
+   * temperature in kelvin, not a difference. Added to a temperature it
+   * weighs 0 like any difference: `T1 + 15 K` is a temperature.
+   */
+  kelvin?: boolean;
 };
+
+/** A temperature, shown in the unit system's scale. */
+export function isAbsolute(q: Quantity): boolean {
+  return Math.abs((q.absolute ?? 0) - 1) < 1e-9;
+}
+
+/**
+ * A difference of temperatures, which converts without the offset. Neither
+ * this nor `isAbsolute` (`T1 * (P2/P1)^0.3`, `sqrt(T1*T2)`): kelvin, shown
+ * as such and converted as a temperature.
+ */
+export function isDifference(q: Quantity): boolean {
+  return !q.kelvin && Math.abs(q.absolute ?? 0) < 1e-9;
+}
 
 export const NONE: Dim = [0, 0, 0, 0];
 const TEMPERATURE: Dim = [0, 0, 0, 1];
@@ -155,6 +179,24 @@ export const UNITS: Record<string, UnitDef> = {
     scale: ((BTU / 3600) * R_PER_K) / FT ** 2,
   },
   hp: { dim: POWER, scale: 745.69987158227 },
+  // Other spellings: symbols a keyboard offers, and the imperial units as
+  // lib/units.ts labels them.
+  "℃": { dim: TEMPERATURE, scale: 1, offset: ZERO_C, absolute: true },
+  "℉": {
+    dim: TEMPERATURE,
+    scale: 1 / R_PER_K,
+    offset: ZERO_C - 32 / R_PER_K,
+    absolute: true,
+  },
+  "°K": { dim: TEMPERATURE, scale: 1 },
+  "lb/ft^3": { dim: DENSITY, scale: LB / FT ** 3 },
+  "ft^3/lb": { dim: SPEC_VOLUME, scale: FT ** 3 / LB },
+  "BTU/(lb*°R)": { dim: SPEC_ENTROPY, scale: BTU_PER_LB_R },
+  "lb/(ft*s)": { dim: VISCOSITY, scale: LB / FT },
+  "BTU/(h*ft*°F)": {
+    dim: CONDUCTIVITY,
+    scale: ((BTU / 3600) * R_PER_K) / FT,
+  },
 };
 
 /** Unit names, longest first, for the lexer. */
@@ -162,14 +204,68 @@ export const UNIT_NAMES = Object.keys(UNITS).sort(
   (a, b) => b.length - a.length,
 );
 
+/**
+ * Each unit as a pattern that also takes how the app shows it ("kJ/(kg·K)",
+ * "m³"), the × of a phone keyboard and the ordinal sign of a Spanish one
+ * ("25 ºC").
+ */
+const UNIT_PATTERNS = UNIT_NAMES.map((name) => {
+  const source = name
+    .replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")
+    .replace(/\\\*/g, "[*·⋅×]")
+    .replace(/\\\^2/g, "(?:\\^2|²)")
+    .replace(/\\\^3/g, "(?:\\^3|³)")
+    .replace(/°/g, "[°º]");
+  return { name, pattern: new RegExp(`^${source}(?![A-Za-z0-9_])`) };
+});
+
+/**
+ * The unit starting `text`, if a whole one does ("kPa" but not "kPax"): its
+ * name in UNITS and how many characters it takes.
+ */
+export function unitAt(
+  text: string,
+): { name: string; length: number } | undefined {
+  for (const { name, pattern } of UNIT_PATTERNS) {
+    const m = pattern.exec(text);
+    if (m) return { name, length: m[0].length };
+  }
+  return undefined;
+}
+
+/**
+ * A unit glued to its number ("1.2MPa" after "1.2"), not a state named like
+ * one ("1m:", "3m.h", "1m [Water]:").
+ */
+export function gluedUnit(text: string) {
+  const unit = unitAt(text);
+  return unit && !/^(\.|\s*[:[])/.test(text.slice(unit.length))
+    ? unit
+    : undefined;
+}
+
 export function literal(value: number, unit: string | undefined): Quantity {
   if (!unit) return { value, dim: NONE };
   const u = UNITS[unit];
   return {
     value: value * u.scale + (u.offset ?? 0),
     dim: u.dim,
-    absolute: u.absolute,
+    absolute: u.absolute ? 1 : undefined,
+    kelvin: dimEq(u.dim, TEMPERATURE) && !u.offset ? true : undefined,
   };
+}
+
+/**
+ * A literal in an offset unit read as a difference: in `T1 + 10 °C`, the
+ * 10 °C is ten degrees, not 283.15 K.
+ */
+export function literalDifference(value: number, unit: string): Quantity {
+  const u = UNITS[unit];
+  return { value: value * u.scale, dim: u.dim };
+}
+
+export function hasOffset(unit: string | undefined): boolean {
+  return unit !== undefined && UNITS[unit]?.offset !== undefined;
 }
 
 /** Dimension of each state property the language reads, by coolprop-rs name. */
@@ -224,7 +320,7 @@ export function displayKind(
 export function convertTo(q: Quantity, unit: string): number | null {
   const u = UNITS[unit];
   if (!u || !dimEq(u.dim, q.dim)) return null;
-  const offset = q.absolute ? (u.offset ?? 0) : 0;
+  const offset = isDifference(q) ? 0 : (u.offset ?? 0);
   return (q.value - offset) / u.scale;
 }
 

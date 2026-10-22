@@ -4,7 +4,7 @@
  * trailing comments aligned within a block, at most one blank line in a row.
  * A line that does not tokenize is left as it is.
  */
-import { tokenize, type Token } from "./parser";
+import { NUMBER, tokenize, type Token } from "./parser";
 
 const TIGHT_BEFORE = new Set([",", ")", "]", ".", ":"]);
 const TIGHT_AFTER = new Set(["(", "[", "."]);
@@ -40,8 +40,10 @@ function splitComment(line: string): { code: string; comment?: string } {
 function tokenText(t: Token): string {
   if (t.kind === "string") return `"${t.text}"`;
   if (t.kind === "num" && t.unit) {
-    const value = t.text.slice(0, t.text.length - t.unit.length).trim();
-    return t.unit === "%" ? `${value}%` : `${value} ${t.unit}`;
+    // The unit as typed: "1m²" is "1 m²".
+    const value = NUMBER.exec(t.text)![0];
+    const unit = t.text.slice(value.length).trim();
+    return t.unit === "%" ? `${value}%` : `${value} ${unit}`;
   }
   return t.text;
 }

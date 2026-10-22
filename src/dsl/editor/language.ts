@@ -13,7 +13,7 @@ import {
 import { tags as t } from "@lezer/highlight";
 import { STATEMENT_KEYWORDS } from "../vocabulary";
 import { PROCESSES } from "../parser";
-import { UNIT_NAMES } from "../units";
+import { gluedUnit, unitAt as unitIn } from "../units";
 
 type LineState = {
   /** What the line is: a statement keyword's, or "state" / "value". */
@@ -31,11 +31,8 @@ const NUMBER = /^\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/;
 /** "h1", "T2s": a state's property, as the textbooks write it. */
 const TEXTBOOK = /^(T|P|p|D|rho|v|h|s|u|x|cp|cv|mu|k|Pr|Z|a|g)\d\w*$/;
 
-function unitAt(stream: StringStream): string | undefined {
-  const rest = stream.string.slice(stream.pos);
-  return UNIT_NAMES.find(
-    (u) => rest.startsWith(u) && !/[A-Za-z0-9_]/.test(rest[u.length] ?? ""),
-  );
+function unitAt(stream: StringStream) {
+  return unitIn(stream.string.slice(stream.pos));
 }
 
 /** What a line without a statement keyword defines, from its shape. */
@@ -81,10 +78,7 @@ function token(stream: StringStream, state: LineState): string | null {
     num && /[A-Za-z0-9_]/.test(stream.string[stream.pos + num[0].length] ?? "");
   const isNumber =
     num &&
-    (!glued ||
-      UNIT_NAMES.some((u) =>
-        stream.string.slice(stream.pos + num[0].length).startsWith(u),
-      ));
+    (!glued || gluedUnit(stream.string.slice(stream.pos + num[0].length)));
   const word = isNumber
     ? null
     : (stream.match(/^[A-Za-z0-9_]+/, false) as RegExpMatchArray | null);

@@ -198,6 +198,14 @@ const UNIT_ALIASES = new Set([
   "m2",
   "m3",
   "psia",
+  "℃",
+  "℉",
+  "°K",
+  "lb/ft^3",
+  "ft^3/lb",
+  "BTU/(lb*°R)",
+  "lb/(ft*s)",
+  "BTU/(h*ft*°F)",
 ]);
 
 /**

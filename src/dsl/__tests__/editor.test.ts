@@ -321,6 +321,15 @@ describe("highlighting", () => {
       "°F": "unit",
     });
   });
+
+  it("reads units as the lexer does", () => {
+    const h = highlighted("1m: T = 25 ºC, P = 1 bar\nk = 1 kJ/(kg·K)");
+    expect(h).toMatchObject({
+      "1m": "stateDef",
+      ºC: "unit",
+      "kJ/(kg·K)": "unit",
+    });
+  });
 });
 
 describe("diagnostic ranges", () => {
