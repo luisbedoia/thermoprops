@@ -1,5 +1,6 @@
 import type { IsolineCurve, PlotProperty } from "@luisbedoia/coolprop-rs-wasm";
 import { buildChartLabels } from "../lib/chartLabels";
+import { viewRange } from "../lib/plotUtils";
 import { fromSI, getDisplayUnit } from "../lib/units";
 import { unitToPlain } from "../lib/unitsFormat";
 import type { FluidChart as Chart } from "./data";
@@ -92,7 +93,14 @@ function axisTitle(axis: Axis) {
  * A fluid's diagram as an image of the page itself: the saturation dome and
  * a few isolines, each named at its end, on axes in °C, kPa and kJ.
  */
-export function FluidChart({ chart, title }: { chart: Chart; title: string }) {
+export function FluidChart({
+  chart: computed,
+  title,
+}: {
+  chart: Chart;
+  title: string;
+}) {
+  const chart = framed(computed);
   const x = scaler(chart.x, M.left, W - M.right);
   const y = scaler(chart.y, H - M.bottom, M.top);
   const clip = `clip-${chart.id}`;
@@ -175,6 +183,22 @@ export function FluidChart({ chart, title }: { chart: Chart; title: string }) {
       ))}
     </svg>
   );
+}
+
+/**
+ * The chart on the worksheet's axes (viewRange): the dome centred, filling
+ * most of each, instead of CoolProp's whole domain (up to 2.25·Tc), where
+ * the dome sits in a corner under isolines of little interest.
+ */
+function framed(chart: Chart): Chart {
+  const dome = (axis: "x" | "y") => chart.dome.flatMap((c) => c[axis]);
+  const range = (axis: "x" | "y") =>
+    viewRange(chart[axis], dome(axis)) ?? chart[axis].range;
+  return {
+    ...chart,
+    x: { ...chart.x, range: range("x") },
+    y: { ...chart.y, range: range("y") },
+  };
 }
 
 /**
