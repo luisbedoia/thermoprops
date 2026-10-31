@@ -2,8 +2,15 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { locale, tr } from "../i18n";
+import { track } from "../lib/analytics";
 import { plainFormula } from "../lib/formula";
-import type { FluidPage as Page, FluidSummary, SaturationRow } from "./data";
+import type {
+  FluidPage as Page,
+  FluidSummary,
+  SaturationPressureRow,
+  SaturationRow,
+  SuperheatedBlock,
+} from "./data";
 import { FluidChart } from "./FluidChart";
 import { loadFluidPage } from "./load";
 import { fluidName, fluidTitle } from "./meta";
@@ -18,6 +25,9 @@ const NUMBER = new Intl.NumberFormat("en-US", {
 });
 const num = (v: number) => NUMBER.format(v);
 const celsius = (k: number) => num(k - 273.15);
+/** kPa below 1 MPa, MPa from it: as the textbooks head their tables. */
+const pressure = (pa: number) =>
+  pa < 1e6 ? `${num(pa / 1000)} kPa` : `${num(pa / 1e6)} MPa`;
 
 /**
  * A fluid's page, for search engines and to start from: its constants, a
@@ -63,7 +73,7 @@ export function FluidPage() {
 }
 
 function Content({ page }: { page: Page }) {
-  const { fluid, data, critical, saturation, charts } = page;
+  const { fluid, data, critical, saturation, charts, boiling } = page;
   const name = fluid.display[locale];
   const title = fluidName(fluid, data.aliases);
   const formula = plainFormula(data.formula);
@@ -92,14 +102,17 @@ function Content({ page }: { page: Page }) {
       </h1>
       <p className="fluid__lead">
         {tr(
-          `Saturation table, p–h and T–s diagrams and constants of ${name}${formula ? ` (${formula})` : ""}, computed with CoolProp. Any other state of ${name}, from any two properties, in the State Explorer or the Worksheet.`,
-          `Tabla de saturación, diagramas p–h y T–s y constantes de ${name}${formula ? ` (${formula})` : ""}, calculados con CoolProp. Cualquier otro estado, desde dos propiedades cualesquiera, en el Explorador de estados o en la Hoja de trabajo.`,
+          `Saturation tables by temperature and by pressure, superheated vapor table, p–h and T–s diagrams and constants of ${name}${formula ? ` (${formula})` : ""}, computed with CoolProp. Any other state of ${name}, from any two properties, in the State Explorer or the Worksheet.`,
+          `Tablas de saturación por temperatura y por presión, tabla de vapor sobrecalentado, diagramas p–h y T–s y constantes de ${name}${formula ? ` (${formula})` : ""}, calculados con CoolProp. Cualquier otro estado, desde dos propiedades cualesquiera, en el Explorador de estados o en la Hoja de trabajo.`,
         )}
       </p>
       <div className="fluid__cta">
         <Link
           className="fluid__primary"
           to={{ pathname: "/explorer", search: `?fluid=${data.name}` }}
+          onClick={() =>
+            track("fluid_open_app", { fluid: data.name, to: "explorer" })
+          }
         >
           {tr(`Calculate a state of ${name}`, `Calcular un estado de ${name}`)}
           <ArrowRight aria-hidden="true" />
@@ -110,6 +123,9 @@ function Content({ page }: { page: Page }) {
             pathname: "/worksheet",
             search: `?${new URLSearchParams({ s: source })}`,
           }}
+          onClick={() =>
+            track("fluid_open_app", { fluid: data.name, to: "worksheet" })
+          }
         >
           {tr("Open it in the Worksheet", "Abrirlo en la Hoja de trabajo")}
           <ArrowRight aria-hidden="true" />
@@ -131,6 +147,26 @@ function Content({ page }: { page: Page }) {
             term={tr("Molar mass", "Masa molar")}
             value={`${num(data.molar_mass * 1000)} g/mol`}
           />
+          {boiling && (
+            <Fact
+              term={
+                data.pseudo_pure
+                  ? tr(
+                      "Bubble and dew points at 1 atm",
+                      "Puntos de burbuja y de rocío a 1 atm",
+                    )
+                  : tr(
+                      "Normal boiling point (1 atm)",
+                      "Punto de ebullición normal (1 atm)",
+                    )
+              }
+              value={
+                data.pseudo_pure
+                  ? `${celsius(boiling.bubble)} °C, ${celsius(boiling.dew)} °C`
+                  : `${celsius(boiling.bubble)} °C (${num(boiling.bubble)} K)`
+              }
+            />
+          )}
           <Fact
             term={tr("Critical temperature", "Temperatura crítica")}
             value={`${celsius(critical.temperature)} °C (${num(critical.temperature)} K)`}
@@ -162,6 +198,14 @@ function Content({ page }: { page: Page }) {
         <Saturation rows={saturation} name={name} mixture={data.pseudo_pure} />
       )}
 
+      {page.saturationByPressure.length > 0 && (
+        <SaturationByPressure
+          rows={page.saturationByPressure}
+          name={name}
+          mixture={data.pseudo_pure}
+        />
+      )}
+
       {charts.length > 0 && (
         <section aria-labelledby="fluid-charts">
           <h2 id="fluid-charts">{tr("Diagrams", "Diagramas")}</h2>
@@ -186,6 +230,10 @@ function Content({ page }: { page: Page }) {
             })}
           </div>
         </section>
+      )}
+
+      {page.superheated.length > 0 && (
+        <Superheated blocks={page.superheated} name={name} />
       )}
 
       <p className="fluid__note">
@@ -288,6 +336,138 @@ function Saturation({
             ))}
           </tbody>
         </table>
+      </div>
+    </section>
+  );
+}
+
+function SaturationByPressure({
+  rows,
+  name,
+  mixture,
+}: {
+  rows: SaturationPressureRow[];
+  name: string;
+  mixture: boolean;
+}) {
+  return (
+    <section aria-labelledby="fluid-saturation-pressure">
+      <h2 id="fluid-saturation-pressure">
+        {tr("Saturation table by pressure", "Tabla de saturación por presión")}
+      </h2>
+      <p className="fluid__hint">
+        {mixture
+          ? tr(
+              `At a pressure, ${name} starts boiling (bubble) and ends (dew) at different temperatures.`,
+              `A una presión, ${name} empieza a hervir (burbuja) y termina (rocío) a temperaturas distintas.`,
+            )
+          : tr(
+              "By pressure: saturated liquid (f) and saturated vapor (g).",
+              "Por presión: líquido saturado (f) y vapor saturado (g).",
+            )}
+      </p>
+      <div className="fluid__table" role="region" tabIndex={0}>
+        <table>
+          <caption>
+            {tr(
+              `Saturated ${name}, by pressure`,
+              `${name} saturado, por presión`,
+            )}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">P kPa</th>
+              {mixture ? (
+                <>
+                  <th scope="col">{tr("T bubble", "T burbuja")} °C</th>
+                  <th scope="col">{tr("T dew", "T rocío")} °C</th>
+                </>
+              ) : (
+                <th scope="col">Tsat °C</th>
+              )}
+              <th scope="col">vf m³/kg</th>
+              <th scope="col">vg m³/kg</th>
+              <th scope="col">hf kJ/kg</th>
+              <th scope="col">hfg kJ/kg</th>
+              <th scope="col">hg kJ/kg</th>
+              <th scope="col">sf kJ/(kg·K)</th>
+              <th scope="col">sg kJ/(kg·K)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.P}>
+                <th scope="row">{num(r.P / 1000)}</th>
+                <td>{celsius(r.Tf)}</td>
+                {mixture && <td>{celsius(r.Tg)}</td>}
+                <td>{num(1 / r.rhof)}</td>
+                <td>{num(1 / r.rhog)}</td>
+                <td>{num(r.hf / 1000)}</td>
+                <td>{num((r.hg - r.hf) / 1000)}</td>
+                <td>{num(r.hg / 1000)}</td>
+                <td>{num(r.sf / 1000)}</td>
+                <td>{num(r.sg / 1000)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+/** The superheated vapor table: a small table for each pressure. */
+function Superheated({
+  blocks,
+  name,
+}: {
+  blocks: SuperheatedBlock[];
+  name: string;
+}) {
+  return (
+    <section aria-labelledby="fluid-superheated">
+      <h2 id="fluid-superheated">
+        {tr("Superheated vapor table", "Tabla de vapor sobrecalentado")}
+      </h2>
+      <p className="fluid__hint">
+        {tr(
+          "At each pressure, from its saturated vapor (Sat.) to higher temperatures.",
+          "A cada presión, desde su vapor saturado (Sat.) hasta temperaturas mayores.",
+        )}
+      </p>
+      <div className="fluid__superheated">
+        {blocks.map((b) => (
+          <div key={b.P} className="fluid__table" role="region" tabIndex={0}>
+            <table>
+              <caption>
+                {tr(
+                  `Superheated ${name} at ${pressure(b.P)} (Tsat ${celsius(b.sat.T)} °C)`,
+                  `${name} sobrecalentado a ${pressure(b.P)} (Tsat ${celsius(b.sat.T)} °C)`,
+                )}
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">T °C</th>
+                  <th scope="col">v m³/kg</th>
+                  <th scope="col">u kJ/kg</th>
+                  <th scope="col">h kJ/kg</th>
+                  <th scope="col">s kJ/(kg·K)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[b.sat, ...b.rows].map((r, i) => (
+                  <tr key={r.T}>
+                    <th scope="row">{i === 0 ? "Sat." : celsius(r.T)}</th>
+                    <td>{num(1 / r.rho)}</td>
+                    <td>{num(r.u / 1000)}</td>
+                    <td>{num(r.h / 1000)}</td>
+                    <td>{num(r.s / 1000)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ))}
       </div>
     </section>
   );

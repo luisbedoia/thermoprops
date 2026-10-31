@@ -1,6 +1,7 @@
 import { Button } from "../components/Button";
 import { ChevronRight, Eraser, FileDown, Plus, Trash2 } from "lucide-react";
 import { downloadText, fileName, statesToCsv } from "../lib/exportFiles";
+import { track } from "../lib/analytics";
 import { MathText } from "../components/MathText";
 import {
   phaseInfo,
@@ -88,13 +89,14 @@ function ExportCsvButton({
       size="sm"
       // Exports once every state is solved, so no row lacks its values.
       disabled={states.some((s) => s.pending)}
-      onClick={() =>
+      onClick={() => {
         downloadText(
           `${fileName(fluid, "states")}.csv`,
           statesToCsv(states, units),
           "text/csv;charset=utf-8",
-        )
-      }
+        );
+        track("export_csv", { fluid });
+      }}
     >
       <FileDown />
       {T.exportCsv}

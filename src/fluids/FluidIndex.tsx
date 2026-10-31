@@ -50,8 +50,8 @@ export function FluidIndex() {
       </h1>
       <p className="fluid__lead">
         {tr(
-          "For each fluid: its constants, a saturation table, and its p–h and T–s diagrams, computed with CoolProp. Any state of them, from any two properties, in the State Explorer or the Worksheet.",
-          "De cada fluido: sus constantes, una tabla de saturación y sus diagramas p–h y T–s, calculados con CoolProp. Cualquiera de sus estados, desde dos propiedades cualesquiera, en el Explorador de estados o en la Hoja de trabajo.",
+          "For each fluid: its constants, saturation tables by temperature and by pressure, a superheated vapor table, and its p–h and T–s diagrams, computed with CoolProp. Any state of them, from any two properties, in the State Explorer or the Worksheet.",
+          "De cada fluido: sus constantes, tablas de saturación por temperatura y por presión, una tabla de vapor sobrecalentado y sus diagramas p–h y T–s, calculados con CoolProp. Cualquiera de sus estados, desde dos propiedades cualesquiera, en el Explorador de estados o en la Hoja de trabajo.",
         )}
       </p>
       {sorted ? (

@@ -26,9 +26,14 @@ export function fluidDescription(page: FluidPage): string {
   const name = page.fluid.display[locale];
   const tc = fmt(page.critical.temperature - 273.15);
   const pc = fmt(page.critical.pressure / 1e6);
+  // A pure fluid's normal boiling point: what is most often looked up.
+  const boils =
+    page.boiling && !page.data.pseudo_pure
+      ? fmt(page.boiling.bubble - 273.15)
+      : null;
   return tr(
-    `${name}: saturation table (pressure, specific volume, enthalpy, entropy), p–h and T–s diagrams and critical point (${tc} °C, ${pc} MPa). Calculate any of its states with CoolProp, free.`,
-    `${name}: tabla de saturación (presión, volumen específico, entalpía, entropía), diagramas p–h y T–s y punto crítico (${tc} °C, ${pc} MPa). Calcula cualquiera de sus estados con CoolProp, gratis.`,
+    `${name}: saturation tables by temperature and pressure, superheated vapor table, p–h and T–s diagrams, critical point (${tc} °C, ${pc} MPa)${boils ? ` and normal boiling point (${boils} °C)` : ""}. Calculate any of its states with CoolProp, free.`,
+    `${name}: tablas de saturación por temperatura y presión, tabla de vapor sobrecalentado, diagramas p–h y T–s, punto crítico (${tc} °C, ${pc} MPa)${boils ? ` y punto de ebullición normal (${boils} °C)` : ""}. Calcula cualquiera de sus estados con CoolProp, gratis.`,
   );
 }
 
@@ -38,6 +43,6 @@ export const FLUIDS_TITLE = tr(
 );
 
 export const FLUIDS_DESCRIPTION = tr(
-  "Saturation tables, p–h and T–s diagrams and critical points of water, air, ammonia, CO₂ and refrigerants such as R134a, R410A, R32 and R1234yf, computed with CoolProp.",
-  "Tablas de saturación, diagramas p–h y T–s y puntos críticos del agua, aire, amoníaco, CO₂ y refrigerantes como R134a, R410A, R32 y R1234yf, calculados con CoolProp.",
+  "Saturation and superheated vapor tables, p–h and T–s diagrams and critical points of water, air, ammonia, CO₂ and refrigerants such as R134a, R410A, R32 and R1234yf, computed with CoolProp.",
+  "Tablas de saturación y de vapor sobrecalentado, diagramas p–h y T–s y puntos críticos del agua, aire, amoníaco, CO₂ y refrigerantes como R134a, R410A, R32 y R1234yf, calculados con CoolProp.",
 );

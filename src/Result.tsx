@@ -3,6 +3,7 @@ import { ArrowLeft, ChartLine, Table2, X } from "lucide-react";
 import type { FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { clearExplorer, saveExplorer } from "./lib/sessions";
+import { track } from "./lib/analytics";
 import type { StateInputs } from "@luisbedoia/coolprop-rs-wasm";
 import { resolveUnitSystem, toSI } from "./lib/units";
 import { validityError } from "./lib/validity";
@@ -290,6 +291,7 @@ export function WorkspaceView() {
         return;
       }
 
+      track("explorer_state", { fluid });
       const id = generateId();
       setStates((prev) => [
         ...prev,

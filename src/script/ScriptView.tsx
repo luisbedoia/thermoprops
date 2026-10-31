@@ -35,6 +35,7 @@ import {
 } from "../dsl/editor/ScriptEditor";
 import { TEMPLATES } from "../dsl/templates";
 import { isOwnWork, savedWorksheet, saveWorksheet } from "../lib/sessions";
+import { track, trackOnce } from "../lib/analytics";
 import { useScript } from "../dsl/useScript";
 import { useDebounced, useFrozenWhile, useMediaQuery } from "./hooks";
 import { ReferencePanel } from "./ReferencePanel";
@@ -291,6 +292,12 @@ export function ScriptView() {
   const [debug] = useState(() => params.get("debug") === "1");
   const editor = useRef<ScriptEditorHandle | null>(null);
   const { result, error, ms, pending, slow } = useScript(source);
+  // Their own work solved, not only a link or an example opened.
+  const solvedOwn =
+    source !== initial && !!result?.states.length && !result.diagnostics.length;
+  useEffect(() => {
+    if (solvedOwn) trackOnce("worksheet_solve");
+  }, [solvedOwn]);
 
   const wide = useMediaQuery(WIDE);
   const touch = useMediaQuery(TOUCH);
@@ -580,6 +587,7 @@ export function ScriptView() {
   const [shared, setShared] = useState(false);
   const share = async () => {
     const url = `${window.location.origin}${window.location.pathname}?s=${encodeURIComponent(source)}`;
+    track("worksheet_share");
     try {
       if (touch && navigator.share) {
         await navigator.share({

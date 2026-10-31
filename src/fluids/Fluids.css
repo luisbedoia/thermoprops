@@ -316,3 +316,11 @@ body:has(.fluid) .app-header {
   padding: 0;
   list-style: none;
 }
+
+/* One small table per pressure, side by side where they fit. */
+.fluid__superheated {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+  gap: 1.25rem;
+  align-items: start;
+}
