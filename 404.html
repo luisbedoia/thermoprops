@@ -145,22 +145,28 @@
       }
     </script>
 
-    <!-- Google Analytics 4 -->
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=G-R76PJHB69S"
-    ></script>
+    <!-- Google Analytics 4: on the published site only, and not for
+         browsers driven by a script (tests, screenshots, Lighthouse). -->
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
+      if (
+        location.hostname === "luisbedoia.github.io" &&
+        !navigator.webdriver
+      ) {
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () {
+          dataLayer.push(arguments);
+        };
+        gtag("js", new Date());
+        gtag("config", "G-R76PJHB69S");
+        const ga = document.createElement("script");
+        ga.async = true;
+        ga.src = "https://www.googletagmanager.com/gtag/js?id=G-R76PJHB69S";
+        document.head.append(ga);
       }
-      gtag("js", new Date());
-      gtag("config", "G-R76PJHB69S");
     </script>
-    <script type="module" crossorigin src="/thermoprops/assets/index-BLIRECeA.js"></script>
+    <script type="module" crossorigin src="/thermoprops/assets/index-BkrH8wkm.js"></script>
     <link rel="modulepreload" crossorigin href="/thermoprops/assets/rolldown-runtime-WkwZ5CU-.js">
-    <link rel="stylesheet" crossorigin href="/thermoprops/assets/index-B463LjC1.css">
+    <link rel="stylesheet" crossorigin href="/thermoprops/assets/index-CEUX130i.css">
   <link rel="manifest" href="/thermoprops/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/thermoprops/registerSW.js" defer></script>
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="/thermoprops/favicon.ico" sizes="48x48">
