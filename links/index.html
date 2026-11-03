@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="theme-color" content="#ffffff" />
+    <script>
+      // The installed app opens on its home, not on the website's landing:
+      // before the first paint, so the landing is never seen there. Keep in
+      // step with src/lib/installed.ts. (Apps installed before /home existed
+      // still start at the landing's address.)
+      var toHome =
+        /^\/thermoprops\/?$/.test(location.pathname) &&
+        (matchMedia(
+          "(display-mode: standalone), (display-mode: minimal-ui), (display-mode: fullscreen), (display-mode: window-controls-overlay)",
+        ).matches ||
+          navigator.standalone === true);
+      if (toHome) location.replace("/thermoprops/home/" + location.search);
+      // The page's language (see src/i18n/index.ts, and keep the key and
+      // the addresses in step): pages with an address per language are in
+      // theirs, and a Spanish one (/es/...) also makes it the visitor's
+      // choice; the others in the visitor's choice, else English. A Spanish
+      // visitor on an English address of those (the landing, /fluids/...)
+      // goes to the Spanish one. A built page in another language than the
+      // visitor's stays hidden until the app draws it in theirs (main.tsx).
+      (function () {
+        var html = document.documentElement;
+        var path = location.pathname;
+        var base = /^\/thermoprops(\/|$)/.test(path) ? "/thermoprops/" : "/";
+        var rel = "/" + path.slice(base.length);
+        var spanish = /^\/es(\/|$)/.test(rel);
+        var english = /^\/fluids(\/|$)/.test(rel);
+        var saved = null;
+        try {
+          if (spanish) localStorage.setItem("thermoprops.locale", "es");
+          saved = localStorage.getItem("thermoprops.locale");
+        } catch (e) {}
+        if (saved === "es" && !toHome) {
+          if (rel === "/") location.replace(base + "es/" + location.search);
+          else if (english)
+            location.replace(
+              base + "es/fluidos" + rel.slice(7) + location.search,
+            );
+        }
+        var lang = spanish || (saved === "es" && !english) ? "es" : "en";
+        html.dataset.built = html.lang;
+        if (lang !== html.lang) {
+          html.lang = lang;
+          html.classList.add("locale-pending");
+        }
+      })();
+    </script>
+    <style>.locale-pending #root{visibility:hidden}</style>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual"
+    />
+
+    <!-- Primary SEO -->
+    <title>Link to a calculation – Thermoprops</title>
+    <link rel="preload" href="/thermoprops/assets/inter-latin-wght-normal-Dx4kXJAl.woff2" as="font" type="font/woff2" crossorigin />
+    <meta
+      name="description"
+      content="How to link to a thermodynamics calculation solved by CoolProp: the Worksheet's script in its address, its syntax, the 30 fluids, and examples of a refrigeration and a Rankine cycle."
+    />
+    <meta
+      name="keywords"
+      content="thermodynamic properties, thermodynamics calculator, CoolProp, refrigerants, fluids, enthalpy, entropy, pressure, temperature, saturation curve, PropsSI"
+    />
+    <meta
+      name="author"
+      content="Department of Mechanical Engineering, Universidad de Antioquia"
+    />
+    <link rel="canonical" href="https://luisbedoia.github.io/thermoprops/links/" />
+
+    <!-- Open Graph (Facebook, LinkedIn, WhatsApp) -->
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:url"
+      content="https://luisbedoia.github.io/thermoprops/links/"
+    />
+    <meta
+      property="og:title"
+      content="Link to a calculation – Thermoprops"
+    />
+    <meta
+      property="og:description"
+      content="How to link to a thermodynamics calculation solved by CoolProp: the Worksheet's script in its address, its syntax, the 30 fluids, and examples of a refrigeration and a Rankine cycle."
+    />
+    <meta
+      property="og:image"
+      content="https://luisbedoia.github.io/thermoprops/og-image.png"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Thermoprops, a free thermodynamic properties calculator in your browser, beside a refrigeration cycle on a T–s diagram."
+    />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Link to a calculation – Thermoprops"
+    />
+    <meta
+      name="twitter:description"
+      content="How to link to a thermodynamics calculation solved by CoolProp: the Worksheet's script in its address, its syntax, the 30 fluids, and examples of a refrigeration and a Rankine cycle."
+    />
+    <meta
+      name="twitter:image"
+      content="https://luisbedoia.github.io/thermoprops/og-image.png"
+    />
+    <meta
+      name="twitter:image:alt"
+      content="Thermoprops, a free thermodynamic properties calculator in your browser, beside a refrigeration cycle on a T–s diagram."
+    />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Thermoprops",
+        "url": "https://luisbedoia.github.io/thermoprops/",
+        "description": "Free thermodynamic properties calculator: 30 fluids and refrigerants by CoolProp, in your browser. Write states as in your notebook and solve a whole cycle.",
+        "applicationCategory": "EngineeringApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires a modern browser with WebAssembly support",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "author": {
+          "@type": "Organization",
+          "name": "Department of Mechanical Engineering, Universidad de Antioquia",
+          "parentOrganization": {
+            "@type": "CollegeOrUniversity",
+            "name": "Universidad de Antioquia",
+            "url": "https://www.udea.edu.co"
+          }
+        }
+      }
+    </script>
+
+    <!-- Google Analytics 4: on the published site only, and not for
+         browsers driven by a script (tests, screenshots, Lighthouse). -->
+    <script>
+      if (
+        location.hostname === "luisbedoia.github.io" &&
+        !navigator.webdriver
+      ) {
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () {
+          dataLayer.push(arguments);
+        };
+        gtag("js", new Date());
+        gtag("config", "G-R76PJHB69S");
+        const ga = document.createElement("script");
+        ga.async = true;
+        ga.src = "https://www.googletagmanager.com/gtag/js?id=G-R76PJHB69S";
+        document.head.append(ga);
+      }
+    </script>
+    <script type="module" crossorigin src="/thermoprops/assets/index-D7PNonH5.js"></script>
+    <link rel="modulepreload" crossorigin href="/thermoprops/assets/rolldown-runtime-WkwZ5CU-.js">
+    <link rel="stylesheet" crossorigin href="/thermoprops/assets/index-Bs_mg2mn.css">
+  <link rel="manifest" href="/thermoprops/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/thermoprops/registerSW.js" defer></script>
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="/thermoprops/favicon.ico" sizes="48x48">
+<link rel="apple-touch-icon" href="/thermoprops/apple-touch-icon-180x180.png"></head>
+  <body>
+    <!-- Each page's HTML is rendered into #root at build time (scripts/postbuild.mjs). -->
+    <div id="root"><div class="app-shell"><a class="skip-link" href="#main">Skip to content</a><header class="app-header"><a class="brand-title" href="/thermoprops/" data-discover="true">Thermoprops</a><div class="app-header__actions"><button type="button" class="app-button app-button--subtle app-button--sm locale-button" lang="es" title="Ver en español"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-languages" aria-hidden="true"><path d="m5 8 6 6"></path><path d="m4 14 6-6 2-3"></path><path d="M2 5h12"></path><path d="M7 2h1"></path><path d="m22 22-5-10-5 10"></path><path d="M14 18h6"></path></svg>Español</button><button type="button" class="app-button app-button--subtle app-button--sm about-button"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>About</button></div></header><main class="app-main" id="main" tabindex="-1"><article class="fluid links"><h1>Link to a calculation<!-- --> <span>Thermoprops addresses, for assistants and for people</span></h1><p class="fluid__lead">A Worksheet&#x27;s script lives in its address: a link opens it already solved, in the browser of whoever follows it. An assistant answering a thermodynamics question can write the script, link it, and the reader gets every state, value and chart, computed by CoolProp.</p><section aria-labelledby="links-address"><h2 id="links-address">The address</h2><pre class="links__code"><code>https://luisbedoia.github.io/thermoprops/worksheet/?s=&lt;script&gt;</code></pre><ul class="links__list"><li><code>&lt;script&gt;</code> is the script, encoded as<!-- --> <code>encodeURIComponent</code> does: spaces as <code>%20</code>, line breaks as <code>%0A</code>, <code>+</code> as<!-- --> <code>%2B</code>, <code>#</code> as <code>%23</code>.</li><li>The results are computed in the browser that opens the link (CoolProp in WebAssembly): the page&#x27;s HTML does not hold them, so a reader without JavaScript sees only the script.</li><li>Nothing is sent anywhere: the script stays in the link and in the reader&#x27;s browser.</li></ul></section><section aria-labelledby="links-script"><h2 id="links-script">The script</h2><p class="fluid__hint">One statement per line; # starts a comment.</p><div class="fluid__table" role="region" tabindex="0"><table class="links__syntax"><tbody><tr><th scope="row"><code>fluid R134a</code></th><td>The fluid of every state.</td></tr><tr><th scope="row"><code>units celsius</code></th><td>How results are shown and bare numbers read: celsius (°C, kPa, kJ/kg), kelvin or imperial.</td></tr><tr><th scope="row"><code>reference ASHRAE</code></th><td>Where h and s are measured from: ASHRAE as in the textbooks&#x27; refrigerant tables, IIR, NBP or DEF (CoolProp&#x27;s default).</td></tr><tr><th scope="row"><code>1: T = 25 °C, P = 1 bar</code></th><td>A state fixed by two properties.</td></tr><tr><th scope="row"><code>1: T = -10 °C, sat vapor</code></th><td>A saturated state: sat liquid (x = 0) or sat vapor (x = 1).</td></tr><tr><th scope="row"><code>2: from 1, compressed to P = 1.2 MPa, eta = 80%</code></th><td>A state reached from another by a process.</td></tr><tr><th scope="row"><code>3: P = P2, sat liquid</code></th><td>A property of another state, by name.</td></tr><tr><th scope="row"><code>COP = (h1 - h4) / (h2 - h1)</code></th><td>A value computed from states and other values: + - * / ^, sqrt, ln, exp, abs, min, max.</td></tr><tr><th scope="row"><code>print COP, T2 in °F</code></th><td>The results to show; in picks the unit.</td></tr><tr><th scope="row"><code>draw 1 -&gt; 2 -&gt; 3 -&gt; 4 -&gt; 1</code></th><td>The processes drawn on the chart.</td></tr></tbody></table></div><dl class="links__terms"><div><dt>Properties</dt><dd>T, P, h, s, x (quality), D (density), v, u, cp, cv, mu, k, Pr, Z, a (speed of sound), g; a state&#x27;s are read as T2, h1, x4.</dd></div><div><dt>Processes</dt><dd>isentropic, compressed and expanded (with eta), throttled, isobaric, isothermal, isochoric, isenthalpic, polytropic (with n).</dd></div><div><dt>Units</dt><dd>°C, K, °F, °R, Pa, kPa, MPa, bar, atm, psi, kJ/kg, BTU/lb, kJ/(kg*K), kg/m^3, m^3/kg, kg/s, kg/h, kW, MW, W, hp, BTU/h, kJ, m/s, %.<!-- --> <!-- -->A number without a unit is read in the script&#x27;s units.</dd></div><div><dt>Fluids</dt><dd>Air, Ammonia, Argon, CarbonDioxide, CarbonMonoxide, Ethanol, Helium, Hydrogen, IsoButane, Isopentane, Methane, n-Butane, n-Pentane, n-Propane, Nitrogen, Oxygen, R1234yf, R1234ze(E), R125, R134a, R143a, R152A, R22, R245fa, R32, R404A, R410A, R507A, Toluene, Water</dd></div></dl></section><section aria-labelledby="links-examples"><h2 id="links-examples">Examples</h2><div class="links__examples"><figure><figcaption>Refrigeration cycle</figcaption><pre class="links__code"><code># Vapor-compression refrigeration cycle
+fluid R134a
+units celsius
+# h and s as in the textbooks&#x27; refrigerant tables
+reference ASHRAE
+
+# evaporator outlet
+1: T = -10 °C, sat vapor
+# compressor
+2: from 1, compressed to P = 1.2 MPa, eta = 80%
+# condenser outlet
+3: P = P2, sat liquid
+# expansion valve
+4: from 3, throttled to P = P1
+
+m = 0.05 kg/s
+q_evap = h1 - h4
+w_comp = h2 - h1
+COP = q_evap / w_comp
+Q_evap = m * q_evap
+
+draw 1 -&gt; 2 -&gt; 3 -&gt; 4 -&gt; 1
+print COP, Q_evap, T2</code></pre><a class="fluid__primary" href="https://luisbedoia.github.io/thermoprops/worksheet/?s=%23%20Vapor-compression%20refrigeration%20cycle%0Afluid%20R134a%0Aunits%20celsius%0A%23%20h%20and%20s%20as%20in%20the%20textbooks&#x27;%20refrigerant%20tables%0Areference%20ASHRAE%0A%0A%23%20evaporator%20outlet%0A1%3A%20T%20%3D%20-10%20%C2%B0C%2C%20sat%20vapor%0A%23%20compressor%0A2%3A%20from%201%2C%20compressed%20to%20P%20%3D%201.2%20MPa%2C%20eta%20%3D%2080%25%0A%23%20condenser%20outlet%0A3%3A%20P%20%3D%20P2%2C%20sat%20liquid%0A%23%20expansion%20valve%0A4%3A%20from%203%2C%20throttled%20to%20P%20%3D%20P1%0A%0Am%20%3D%200.05%20kg%2Fs%0Aq_evap%20%3D%20h1%20-%20h4%0Aw_comp%20%3D%20h2%20-%20h1%0ACOP%20%3D%20q_evap%20%2F%20w_comp%0AQ_evap%20%3D%20m%20*%20q_evap%0A%0Adraw%201%20-%3E%202%20-%3E%203%20-%3E%204%20-%3E%201%0Aprint%20COP%2C%20Q_evap%2C%20T2%0A">Open it solved<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></a></figure><figure><figcaption>Rankine cycle</figcaption><pre class="links__code"><code># Rankine cycle with a real turbine
+fluid Water
+units celsius
+
+# condenser outlet
+1: P = 10 kPa, sat liquid
+# pump
+2: from 1, isentropic to P = 8 MPa
+# boiler outlet
+3: P = P2, T = 480 °C
+# turbine
+4: from 3, expanded to P = P1, eta = 85%
+
+w_pump = h2 - h1
+w_turb = h3 - h4
+q_in = h3 - h2
+efficiency = (w_turb - w_pump) / q_in
+
+draw 1 -&gt; 2 -&gt; 3 -&gt; 4 -&gt; 1
+print efficiency in %, w_turb - w_pump, x4</code></pre><a class="fluid__primary" href="https://luisbedoia.github.io/thermoprops/worksheet/?s=%23%20Rankine%20cycle%20with%20a%20real%20turbine%0Afluid%20Water%0Aunits%20celsius%0A%0A%23%20condenser%20outlet%0A1%3A%20P%20%3D%2010%20kPa%2C%20sat%20liquid%0A%23%20pump%0A2%3A%20from%201%2C%20isentropic%20to%20P%20%3D%208%20MPa%0A%23%20boiler%20outlet%0A3%3A%20P%20%3D%20P2%2C%20T%20%3D%20480%20%C2%B0C%0A%23%20turbine%0A4%3A%20from%203%2C%20expanded%20to%20P%20%3D%20P1%2C%20eta%20%3D%2085%25%0A%0Aw_pump%20%3D%20h2%20-%20h1%0Aw_turb%20%3D%20h3%20-%20h4%0Aq_in%20%3D%20h3%20-%20h2%0Aefficiency%20%3D%20(w_turb%20-%20w_pump)%20%2F%20q_in%0A%0Adraw%201%20-%3E%202%20-%3E%203%20-%3E%204%20-%3E%201%0Aprint%20efficiency%20in%20%25%2C%20w_turb%20-%20w_pump%2C%20x4%0A">Open it solved<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></a></figure></div></section><section aria-labelledby="links-other"><h2 id="links-other">Other addresses</h2><ul class="links__list"><li>A fluid&#x27;s tables (saturation by temperature and by pressure, superheated vapor) and diagrams, as HTML:<!-- --> <code>https://luisbedoia.github.io/thermoprops<!-- -->/fluids/r134a/</code>, in Spanish<!-- --> <code>https://luisbedoia.github.io/thermoprops<!-- -->/es/fluidos/r134a/</code>. All of them:<!-- --> <a href="/thermoprops/fluids" data-discover="true">fluids</a>.</li><li>The State Explorer with a fluid chosen:<!-- --> <code>https://luisbedoia.github.io/thermoprops<!-- -->/explorer/?fluid=R134a&amp;units=celsius</code> <!-- -->(units: celsius, kelvin or imperial).</li></ul></section></article></main><footer class="app-footer"><nav class="app-footer__links" aria-label="Site"><a href="/thermoprops/fluids" data-discover="true">Fluid properties</a><a href="/thermoprops/links" data-discover="true">Link to a calculation</a></nav><span>Properties by<!-- --> <a href="https://coolprop.org" target="_blank" rel="noopener noreferrer">CoolProp</a> · <!-- -->WebAssembly via<!-- --> <a href="https://github.com/luisbedoia/coolprop-rs" target="_blank" rel="noopener noreferrer">coolprop-rs</a></span><span class="app-version">v0.3.12</span></footer></div></div>
+    <noscript>
+      <p>Thermoprops needs JavaScript and WebAssembly to run.</p>
+    </noscript>
+  </body>
+</html>
