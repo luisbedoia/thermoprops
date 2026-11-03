@@ -16,6 +16,7 @@ export const BUILT_PAGES = [
   "workspace",
   "worksheet",
   "script",
+  "links",
 ];
 
 /**
@@ -41,6 +42,14 @@ export const PAGES: Record<
     title: tr("Worksheet – Thermoprops", "Hoja de trabajo – Thermoprops"),
     description:
       "Define thermodynamic states as in your notebook, read their properties by name and calculate with them, from a single heat to a whole cycle. Solved by CoolProp as you type, with units and charts. In development: solving for unknowns.",
+  },
+  links: {
+    title: tr(
+      "Link to a calculation – Thermoprops",
+      "Enlazar un cálculo – Thermoprops",
+    ),
+    description:
+      "How to link to a thermodynamics calculation solved by CoolProp: the Worksheet's script in its address, its syntax, the 30 fluids, and examples of a refrigeration and a Rankine cycle.",
   },
   // The installed app's home: for the app, not for search results.
   home: {

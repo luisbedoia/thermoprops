@@ -74,11 +74,19 @@
   padding: 0.9rem clamp(1.25rem, 2vw + 1rem, 2rem);
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
   justify-content: space-between;
   font-size: 0.85rem;
   color: var(--text-muted);
   border-top: 1px solid var(--border-soft);
   background: var(--surface-elevated);
+}
+
+.app-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
 }
 
 .app-version {

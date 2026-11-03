@@ -70,9 +70,14 @@ export function AppLayout() {
         <Outlet />
       </main>
       <footer className="app-footer">
-        <Link to={localizedPath("/fluids", locale)!}>
-          {tr("Fluid properties", "Propiedades de fluidos")}
-        </Link>
+        <nav className="app-footer__links" aria-label={tr("Site", "Sitio")}>
+          <Link to={localizedPath("/fluids", locale)!}>
+            {tr("Fluid properties", "Propiedades de fluidos")}
+          </Link>
+          <Link to="/links">
+            {tr("Link to a calculation", "Enlazar un cálculo")}
+          </Link>
+        </nav>
         <span>
           {tr("Properties by", "Propiedades por")}{" "}
           <a

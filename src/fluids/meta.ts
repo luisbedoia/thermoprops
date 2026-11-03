@@ -14,11 +14,20 @@ export function fluidName(f: FluidSummary, aliases: readonly string[] = []) {
 
 const fmt = (v: number) => String(Number(v.toPrecision(4)));
 
+/**
+ * Its title, in the words people search with: water's tables are the
+ * "steam tables"; the others', their saturation and superheated tables.
+ */
 export function fluidTitle(page: FluidPage): string {
+  if (page.fluid.name === "Water")
+    return tr(
+      "Steam tables – Saturated and superheated water properties | Thermoprops",
+      "Tablas de vapor – Propiedades del agua saturada y sobrecalentada | Thermoprops",
+    );
   const name = fluidName(page.fluid, page.data.aliases);
   return tr(
-    `${name} – Thermodynamic properties, saturation table and p–h diagram | Thermoprops`,
-    `${name} – Propiedades termodinámicas, tabla de saturación y diagrama p–h | Thermoprops`,
+    `${name} – Saturation and superheated tables, p–h diagram | Thermoprops`,
+    `${name} – Tablas de saturación y de sobrecalentado, diagrama p–h | Thermoprops`,
   );
 }
 
@@ -46,3 +55,70 @@ export const FLUIDS_DESCRIPTION = tr(
   "Saturation and superheated vapor tables, p–h and T–s diagrams and critical points of water, air, ammonia, CO₂ and refrigerants such as R134a, R410A, R32 and R1234yf, computed with CoolProp.",
   "Tablas de saturación y de vapor sobrecalentado, diagramas p–h y T–s y puntos críticos del agua, aire, amoníaco, CO₂ y refrigerantes como R134a, R410A, R32 y R1234yf, calculados con CoolProp.",
 );
+
+const SITE = "https://luisbedoia.github.io/thermoprops/";
+
+/**
+ * Its structured data for search engines (schema.org): the tables as a
+ * dataset, and where the page is in the site. `url` is the page's address.
+ */
+export function fluidStructuredData(page: FluidPage, url: string) {
+  const name = fluidName(page.fluid, page.data.aliases);
+  const fluids = SITE + (locale === "es" ? "es/fluidos/" : "fluids/");
+  const dataset = {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    name: fluidTitle(page).replace(/ \| Thermoprops$/, ""),
+    description: fluidDescription(page),
+    url,
+    inLanguage: locale,
+    keywords: [
+      name,
+      ...page.data.aliases,
+      page.data.cas,
+      tr("saturation table", "tabla de saturación"),
+      tr("superheated vapor table", "tabla de vapor sobrecalentado"),
+      tr("thermodynamic properties", "propiedades termodinámicas"),
+    ],
+    variableMeasured: [
+      tr("Temperature", "Temperatura"),
+      tr("Pressure", "Presión"),
+      tr("Specific volume", "Volumen específico"),
+      tr("Specific internal energy", "Energía interna específica"),
+      tr("Specific enthalpy", "Entalpía específica"),
+      tr("Specific entropy", "Entropía específica"),
+    ],
+    isAccessibleForFree: true,
+    license: "https://opensource.org/licenses/MIT",
+    isBasedOn: {
+      "@type": "SoftwareSourceCode",
+      name: "CoolProp",
+      url: "https://coolprop.org",
+    },
+    // As index.html names the app's author.
+    creator: {
+      "@type": "Organization",
+      name: "Department of Mechanical Engineering, Universidad de Antioquia",
+      parentOrganization: {
+        "@type": "CollegeOrUniversity",
+        name: "Universidad de Antioquia",
+        url: "https://www.udea.edu.co",
+      },
+    },
+    includedInDataCatalog: {
+      "@type": "DataCatalog",
+      name: FLUIDS_TITLE.replace(/ \| Thermoprops$/, ""),
+      url: fluids,
+    },
+  };
+  const breadcrumbs = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { name: "Thermoprops", item: SITE + (locale === "es" ? "es/" : "") },
+      { name: tr("Fluids", "Fluidos"), item: fluids },
+      { name, item: url },
+    ].map((e, i) => ({ "@type": "ListItem", position: i + 1, ...e })),
+  };
+  return [dataset, breadcrumbs] as const;
+}

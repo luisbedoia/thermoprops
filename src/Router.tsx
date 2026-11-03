@@ -14,6 +14,7 @@ import { CoolPropGate } from "./layout/CoolPropGate";
 import { landingPath } from "./i18n";
 import { FluidIndex } from "./fluids/FluidIndex";
 import { FluidPage } from "./fluids/FluidPage";
+import { LinksPage } from "./links/LinksPage";
 
 // Each mode's code loads only when one of its pages is opened, so the
 // landing carries neither (the worksheet's editor is CodeMirror).
@@ -57,6 +58,8 @@ export function AppRoutes() {
         <Route path="/fluids/:slug" element={<FluidPage />} />
         <Route path="/es/fluidos" element={<FluidIndex />} />
         <Route path="/es/fluidos/:slug" element={<FluidPage />} />
+        {/* How to link to a calculation: for assistants and people. */}
+        <Route path="/links" element={<LinksPage />} />
         <Route element={<CoolPropGate />}>
           {/* The State Explorer: a fluid and units, then its states. */}
           <Route path="/explorer" element={<SettingsView />} />

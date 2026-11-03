@@ -38,3 +38,9 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
+
+      # Bing (and ChatGPT's search, which reads it) learns of the release's
+      # pages now. Not part of the release: a failure here leaves it up.
+      - name: Notify IndexNow
+        run: node scripts/indexnow.mjs
+        continue-on-error: true

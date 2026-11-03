@@ -166,7 +166,28 @@ describe("the built pages", { timeout: 30_000 }, () => {
     );
     expect(html).toContain('href="/fluids/r134a"');
     expect(html).toContain("<svg");
-    expect(meta.fluidTitle(water)).toMatch(/^Water \(R718\) – Thermodynamic/);
+    expect(meta.fluidTitle(water)).toMatch(/^Steam tables – Saturated/);
+    const r134a = await fluidPage(
+      cp,
+      summaries.find((f) => f.name === "R134a")!,
+      summaries,
+    );
+    expect(meta.fluidTitle(r134a)).toBe(
+      "R134a – Saturation and superheated tables, p–h diagram | Thermoprops",
+    );
+    const url = "https://luisbedoia.github.io/thermoprops/fluids/water/";
+    const [dataset, crumbs] = meta.fluidStructuredData(water, url);
+    expect(dataset["@type"]).toBe("Dataset");
+    expect(dataset.name).toBe(
+      "Steam tables – Saturated and superheated water properties",
+    );
+    expect(dataset.url).toBe(url);
+    expect(dataset.keywords).toContain("7732-18-5");
+    expect(crumbs.itemListElement.map((e) => e.item)).toEqual([
+      "https://luisbedoia.github.io/thermoprops/",
+      "https://luisbedoia.github.io/thermoprops/fluids/",
+      url,
+    ]);
   });
 
   it("and in Spanish, with the Spanish addresses", async () => {
@@ -178,7 +199,11 @@ describe("the built pages", { timeout: 30_000 }, () => {
     expect(html).toContain("Tabla de saturación");
     expect(html).toContain("Tabla de vapor sobrecalentado");
     expect(html).toContain('href="/es/fluidos/r134a"');
-    expect(meta.fluidTitle(es)).toMatch(/^Agua \(R718\) – Propiedades/);
+    expect(meta.fluidTitle(es)).toMatch(/^Tablas de vapor – Propiedades/);
+    const [, crumbs] = meta.fluidStructuredData(es, "u");
+    expect(crumbs.itemListElement[1].item).toBe(
+      "https://luisbedoia.github.io/thermoprops/es/fluidos/",
+    );
   });
 
   it("write the index, with every fluid", async () => {

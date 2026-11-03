@@ -13,7 +13,7 @@
 //   (/fluids/r134a/, /es/fluidos/r134a/): its constants, saturation table and
 //   diagrams, worked out here with CoolProp and written into the page with
 //   the data it was rendered from (src/fluids).
-// - Generates sitemap.xml with the build date.
+// - Generates sitemap.xml.
 import { readFileSync, readdirSync, mkdirSync, writeFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -206,6 +206,17 @@ function dataPage(app, route, data, meta) {
   return app.locale === "es" ? inSpanish(out) : out;
 }
 
+/** `html` with `data` as its structured data (JSON-LD), for search engines. */
+function withStructuredData(html, data) {
+  if (!html.includes("</head>")) throw new Error("index.html has no </head>");
+  // "<" escaped: no "</script>" inside can end it early.
+  const json = JSON.stringify(data).replace(/</g, "\\u003c");
+  return html.replace(
+    "</head>",
+    `  <script type="application/ld+json">${json}</script>\n  </head>`,
+  );
+}
+
 /** Writes `html` as the page of the folder `route`. */
 function write(route, html) {
   mkdirSync(join(DIST, route), { recursive: true });
@@ -244,7 +255,10 @@ function fluidPages(app, summaries, pages) {
     write(
       route,
       withAlternates(
-        dataPage(app, route, data, meta),
+        withStructuredData(
+          dataPage(app, route, data, meta),
+          fluidsMeta.fluidStructuredData(data, `${SITE_URL}${route}/`),
+        ),
         app.locale,
         pair(data.fluid.slug),
       ),
@@ -351,11 +365,11 @@ const SITEMAP_PATHS = [
     ...fluids.summaries.map((f) => fluidsRoute(locale, f.slug)),
   ]),
 ];
-const lastmod = new Date().toISOString().slice(0, 10);
+// No <lastmod>: the build date would change every URL's on every release,
+// and search engines learn to ignore a sitemap's dates when they do.
 const urls = SITEMAP_PATHS.map(
   (path) => `  <url>
     <loc>${SITE_URL}${path && `${path}/`}</loc>
-    <lastmod>${lastmod}</lastmod>
   </url>`,
 ).join("\n");
 

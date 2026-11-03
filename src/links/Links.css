@@ -1,0 +1,96 @@
+/* The link format's page, in the fluids' pages' design (Fluids.css). */
+.links code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.875em;
+}
+
+.links__code {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  overflow-x: auto;
+  border-radius: 8px;
+  background: var(--card);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.links__list {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+  padding-left: 1.25rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.links__list a {
+  color: var(--ps-blue-pressed);
+}
+
+/* Statement and meaning: the meaning wraps, the statement does not. */
+.links .links__syntax td {
+  text-align: left;
+  white-space: normal;
+  min-width: 16rem;
+}
+
+/* Narrow screens: the statement over its meaning. */
+@media (max-width: 40rem) {
+  .links__syntax,
+  .links__syntax tbody,
+  .links__syntax tr,
+  .links__syntax th,
+  .links__syntax td {
+    display: block;
+  }
+
+  .links .links__syntax th {
+    padding-bottom: 0.15rem;
+    border-bottom: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .links .links__syntax td {
+    min-width: 0;
+    padding-top: 0;
+  }
+}
+
+.links__terms {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0;
+}
+
+.links__terms dt {
+  font-weight: 600;
+}
+
+.links__terms dd {
+  margin: 0.15rem 0 0;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.links__examples {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+  gap: 1.25rem;
+}
+
+.links__examples figure {
+  display: grid;
+  gap: 0.75rem;
+  align-content: start;
+  justify-items: start;
+  margin: 0;
+}
+
+.links__examples figcaption {
+  font-weight: 600;
+}
+
+.links__examples .links__code {
+  justify-self: stretch;
+}
