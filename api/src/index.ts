@@ -265,12 +265,52 @@ async function solve(
   return answer(source, result);
 }
 
+/**
+ * 60 calculations a minute per IP (wrangler.jsonc): one address cannot use
+ * up the free plan's 100,000 a day (60 × 1440 = 86,400), and an agent's
+ * platform, whose users share its addresses, still has room.
+ */
+interface Env {
+  LIMITER: { limit(options: { key: string }): Promise<{ success: boolean }> };
+}
+
+async function limited(request: Request, env: Env) {
+  const ip = request.headers.get("cf-connecting-ip") ?? "unknown";
+  const { success } = await env.LIMITER.limit({ key: ip });
+  if (success) return null;
+  console.log(
+    JSON.stringify({
+      limited: true,
+      agent: request.headers.get("user-agent")?.slice(0, 80) ?? null,
+    }),
+  );
+  return new Response(
+    JSON.stringify({
+      error:
+        "Too many requests: 60 a minute per address. Wait a minute and call again.",
+    }),
+    {
+      status: 429,
+      headers: {
+        ...CORS,
+        "content-type": "application/json; charset=utf-8",
+        "retry-after": "60",
+      },
+    },
+  );
+}
+
 export default {
-  async fetch(request: Request): Promise<Response> {
+  async fetch(request: Request, env: Env): Promise<Response> {
     startup = false;
     const url = new URL(request.url);
     if (request.method === "OPTIONS")
       return new Response(null, { status: 204, headers: CORS });
+    // The manual is free to read; calculations count.
+    if (url.pathname === "/mcp" || url.pathname === "/solve") {
+      const refused = await limited(request, env);
+      if (refused) return refused;
+    }
     if (url.pathname === "/mcp")
       return withCors(
         await handleMcp(
