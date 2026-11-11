@@ -116,7 +116,7 @@ EXAMPLE (vapor-compression refrigeration cycle)
 ${EXAMPLE.replace(/^/gm, "  ")}`;
 
 const USAGE = `Thermoprops API: thermodynamic properties and cycles, computed with CoolProp.
-Free, no key. Results are exact (CoolProp's equations of state), not interpolated from tables.
+Free, no key. Computed from the reference equations of state (CoolProp), not interpolated from tables.
 
 GET /solve?s=<script>
   <script>: a Thermoprops Worksheet script, URL-encoded (encodeURIComponent).
