@@ -1,0 +1,18 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.luisbedoia/thermoprops",
+  "title": "Thermoprops",
+  "description": "Thermodynamic properties and cycles with CoolProp: fluid states, refrigeration, Rankine, Brayton.",
+  "repository": {
+    "url": "https://github.com/luisbedoia/thermoprops",
+    "source": "github",
+    "subfolder": "api"
+  },
+  "version": "0.1.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://thermoprops-api.luisbedoia.workers.dev/mcp"
+    }
+  ]
+}
