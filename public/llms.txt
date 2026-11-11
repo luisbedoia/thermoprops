@@ -7,6 +7,7 @@ A Worksheet's script lives in its address: a link opens it solved, in the reader
 ## Compute
 
 - [Calculation API](https://thermoprops-api.luisbedoia.workers.dev/): `GET /solve?s=<script>` answers JSON with every state, its properties, the computed values and a link to the Worksheet. Free, no key. This address is its manual, as plain text.
+- [MCP server](https://thermoprops-api.luisbedoia.workers.dev/mcp): the same as MCP tools, `fluid_state` (a state from two properties) and `solve_worksheet` (a whole script). Streamable HTTP, no authentication.
 - [Link to a calculation](https://luisbedoia.github.io/thermoprops/links/): the script language, the link format, the 30 fluids and worked examples.
 - [Worksheet](https://luisbedoia.github.io/thermoprops/worksheet/): states, processes and cycles, written as in a notebook.
 - [State Explorer](https://luisbedoia.github.io/thermoprops/explorer/): a fluid's states from any two properties, on its diagrams.

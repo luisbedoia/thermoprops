@@ -177,6 +177,22 @@ export function LinksPage() {
               </>,
             )}
           </li>
+          <li>
+            {tr(
+              <>
+                As an MCP server, for Claude, ChatGPT, Cursor or VS Code: add{" "}
+                <code>{API}/mcp</code> as a connector. Its tools:{" "}
+                <code>fluid_state</code>, a state from two properties, and{" "}
+                <code>solve_worksheet</code>, a whole script.
+              </>,
+              <>
+                Como servidor MCP, para Claude, ChatGPT, Cursor o VS Code:
+                agrega <code>{API}/mcp</code> como conector. Sus herramientas:{" "}
+                <code>fluid_state</code>, un estado a partir de dos propiedades,
+                y <code>solve_worksheet</code>, un código completo.
+              </>,
+            )}
+          </li>
         </ul>
       </section>
 
