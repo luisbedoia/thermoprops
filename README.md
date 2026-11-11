@@ -17,8 +17,38 @@ to WebAssembly.
 - p–h, T–s, h–s, p–v, T–v and p–T diagrams, with the saturation dome,
   isolines and your states plotted together.
 - °C, K or imperial units.
+- A Worksheet that solves processes and whole cycles written as in a
+  notebook (`2: from 1, compressed to P = 1.2 MPa, eta = 80%`).
+- Saturation and superheated tables for every fluid, in English and Spanish:
+  [steam tables](https://luisbedoia.github.io/thermoprops/fluids/water/),
+  [R134a](https://luisbedoia.github.io/thermoprops/fluids/r134a/)…
 - Shareable links: fluid, units and states are stored in the URL.
 - Works on phones, offline once loaded, and can be installed as an app.
+
+## For AI agents: MCP server and API
+
+Agents can compute properties with CoolProp instead of interpolating tables.
+Free, no key.
+
+**MCP server** (Streamable HTTP): `https://thermoprops-api.luisbedoia.workers.dev/mcp`
+
+- `fluid_state`: one state from two properties (`"T = -10 °C, sat vapor"`),
+  in SI or imperial units, with the reference state textbooks use.
+- `solve_worksheet`: a whole Worksheet script, from a single process to a
+  combined cycle.
+
+Every answer carries a link that opens the calculation solved, with its
+diagrams, in the Worksheet.
+
+Add it in Claude (Settings › Connectors › Add custom connector), ChatGPT
+(developer mode), Cursor or VS Code with that address. It is listed in the
+[MCP Registry](https://registry.modelcontextprotocol.io/) as
+`io.github.luisbedoia/thermoprops`.
+
+**HTTP API**: `GET https://thermoprops-api.luisbedoia.workers.dev/solve?s=<script>`
+answers JSON. [The address without a path](https://thermoprops-api.luisbedoia.workers.dev/)
+is its manual, and [Link to a calculation](https://luisbedoia.github.io/thermoprops/links/)
+describes the script language.
 
 ![The same cycle on the T–s diagram, with isobars](docs/screenshots/desktop-ts.png)
 
@@ -45,6 +75,15 @@ npm run build     # type check and production build
 ```
 
 Pushing a `v*` tag deploys to GitHub Pages.
+
+The API and MCP server ([`api/`](api/)) are a Cloudflare Worker that runs
+the Worksheet's own script language (`src/dsl`) on the same wasm:
+
+```bash
+cd api && npm install
+npm run dev       # local server on wrangler dev
+npm run deploy    # needs `npx wrangler login`
+```
 
 ## Credits
 
