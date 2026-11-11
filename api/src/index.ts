@@ -13,20 +13,15 @@
  * (and their legs cost most of a cycle's time). The answer links the
  * Worksheet, where the script opens solved and drawn.
  */
-import {
-  loadCoolProp,
-  type CoolProp,
-  type State,
-} from "@luisbedoia/coolprop-rs-wasm";
+import { loadCoolProp, type CoolProp } from "@luisbedoia/coolprop-rs-wasm";
 // The package exports neither: imported by path, as wrangler needs the
 // .wasm as a module (Workers compile no wasm from bytes at run time).
 // @ts-expect-error: emscripten's glue, untyped.
 import factory from "../../node_modules/@luisbedoia/coolprop-rs-wasm/dist/coolprop.js";
 import wasm from "../../node_modules/@luisbedoia/coolprop-rs-wasm/dist/coolprop.wasm";
-import { evaluate, type ScriptResult } from "../../src/dsl/evaluate";
-import { formatQuantity } from "../../src/dsl/format";
-import { fromSI, getDisplayUnit, type UnitSystem } from "../../src/lib/units";
+import { evaluate } from "../../src/dsl/evaluate";
 import { FLUID_NAMES, SITE, SYNTAX } from "../../src/links/links";
+import { answer, type Answer } from "./answer";
 import { handleMcp } from "./mcp";
 
 /** Longer scripts are not a calculation someone links. */
@@ -93,80 +88,6 @@ const ready: Promise<CoolProp> = loadCoolProp({
   return cp;
 });
 
-/** A state's properties, by their coolprop-rs names, in the script's units. */
-const PROPERTIES = [
-  "temperature",
-  "pressure",
-  "density",
-  "specific_volume",
-  "enthalpy",
-  "entropy",
-  "internal_energy",
-  "quality",
-  "cp",
-  "cv",
-  "speed_of_sound",
-  "viscosity",
-  "conductivity",
-  "prandtl",
-  "compressibility",
-] as const;
-
-/** Six significant digits: CoolProp's, without float noise. */
-const round = (x: number) => Number(x.toPrecision(6));
-
-function properties(state: State, system: UnitSystem) {
-  const out: Record<string, { value: number; unit?: string }> = {};
-  for (const name of PROPERTIES) {
-    const si = name === "specific_volume" ? 1 / state.density : state[name];
-    if (si === null || si === undefined || !Number.isFinite(si)) continue;
-    const unit = getDisplayUnit(name, system).replace(/\*/g, "·");
-    out[name] = {
-      value: round(fromSI(name, si, system)),
-      ...(unit && { unit }),
-    };
-  }
-  return out;
-}
-
-/** The result, for a reader that has not seen the Worksheet. */
-function answer(source: string, r: ScriptResult) {
-  return {
-    ok: r.diagnostics.length === 0,
-    fluid: r.fluid ?? null,
-    units: r.unitSystem,
-    reference: r.reference,
-    states: r.states.map((s) => ({
-      name: s.name,
-      fluid: s.fluid ?? null,
-      how: s.how,
-      ...(s.state
-        ? {
-            phase: s.state.phase,
-            properties: properties(s.state, r.unitSystem),
-          }
-        : {}),
-      ...(s.error ? { error: s.error } : {}),
-    })),
-    values: r.values.map((v) => ({
-      name: v.name,
-      ...(v.value
-        ? { value: formatQuantity(v.value, r.unitSystem, v.unit) }
-        : {}),
-      ...(v.error ? { error: v.error } : {}),
-    })),
-    prints: r.prints.map((p) =>
-      p.value
-        ? `${p.text} = ${formatQuantity(p.value, r.unitSystem, p.unit)}`
-        : `${p.text}: ${p.error}`,
-    ),
-    errors: r.diagnostics.map((d) => ({ line: d.line, message: d.message })),
-    // Tagged, so the site's analytics count the visits answers bring.
-    worksheet: `${SITE}/worksheet/?s=${encodeURIComponent(source)}&utm_source=thermoprops-api&utm_medium=api`,
-    engine: "CoolProp (coolprop-rs), via Thermoprops",
-  };
-}
-
 const EXAMPLE = `fluid R134a
 units celsius
 reference ASHRAE
@@ -199,20 +120,18 @@ Free, no key. Results are exact (CoolProp's equations of state), not interpolate
 GET /solve?s=<script>
   <script>: a Thermoprops Worksheet script, URL-encoded (encodeURIComponent).
   Answers JSON:
-    ok          true when every line solved
-    states      each state: how it was fixed, its phase, and its properties
-                (temperature, pressure, density, specific_volume, enthalpy,
-                entropy, internal_energy, quality, cp, cv, speed_of_sound,
-                viscosity, conductivity, prandtl, compressibility), each
-                {value, unit} in the script's units
-    values      each computed value, with its unit
-    prints      the print lines, as "COP = 2.72"
-    errors      [{line, message}]: fix the line and call again
+    fluid, reference  the script's fluid, and where h and s are measured from
+    units       the unit of each property below, once
+    states      [{name, phase, T, P, h, s, x, v}]; x only in the two-phase
+                region. Any other property (D, u, cp, cv, mu, k, Pr, Z, a, g)
+                is printed: print cp2
+    results     the print lines ("COP = 2.72"), or every value if none
+    errors      [{line, message}], only when a line fails: fix it, call again
     worksheet   a link that opens the script solved, with p-h/T-s diagrams,
                 in the Thermoprops Worksheet: give it to the person you answer
 
-MCP: the same, as tools (solve_worksheet, fluid_state), at /mcp
-  (Streamable HTTP, no authentication).
+MCP: the same, as tools (fluid_state, solve_worksheet, language_reference),
+  at /mcp (Streamable HTTP, no authentication), answered as a text table.
 
 ${LANGUAGE}
 
@@ -229,7 +148,7 @@ const CORS = {
 };
 
 function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body, null, 2), {
+  return new Response(JSON.stringify(body), {
     status,
     headers: {
       ...CORS,
@@ -245,7 +164,7 @@ async function solve(
   source: string,
   via: "rest" | "mcp",
   agent: string | null,
-): Promise<ReturnType<typeof answer> | { error: string }> {
+): Promise<Answer | { error: string }> {
   if (!source.trim()) return { error: "The script is empty." };
   if (source.length > MAX_SCRIPT)
     return { error: `The script is over ${MAX_SCRIPT} characters.` };
@@ -336,7 +255,7 @@ export default {
       "rest",
       request.headers.get("user-agent"),
     );
-    return "ok" in result ? json(result) : json(result, 413);
+    return "states" in result ? json(result) : json(result, 413);
   },
 };
 

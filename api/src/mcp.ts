@@ -1,17 +1,24 @@
 /**
  * The API as an MCP server (Streamable HTTP, stateless): JSON-RPC posted to
- * /mcp, answered as JSON, no session and no stream. Two tools, both a
- * Worksheet script solved: `solve_worksheet` takes one whole, `fluid_state`
- * writes the one-state script for a quick question.
+ * /mcp, answered as JSON, no session and no stream. Two tools solve a
+ * Worksheet script, `solve_worksheet` one whole and `fluid_state` the
+ * one-state script it writes for a quick question; `language_reference`
+ * gives the script language's whole manual.
+ *
+ * Every token of the tools' descriptions is read in every conversation, and
+ * of an answer in every call: the descriptions carry a cheat sheet (the
+ * manual is a tool away) and answers are a text table (answer.ts).
  *
  * Clients add it by its address (Claude's connectors, Cursor, VS Code,
  * ChatGPT's developer mode); there is nothing to authenticate.
  */
+import { FLUID_NAMES } from "../../src/links/links";
+import { asText, type Answer } from "./answer";
 
 type Solve = (
   script: string,
   agent: string | null,
-) => Promise<{ ok: boolean } | { error: string }>;
+) => Promise<Answer | { error: string }>;
 
 type Message = {
   jsonrpc?: string;
@@ -25,71 +32,80 @@ const VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26"];
 
 const UNIT_SYSTEMS = ["celsius", "kelvin", "imperial"];
 const REFERENCES = ["DEF", "ASHRAE", "IIR", "NBP"];
+/** A state's properties besides those every answer shows (T, P, h, s, x, v). */
+const EXTRA = ["D", "u", "cp", "cv", "mu", "k", "Pr", "Z", "a", "g"];
 
-function tools(language: string) {
-  const readOnly = {
-    readOnlyHint: true,
-    destructiveHint: false,
-    idempotentHint: true,
-    openWorldHint: false,
-  };
+const CHEAT_SHEET = `One statement per line, # comments:
+fluid R134a
+units celsius             # or kelvin, imperial
+reference ASHRAE          # zero of h, s: DEF, ASHRAE (textbook refrigerant tables), IIR, NBP
+1: T = -10 °C, sat vapor  # two properties; sat liquid is x = 0
+2: from 1, compressed to P = 1.2 MPa, eta = 80%
+3: P = P2, sat liquid
+4: from 3, throttled to P = P1
+COP = (h1 - h4) / (h2 - h1)
+print COP, T2 in °F, cp2
+Processes: isentropic, compressed/expanded (eta), throttled, isobaric, isothermal, isochoric, isenthalpic, polytropic (n).
+Properties: T P h s x D v u cp cv mu k Pr Z a g; states show T P h s x v, print others.
+Fluids: ${FLUID_NAMES.join(", ")}.`;
+
+function tools() {
+  const readOnly = { readOnlyHint: true, openWorldHint: false };
   return [
-    {
-      name: "solve_worksheet",
-      title: "Solve a thermodynamics script",
-      description: `Solves a Thermoprops Worksheet script with CoolProp (exact equations of state, not interpolated tables): states, processes and whole cycles, with values computed from them.
-
-Returns JSON: each state with its phase and properties in the script's units, the computed values, the print lines ("COP = 2.72"), errors by line (fix the line and call again), and "worksheet": a link that opens the script solved with p-h and T-s diagrams. Give that link to the person you answer.
-
-${language}`,
-      inputSchema: {
-        type: "object",
-        properties: {
-          script: {
-            type: "string",
-            description: "The script, one statement per line.",
-          },
-        },
-        required: ["script"],
-        additionalProperties: false,
-      },
-      annotations: { title: "Solve a thermodynamics script", ...readOnly },
-    },
     {
       name: "fluid_state",
       title: "Properties of a fluid's state",
       description:
-        'One state of a fluid from two properties, computed with CoolProp: temperature, pressure, density, specific volume, enthalpy, entropy, internal energy, quality, cp, cv, speed of sound, viscosity, conductivity, Prandtl number and compressibility. "state" is written as in the Worksheet: "T = 25 °C, P = 1 bar", "P = 1 MPa, sat vapor", "T = -10 °C, x = 0.3", "P = 8 MPa, h = 3300 kJ/kg". For a cycle or a process, use solve_worksheet.',
+        'A fluid\'s state from two properties, with CoolProp: T, P, h, s, x, v, and "properties" (D density, u, cp, cv, mu viscosity, k conductivity, Pr, Z, a speed of sound, g). state: "T = 25 °C, P = 1 bar", "P = 1 MPa, sat vapor". Processes and cycles: solve_worksheet.',
       inputSchema: {
         type: "object",
         properties: {
-          fluid: {
-            type: "string",
-            description:
-              "CoolProp's name: Water, R134a, Ammonia, CarbonDioxide, Air, R410A, R32, Nitrogen…",
-          },
-          state: {
-            type: "string",
-            description:
-              'Two properties with units, e.g. "T = 25 °C, P = 1 bar".',
-          },
+          fluid: { type: "string", description: "Water, R134a, Ammonia…" },
+          state: { type: "string" },
           units: {
             type: "string",
             enum: UNIT_SYSTEMS,
-            description:
-              "How results are given: celsius (°C, kPa, kJ/kg), kelvin, or imperial (°F, psi, BTU/lb). Default celsius.",
+            description: "Default celsius.",
           },
           reference: {
             type: "string",
             enum: REFERENCES,
             description:
-              "Where h and s are measured from. ASHRAE (h = s = 0 for the saturated liquid at -40 °C) matches the refrigerant tables of most textbooks; IIR (h = 200 kJ/kg, s = 1 kJ/(kg·K) at 0 °C) European ones; NBP (0 at the normal boiling point); DEF, CoolProp's default and the steam tables' for water. Default DEF.",
+              "Zero of h, s; default DEF. ASHRAE: textbook refrigerant tables.",
           },
+          properties: { type: "array", items: { type: "string", enum: EXTRA } },
         },
         required: ["fluid", "state"],
         additionalProperties: false,
       },
-      annotations: { title: "Properties of a fluid's state", ...readOnly },
+      annotations: readOnly,
+    },
+    {
+      name: "solve_worksheet",
+      title: "Solve a thermodynamics script",
+      description: `Solves processes and whole cycles with CoolProp, written as a Thermoprops Worksheet script. Answers a table of the states, the printed results, errors by line, and a link that opens it solved with diagrams: give it to the user.
+
+${CHEAT_SHEET}
+More syntax: language_reference.`,
+      inputSchema: {
+        type: "object",
+        properties: { script: { type: "string" } },
+        required: ["script"],
+        additionalProperties: false,
+      },
+      annotations: readOnly,
+    },
+    {
+      name: "language_reference",
+      title: "The Worksheet script language",
+      description:
+        "The script language's whole manual, for what solve_worksheet's cheat sheet leaves out.",
+      inputSchema: {
+        type: "object",
+        properties: {},
+        additionalProperties: false,
+      },
+      annotations: readOnly,
     },
   ];
 }
@@ -109,35 +125,47 @@ const failure = (id: Message["id"], code: number, message: string) => ({
   error: { code, message },
 });
 
+const text = (t: string, isError = false) => ({
+  content: [{ type: "text", text: t }],
+  isError,
+});
+
 /** One line of a script: no line breaks smuggled into a fluid's name. */
 const oneLine = (s: unknown) =>
   typeof s === "string" && !/[\r\n]/.test(s) && s.trim() ? s.trim() : null;
 
-async function call(
+/** The script a tool's arguments stand for, or why they are wrong. */
+function script(
   name: unknown,
   args: Record<string, unknown>,
-  solve: Solve,
-  agent: string | null,
-) {
-  let script: string;
-  if (name === "solve_worksheet") {
-    if (typeof args.script !== "string")
-      return { error: "solve_worksheet takes a script." };
-    script = args.script;
-  } else if (name === "fluid_state") {
-    const fluid = oneLine(args.fluid);
-    const state = oneLine(args.state);
-    const units = args.units ?? "celsius";
-    if (!fluid || !state)
-      return { error: "fluid_state takes a fluid and a state." };
-    if (typeof units !== "string" || !UNIT_SYSTEMS.includes(units))
-      return { error: `units is one of ${UNIT_SYSTEMS.join(", ")}.` };
-    const reference = args.reference ?? "DEF";
-    if (typeof reference !== "string" || !REFERENCES.includes(reference))
-      return { error: `reference is one of ${REFERENCES.join(", ")}.` };
-    script = `fluid ${fluid}\nunits ${units}\nreference ${reference}\n1: ${state}`;
-  } else return null;
-  return solve(script, agent);
+): { script: string } | { error: string } | null {
+  if (name === "solve_worksheet")
+    return typeof args.script === "string"
+      ? { script: args.script }
+      : { error: "solve_worksheet takes a script." };
+  if (name !== "fluid_state") return null;
+  const fluid = oneLine(args.fluid);
+  const state = oneLine(args.state);
+  if (!fluid || !state)
+    return { error: "fluid_state takes a fluid and a state." };
+  const units = args.units ?? "celsius";
+  if (typeof units !== "string" || !UNIT_SYSTEMS.includes(units))
+    return { error: `units is one of ${UNIT_SYSTEMS.join(", ")}.` };
+  const reference = args.reference ?? "DEF";
+  if (typeof reference !== "string" || !REFERENCES.includes(reference))
+    return { error: `reference is one of ${REFERENCES.join(", ")}.` };
+  const extra = args.properties ?? [];
+  if (
+    !Array.isArray(extra) ||
+    !extra.every((p) => typeof p === "string" && EXTRA.includes(p))
+  )
+    return { error: `properties are among ${EXTRA.join(", ")}.` };
+  const print = extra.length
+    ? `\nprint ${extra.map((p) => `${p}1`).join(", ")}`
+    : "";
+  return {
+    script: `fluid ${fluid}\nunits ${units}\nreference ${reference}\n1: ${state}${print}`,
+  };
 }
 
 async function reply(
@@ -158,7 +186,7 @@ async function reply(
         serverInfo: {
           name: "thermoprops",
           title: "Thermoprops",
-          version: "0.1.0",
+          version: "0.2.0",
           websiteUrl: "https://luisbedoia.github.io/thermoprops/",
         },
         instructions: INSTRUCTIONS,
@@ -167,21 +195,21 @@ async function reply(
     case "ping":
       return result(m.id, {});
     case "tools/list":
-      return result(m.id, { tools: tools(language) });
+      return result(m.id, { tools: tools() });
     case "tools/call": {
       const params = m.params ?? {};
+      if (params.name === "language_reference")
+        return result(m.id, text(language));
       const args = (params.arguments ?? {}) as Record<string, unknown>;
-      const answer = await call(params.name, args, solve, agent);
-      if (answer === null)
+      const asked = script(params.name, args);
+      if (asked === null)
         return failure(m.id, -32602, `Unknown tool: ${String(params.name)}`);
+      if ("error" in asked) return result(m.id, text(asked.error, true));
+      const answer = await solve(asked.script, agent);
+      if ("error" in answer) return result(m.id, text(answer.error, true));
       // A script that does not solve is the tool's answer, marked as an
       // error so the model reads it and fixes the script.
-      const isError = !("ok" in answer) || !answer.ok;
-      return result(m.id, {
-        content: [{ type: "text", text: JSON.stringify(answer, null, 2) }],
-        structuredContent: answer,
-        isError,
-      });
+      return result(m.id, text(asText(answer), !!answer.errors));
     }
     default:
       return failure(m.id, -32601, `Method not found: ${m.method}`);
