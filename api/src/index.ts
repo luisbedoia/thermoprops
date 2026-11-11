@@ -21,7 +21,8 @@ import factory from "../../node_modules/@luisbedoia/coolprop-rs-wasm/dist/coolpr
 import wasm from "../../node_modules/@luisbedoia/coolprop-rs-wasm/dist/coolprop.wasm";
 import { evaluate } from "../../src/dsl/evaluate";
 import { FLUID_NAMES, SITE, SYNTAX } from "../../src/links/links";
-import { answer, type Answer } from "./answer";
+import { answer, worksheetLink, type Answer } from "./answer";
+import { scriptOf, shortLink, touch, type LinkStore } from "./links";
 import { handleMcp } from "./mcp";
 
 /** Longer scripts are not a calculation someone links. */
@@ -128,7 +129,8 @@ GET /solve?s=<script>
     results     the print lines ("COP = 2.72"), or every value if none
     errors      [{line, message}], only when a line fails: fix it, call again
     worksheet   a link that opens the script solved, with p-h/T-s diagrams,
-                in the Thermoprops Worksheet: give it to the person you answer
+                in the Thermoprops Worksheet: give it to the person you answer.
+                A short link (/w/<id>) expires after a year unopened.
 
 MCP: the same, as tools (fluid_state, solve_worksheet, language_reference),
   at /mcp (Streamable HTTP, no authentication), answered as a text table.
@@ -164,6 +166,8 @@ async function solve(
   source: string,
   via: "rest" | "mcp",
   agent: string | null,
+  env: Env,
+  origin: string,
 ): Promise<Answer | { error: string }> {
   if (!source.trim()) return { error: "The script is empty." };
   if (source.length > MAX_SCRIPT)
@@ -181,7 +185,9 @@ async function solve(
       agent: agent?.slice(0, 80) ?? null,
     }),
   );
-  return answer(source, result);
+  const link =
+    (await shortLink(env.LINKS, origin, source)) ?? worksheetLink(source);
+  return answer(result, link);
 }
 
 /**
@@ -191,6 +197,7 @@ async function solve(
  */
 interface Env {
   LIMITER: { limit(options: { key: string }): Promise<{ success: boolean }> };
+  LINKS: LinkStore;
 }
 
 async function limited(request: Request, env: Env) {
@@ -220,7 +227,11 @@ async function limited(request: Request, env: Env) {
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(
+    request: Request,
+    env: Env,
+    ctx: { waitUntil(promise: Promise<unknown>): void },
+  ): Promise<Response> {
     startup = false;
     const url = new URL(request.url);
     if (request.method === "OPTIONS")
@@ -234,12 +245,36 @@ export default {
       return withCors(
         await handleMcp(
           request,
-          (script, agent) => solve(script, "mcp", agent),
+          (script, agent) => solve(script, "mcp", agent, env, url.origin),
           LANGUAGE,
         ),
       );
     if (request.method !== "GET" && request.method !== "HEAD")
       return json({ error: "Only GET." }, 405);
+
+    // A short link (links.ts): to the Worksheet, the script in its address.
+    const short = /^\/w\/([^/]+)$/.exec(url.pathname);
+    if (short) {
+      const script = await scriptOf(env.LINKS, short[1]);
+      if (script === null)
+        return new Response(
+          `This link expired (a year unopened) or never existed. The Worksheet: ${SITE}/worksheet/\n`,
+          {
+            status: 404,
+            headers: { "content-type": "text/plain; charset=utf-8" },
+          },
+        );
+      // After the redirect: the visitor does not wait for the write.
+      ctx.waitUntil(touch(env.LINKS, short[1]).catch(() => {}));
+      return new Response(null, {
+        status: 302,
+        headers: {
+          location: worksheetLink(script),
+          // A day, so that each day's opens reach here and keep it used.
+          "cache-control": "public, max-age=86400",
+        },
+      });
+    }
 
     if (url.pathname === "/")
       return new Response(USAGE, {
@@ -254,6 +289,8 @@ export default {
       source,
       "rest",
       request.headers.get("user-agent"),
+      env,
+      url.origin,
     );
     return "states" in result ? json(result) : json(result, 413);
   },

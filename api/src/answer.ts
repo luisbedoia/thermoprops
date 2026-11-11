@@ -49,8 +49,8 @@ const unitLabel = (unit: string) =>
   unit.replace(/\*/g, "·").replace(/\^3/g, "³").replace(/\^2/g, "²");
 
 /**
- * The Worksheet's address with the script: spaces as "+", not "%20", for a
- * shorter link (the Worksheet reads both). Tagged, so the site's analytics
+ * The Worksheet's address with the script, where short links lead: spaces
+ * as "+", not "%20" (the Worksheet reads both). Tagged, so the site's analytics
  * count the visits answers bring.
  */
 export const worksheetLink = (source: string) =>
@@ -60,7 +60,8 @@ export const worksheetLink = (source: string) =>
     utm_medium: "api",
   })}`;
 
-export function answer(source: string, r: ScriptResult): Answer {
+/** `worksheet`: the link that opens the script solved (links.ts). */
+export function answer(r: ScriptResult, worksheet: string): Answer {
   const system = r.unitSystem;
   const units: Answer["units"] = {};
   for (const [column, name] of COLUMNS) {
@@ -102,7 +103,7 @@ export function answer(source: string, r: ScriptResult): Answer {
     ...(r.diagnostics.length && {
       errors: r.diagnostics.map((d) => ({ line: d.line, message: d.message })),
     }),
-    worksheet: worksheetLink(source),
+    worksheet,
   };
 }
 
@@ -131,6 +132,12 @@ export function asText(a: Answer): string {
     lines.push("Errors (fix the line and call again):");
     for (const e of a.errors) lines.push(`line ${e.line}: ${e.message}`);
   }
-  lines.push(`Open it solved, with p-h and T-s diagrams: ${a.worksheet}`);
+  // A short link (links.ts) is deleted after a year unused.
+  const expiry = a.worksheet.includes("/w/")
+    ? " (the link expires after a year unopened)"
+    : "";
+  lines.push(
+    `Open it solved, with p-h and T-s diagrams${expiry}: ${a.worksheet}`,
+  );
   return lines.join("\n");
 }

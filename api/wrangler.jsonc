@@ -12,4 +12,12 @@
       "simple": { "limit": 60, "period": 60 },
     },
   ],
+  // Short links to the Worksheet (src/links.ts); its table in migrations/.
+  "d1_databases": [
+    {
+      "binding": "LINKS",
+      "database_name": "thermoprops-links",
+      "database_id": "40d0f622-c5c4-4081-8ea2-9ac4e9af682d",
+    },
+  ],
 }

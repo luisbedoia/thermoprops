@@ -159,8 +159,8 @@ export function LinksPage() {
         <ul className="links__list">
           <li>
             {tr(
-              "The same script, encoded the same way, solved on a server: the answer is JSON, with every state and its properties in the script's units, the computed values, the errors by line, and the Worksheet's link that opens it solved.",
-              "El mismo código, codificado igual, resuelto en un servidor: la respuesta es JSON, con cada estado y sus propiedades en las unidades del código, los valores calculados, los errores por línea y el enlace a la Hoja de trabajo que lo abre resuelto.",
+              "The same script, encoded the same way, solved on a server: the answer is JSON, with every state and its properties in the script's units, the computed values, the errors by line, and a short link that opens it solved in the Worksheet. A short link not opened for a year may expire; the address above never does.",
+              "El mismo código, codificado igual, resuelto en un servidor: la respuesta es JSON, con cada estado y sus propiedades en las unidades del código, los valores calculados, los errores por línea y un enlace corto que lo abre resuelto en la Hoja de trabajo. Un enlace corto que nadie abra en un año puede expirar; la dirección de arriba no expira nunca.",
             )}
           </li>
           <li>

@@ -37,8 +37,9 @@ Free, no key.
 - `solve_worksheet`: a whole Worksheet script, from a single process to a
   combined cycle.
 
-Every answer carries a link that opens the calculation solved, with its
-diagrams, in the Worksheet.
+Every answer carries a short link that opens the calculation solved, with
+its diagrams, in the Worksheet. A short link not opened for a year may
+expire; the Worksheet's own address (`/worksheet/?s=<script>`) never does.
 
 Add it in Claude (Settings › Connectors › Add custom connector), ChatGPT
 (developer mode), Cursor or VS Code with that address. It is listed in the
