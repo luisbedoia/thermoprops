@@ -1,0 +1,28 @@
+# Thermoprops
+
+> Free web app for the thermodynamic properties of fluids and refrigerants, computed with CoolProp's equations of state (not interpolated from tables): saturation and superheated tables, p–h and T–s diagrams, a State Explorer, and a Worksheet that solves whole cycles. In English and Spanish.
+
+A Worksheet's script lives in its address: a link opens it solved, in the reader's browser. The same script, sent to the API, comes back solved as JSON.
+
+## Compute
+
+- [Calculation API](https://thermoprops-api.luisbedoia.workers.dev/): `GET /solve?s=<script>` answers JSON with every state, its properties, the computed values and a link to the Worksheet. Free, no key. This address is its manual, as plain text.
+- [Link to a calculation](https://luisbedoia.github.io/thermoprops/links/): the script language, the link format, the 30 fluids and worked examples.
+- [Worksheet](https://luisbedoia.github.io/thermoprops/worksheet/): states, processes and cycles, written as in a notebook.
+- [State Explorer](https://luisbedoia.github.io/thermoprops/explorer/): a fluid's states from any two properties, on its diagrams.
+
+## Tables
+
+- [Fluids](https://luisbedoia.github.io/thermoprops/fluids/): every fluid's page.
+- [Steam tables (water)](https://luisbedoia.github.io/thermoprops/fluids/water/)
+- [R134a](https://luisbedoia.github.io/thermoprops/fluids/r134a/)
+- [Ammonia (R717)](https://luisbedoia.github.io/thermoprops/fluids/ammonia/)
+- [Carbon dioxide (R744)](https://luisbedoia.github.io/thermoprops/fluids/carbondioxide/)
+- [R410A](https://luisbedoia.github.io/thermoprops/fluids/r410a/)
+- [R32](https://luisbedoia.github.io/thermoprops/fluids/r32/)
+- [Air](https://luisbedoia.github.io/thermoprops/fluids/air/)
+
+## Spanish
+
+- [Tablas de vapor](https://luisbedoia.github.io/thermoprops/es/fluidos/water/)
+- [Fluidos](https://luisbedoia.github.io/thermoprops/es/fluidos/)

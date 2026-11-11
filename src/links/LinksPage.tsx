@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { localizedPath, locale, tr } from "../i18n";
 import { TEMPLATES } from "../dsl/templates";
 import "../fluids/Fluids.css";
-import { FLUID_NAMES, SITE, SYNTAX, worksheetLink } from "./links";
+import { API, FLUID_NAMES, SITE, SYNTAX, worksheetLink } from "./links";
 import "./Links.css";
 
 /**
@@ -147,6 +147,37 @@ export function LinksPage() {
             </figure>
           ))}
         </div>
+      </section>
+
+      <section aria-labelledby="links-api">
+        <h2 id="links-api">
+          {tr("The API, for agents", "La API, para agentes")}
+        </h2>
+        <pre className="links__code">
+          <code>{`GET ${API}/solve?s=<script>`}</code>
+        </pre>
+        <ul className="links__list">
+          <li>
+            {tr(
+              "The same script, encoded the same way, solved on a server: the answer is JSON, with every state and its properties in the script's units, the computed values, the errors by line, and the Worksheet's link that opens it solved.",
+              "El mismo código, codificado igual, resuelto en un servidor: la respuesta es JSON, con cada estado y sus propiedades en las unidades del código, los valores calculados, los errores por línea y el enlace a la Hoja de trabajo que lo abre resuelto.",
+            )}
+          </li>
+          <li>
+            {tr(
+              <>
+                For an agent that computes before answering, instead of
+                interpolating tables. Free, with no key. Its manual, as plain
+                text: <a href={`${API}/`}>{API}/</a>.
+              </>,
+              <>
+                Para un agente que calcula antes de responder, en lugar de
+                interpolar tablas. Gratis y sin clave. Su manual, en texto
+                plano: <a href={`${API}/`}>{API}/</a>.
+              </>,
+            )}
+          </li>
+        </ul>
       </section>
 
       <section aria-labelledby="links-other">

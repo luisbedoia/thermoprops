@@ -49,7 +49,7 @@ export const PAGES: Record<
       "Enlazar un cálculo – Thermoprops",
     ),
     description:
-      "How to link to a thermodynamics calculation solved by CoolProp: the Worksheet's script in its address, its syntax, the 30 fluids, and examples of a refrigeration and a Rankine cycle.",
+      "How to link to a thermodynamics calculation solved by CoolProp: the Worksheet's script in its address, its syntax, the 30 fluids, examples of a refrigeration and a Rankine cycle, and the free API that solves a script as JSON.",
   },
   // The installed app's home: for the app, not for search results.
   home: {

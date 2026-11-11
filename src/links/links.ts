@@ -2,6 +2,9 @@
 
 export const SITE = "https://luisbedoia.github.io/thermoprops";
 
+/** The calculation API (api/): a script in, its solution as JSON out. */
+export const API = "https://thermoprops-api.luisbedoia.workers.dev";
+
 /**
  * The fluids a script can name, by CoolProp's names. A test keeps them in
  * step with the catalog.

@@ -5,3 +5,5 @@ public/BingSiteAuth.xml
 src/test-fixtures/coolprop-schema.json
 # Local tool settings.
 .claude/
+# The API worker's local build output.
+api/.wrangler/
