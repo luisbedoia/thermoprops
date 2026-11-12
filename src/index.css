@@ -78,9 +78,21 @@ select:not([multiple]):not([size]) {
   min-height: 50vh;
   margin: 0;
   display: grid;
-  place-items: center;
+  place-content: center;
+  justify-items: center;
+  gap: 0.5rem;
   font-size: 1.1rem;
   color: var(--text-secondary);
+}
+
+.app-loader p {
+  margin: 0;
+}
+
+.app-loader__title {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--text-primary);
 }
 
 .app-loader.error {

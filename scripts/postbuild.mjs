@@ -252,6 +252,10 @@ function fluidPages(app, summaries, pages) {
       title: fluidsMeta.fluidTitle(data),
       description: fluidsMeta.fluidDescription(data),
     };
+    if (meta.title.length > fluidsMeta.TITLE_LIMIT)
+      throw new Error(
+        `${route}: title over ${fluidsMeta.TITLE_LIMIT}: ${meta.title}`,
+      );
     write(
       route,
       withAlternates(

@@ -14,21 +14,37 @@ export function fluidName(f: FluidSummary, aliases: readonly string[] = []) {
 
 const fmt = (v: number) => String(Number(v.toPrecision(4)));
 
+/** Search engines cut (and Bing flags) longer titles. */
+export const TITLE_LIMIT = 70;
+
 /**
  * Its title, in the words people search with: water's tables are the
- * "steam tables"; the others', their saturation and superheated tables.
+ * "steam tables"; the others', their saturation and superheated tables,
+ * said as fully as the fluid's name leaves room for.
  */
 export function fluidTitle(page: FluidPage): string {
+  const suffix = " | Thermoprops";
   if (page.fluid.name === "Water")
     return tr(
-      "Steam tables – Saturated and superheated water properties | Thermoprops",
-      "Tablas de vapor – Propiedades del agua saturada y sobrecalentada | Thermoprops",
-    );
+      "Steam tables – Saturated and superheated water",
+      "Tablas de vapor – Agua saturada y sobrecalentada",
+    ).concat(suffix);
   const name = fluidName(page.fluid, page.data.aliases);
-  return tr(
-    `${name} – Saturation and superheated tables, p–h diagram | Thermoprops`,
-    `${name} – Tablas de saturación y de sobrecalentado, diagrama p–h | Thermoprops`,
-  );
+  const said = tr(
+    [
+      "Saturation and superheated tables, p–h diagram",
+      "Saturation and superheated tables",
+      "Saturation & superheated tables",
+    ],
+    [
+      "Tablas de saturación y sobrecalentado, diagrama p–h",
+      "Tablas de saturación y sobrecalentado",
+      "Saturación y sobrecalentado",
+    ],
+  )
+    .map((words) => `${name} – ${words}${suffix}`)
+    .find((title) => title.length <= TITLE_LIMIT);
+  return said ?? `${name}${suffix}`;
 }
 
 export function fluidDescription(page: FluidPage): string {

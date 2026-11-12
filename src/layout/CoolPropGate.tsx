@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { initCoolProp, isCoolPropLoaded } from "../coolprop";
 import { tr } from "../i18n";
 
@@ -48,10 +48,26 @@ export function CoolPropGate() {
   return <Loading />;
 }
 
+/**
+ * The page's name over the wait: the built page's heading for search
+ * engines, which read it before the app starts (the page's own replaces it).
+ */
+function pageName(pathname: string) {
+  const page = pathname.replace(/\/+$/, "").split("/").pop();
+  if (page === "worksheet") return tr("Worksheet", "Hoja de trabajo");
+  if (page === "explorer" || page === "settings")
+    return tr("State Explorer", "Explorador de estados");
+  return null;
+}
+
 function Loading() {
+  const name = pageName(useLocation().pathname);
   return (
-    <p className="app-loader" role="status">
-      {tr("Loading calculator…", "Cargando la calculadora…")}
-    </p>
+    <div className="app-loader">
+      {name && <h1 className="app-loader__title">{name}</h1>}
+      <p role="status">
+        {tr("Loading calculator…", "Cargando la calculadora…")}
+      </p>
+    </div>
   );
 }
